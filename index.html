@@ -8,6 +8,17 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // SPA redirect from 404.html
+      (function () {
+        var m = window.location.search.match(/[?&]p=([^&]+)/);
+        if (m) {
+          var path = decodeURIComponent(m[1]);
+          var rest = window.location.search.replace(/[?&]p=[^&]+/, '').replace(/^&/, '?');
+          window.history.replaceState(null, '', path + rest + window.location.hash);
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
