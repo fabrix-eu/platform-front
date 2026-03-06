@@ -1,0 +1,97 @@
+import {
+  createRouter,
+  createRootRoute,
+  createRoute,
+  redirect,
+} from '@tanstack/react-router';
+import { z } from 'zod';
+import { RootLayout } from '../routes/root';
+import { HomePage } from '../routes/home';
+import { LoginPage } from '../routes/login';
+import { OrganizationsListPage } from '../routes/organizations/list';
+import { OrganizationShowPage } from '../routes/organizations/show';
+import { OrganizationNewPage } from '../routes/organizations/new';
+import { OrganizationEditPage } from '../routes/organizations/edit';
+import { isAuthenticated } from './auth';
+
+// Auth guard
+function requireAuth() {
+  if (!isAuthenticated()) {
+    throw redirect({ to: '/login' });
+  }
+}
+
+// Root
+const rootRoute = createRootRoute({
+  component: RootLayout,
+});
+
+// Public
+const loginRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/login',
+  component: LoginPage,
+});
+
+// Protected
+const indexRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/',
+  beforeLoad: requireAuth,
+  component: HomePage,
+});
+
+// Organizations
+const organizationsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/organizations',
+  beforeLoad: requireAuth,
+});
+
+const organizationsIndexRoute = createRoute({
+  getParentRoute: () => organizationsRoute,
+  path: '/',
+  validateSearch: z.object({
+    page: z.number().optional(),
+    search: z.string().optional(),
+  }),
+  component: OrganizationsListPage,
+});
+
+const organizationNewRoute = createRoute({
+  getParentRoute: () => organizationsRoute,
+  path: '/new',
+  component: OrganizationNewPage,
+});
+
+const organizationShowRoute = createRoute({
+  getParentRoute: () => organizationsRoute,
+  path: '/$id',
+  component: OrganizationShowPage,
+});
+
+const organizationEditRoute = createRoute({
+  getParentRoute: () => organizationsRoute,
+  path: '/$id/edit',
+  component: OrganizationEditPage,
+});
+
+const routeTree = rootRoute.addChildren([
+  loginRoute,
+  indexRoute,
+  organizationsRoute.addChildren([
+    organizationsIndexRoute,
+    organizationNewRoute,
+    organizationShowRoute,
+    organizationEditRoute,
+  ]),
+]);
+
+export const router = createRouter({ routeTree });
+
+
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router;
+  }
+}
