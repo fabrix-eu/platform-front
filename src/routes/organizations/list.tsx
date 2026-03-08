@@ -1,7 +1,12 @@
+import { useState } from 'react';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getOrganizations, ORG_KINDS } from '../../lib/organizations';
 import type { Organization } from '../../lib/organizations';
+import { OrganizationsMap } from '../../components/OrganizationsMap';
+import { MapLegend } from '../../components/MapLegend';
+
+const ALL_KINDS = Object.keys(ORG_KINDS);
 
 function OrgAvatar({ org }: { org: Organization }) {
   if (org.image_url) {
@@ -57,22 +62,23 @@ export function OrganizationsListPage() {
     });
   };
 
+  const [view, setView] = useState<'list' | 'map'>('list');
+  const [selectedKinds, setSelectedKinds] = useState<string[]>(ALL_KINDS);
   const meta = query.data?.meta;
+
+  // For map view: fetch all orgs (no pagination)
+  const mapQuery = useQuery({
+    queryKey: ['organizations', 'map', { search }],
+    queryFn: () => getOrganizations({ per_page: 1000, search }),
+    enabled: view === 'map',
+  });
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Organizations</h1>
-        <Link
-          to="/organizations/new"
-          className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90"
-        >
-          New Organization
-        </Link>
-      </div>
+      <h1 className="text-2xl font-bold">Organizations</h1>
 
-      {/* Search */}
+      {/* Search + Add */}
       <form onSubmit={handleSearch} className="flex gap-2">
         <input
           name="search"
@@ -86,13 +92,41 @@ export function OrganizationsListPage() {
         >
           Search
         </button>
+        <div className="flex border border-border rounded-lg overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setView('list')}
+            className={`px-3 py-2 text-sm ${view === 'list' ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:bg-muted/50'}`}
+            title="List view"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={() => setView('map')}
+            className={`px-3 py-2 text-sm border-l border-border ${view === 'map' ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:bg-muted/50'}`}
+            title="Map view"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z" />
+            </svg>
+          </button>
+        </div>
+        <Link
+          to="/organizations/new"
+          className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90"
+        >
+          New Organization
+        </Link>
       </form>
 
-      {/* List */}
+      {/* Content */}
       {query.isLoading && <p className="text-muted-foreground">Loading...</p>}
       {query.error && <p className="text-destructive">Failed to load organizations</p>}
 
-      {query.data && (
+      {query.data && view === 'list' && (
         <>
           <p className="text-sm text-muted-foreground">{meta?.total_count ?? 0} results</p>
 
@@ -167,6 +201,26 @@ export function OrganizationsListPage() {
             </div>
           )}
         </>
+      )}
+
+      {view === 'map' && (
+        <div className="relative border border-border rounded-lg overflow-hidden">
+          {mapQuery.isLoading && (
+            <div className="flex items-center justify-center h-[500px] text-muted-foreground">
+              Loading map...
+            </div>
+          )}
+          {mapQuery.data && (
+            <>
+              <MapLegend selectedKinds={selectedKinds} onKindsChange={setSelectedKinds} />
+              <OrganizationsMap
+                organizations={mapQuery.data.organizations}
+                selectedKinds={selectedKinds}
+                height="500px"
+              />
+            </>
+          )}
+        </div>
       )}
     </div>
   );

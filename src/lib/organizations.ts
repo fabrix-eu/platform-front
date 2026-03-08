@@ -14,6 +14,21 @@ export const ORG_KINDS: Record<string, { label: string; color: string }> = {
   other: { label: 'Other', color: 'bg-gray-100 text-gray-800' },
 };
 
+/** Hex colors for map markers, matching platform-front kinds.ts */
+export const ORG_KIND_COLORS: Record<string, string> = {
+  brand_retailer: '#50B83C',
+  producer: '#10B981',
+  facility_factory_supplier_vendor: '#E2725B',
+  collector_sorter: '#F59E0B',
+  recycler: '#14B8A6',
+  academic_researcher_journalist_student: '#B565A7',
+  auditor_certification_service_provider: '#4A90E2',
+  civil_society_organization: '#F5A623',
+  multi_stakeholder_initiative: '#9B51E0',
+  union: '#D0021B',
+  other: '#8C9196',
+};
+
 export interface Organization {
   id: string;
   name: string;
@@ -22,6 +37,8 @@ export interface Organization {
   description: string | null;
   address: string | null;
   country_code: string | null;
+  lat: number | null;
+  lon: number | null;
   number_of_workers: number | null;
   image_url: string | null;
   claimed: boolean;
