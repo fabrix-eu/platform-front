@@ -86,31 +86,43 @@ export function OrgSwitcher() {
           <div className="px-3 py-1.5 text-xs font-medium text-gray-400 uppercase tracking-wider">
             Organizations
           </div>
-          {organizations.map((org) => {
-            const kind = org.organization_kind ? ORG_KINDS[org.organization_kind] : null;
-            return (
-              <Link
-                key={org.organization_id}
-                to="/$orgSlug"
-                params={{ orgSlug: org.organization_slug }}
-                onClick={() => setOpen(false)}
-                className={`flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-gray-50 transition-colors ${
-                  org.organization_slug === orgSlug ? 'bg-gray-50 font-medium' : 'text-gray-700'
-                }`}
-              >
-                <OrgAvatar org={org} />
-                <div className="flex-1 min-w-0">
-                  <div className="truncate">{org.organization_name}</div>
-                  {kind && (
-                    <span className={`inline-block text-[10px] px-1.5 py-0 rounded-full ${kind.color}`}>
-                      {kind.label}
-                    </span>
-                  )}
-                </div>
-              </Link>
-            );
-          })}
+          <div className="max-h-64 overflow-y-auto">
+            {organizations.map((org) => {
+              const kind = org.organization_kind ? ORG_KINDS[org.organization_kind] : null;
+              return (
+                <Link
+                  key={org.organization_id}
+                  to="/$orgSlug"
+                  params={{ orgSlug: org.organization_slug }}
+                  onClick={() => setOpen(false)}
+                  className={`flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-gray-50 transition-colors ${
+                    org.organization_slug === orgSlug ? 'bg-gray-50 font-medium' : 'text-gray-700'
+                  }`}
+                >
+                  <OrgAvatar org={org} />
+                  <div className="flex-1 min-w-0">
+                    <div className="truncate">{org.organization_name}</div>
+                    {kind && (
+                      <span className={`inline-block text-[10px] px-1.5 py-0 rounded-full ${kind.color}`}>
+                        {kind.label}
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
           <div className="border-t border-border mt-1 pt-1">
+            <Link
+              to="/organizations/new"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              New Organization
+            </Link>
             <Link
               to="/"
               onClick={() => setOpen(false)}
