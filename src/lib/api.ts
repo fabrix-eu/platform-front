@@ -1,6 +1,6 @@
 export const BASE = import.meta.env.PROD
   ? 'https://api.fabrixproject.eu'
-  : '/api';
+  : 'http://localhost:4001';
 
 export class ApiError extends Error {
   status: number;
