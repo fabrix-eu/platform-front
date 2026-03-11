@@ -27,6 +27,12 @@ import { CommunityChallengesListPage } from '../routes/community/challenges';
 import { CommunityMatchmakingPage } from '../routes/community/matchmaking';
 import { MapPage } from '../routes/map';
 import { CommunitiesPage } from '../routes/communities';
+import { ForgotPasswordPage } from '../routes/forgot-password';
+import { ResetPasswordPage } from '../routes/reset-password';
+import { RegisterPage } from '../routes/register';
+import { RegisterWithOrgPage } from '../routes/register-with-org';
+import { VerifyInstructionsPage } from '../routes/verify-instructions';
+import { VerifyEmailPage } from '../routes/verify-email';
 import { isAuthenticated, type User } from './auth';
 import { queryClient } from './queryClient';
 
@@ -87,12 +93,49 @@ const loginRoute = createRoute({
   component: LoginPage,
 });
 
+const forgotPasswordRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/forgot-password',
+  component: ForgotPasswordPage,
+});
+
+const resetPasswordRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/reset-password',
+  validateSearch: z.object({ token: z.string().optional() }),
+  component: ResetPasswordPage,
+});
+
+const registerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/register',
+  component: RegisterPage,
+});
+
+const registerWithOrgRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/register-with-org',
+  component: RegisterWithOrgPage,
+});
+
+const verifyInstructionsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/verify-instructions',
+  component: VerifyInstructionsPage,
+});
+
+const verifyEmailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/verify-email',
+  validateSearch: z.object({ token: z.string().optional() }),
+  component: VerifyEmailPage,
+});
+
 // ── Shell A: Explorer ────────────────────────────────────────
 
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  beforeLoad: requireAuth,
   component: HomePage,
 });
 
@@ -249,6 +292,12 @@ const communityMatchmakingRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([
   loginRoute,
+  registerRoute,
+  registerWithOrgRoute,
+  verifyInstructionsRoute,
+  verifyEmailRoute,
+  forgotPasswordRoute,
+  resetPasswordRoute,
   indexRoute,
   organizationsRoute.addChildren([
     organizationsIndexRoute,

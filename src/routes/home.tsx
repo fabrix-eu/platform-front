@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { getMe, type MeOrganization } from '../lib/auth';
+import { getMe, isAuthenticated, type MeOrganization } from '../lib/auth';
 import { ORG_KINDS } from '../lib/organizations';
 
 function OrgCard({ org }: { org: MeOrganization }) {
@@ -57,11 +57,52 @@ function OrgCard({ org }: { org: MeOrganization }) {
   );
 }
 
+function LandingPage() {
+  return (
+    <div className="max-w-2xl mx-auto px-6 mt-24 text-center">
+      <h1 className="text-4xl font-display font-bold text-gray-900 mb-4">
+        Circular textile starts here
+      </h1>
+      <p className="text-lg text-gray-500 mb-8">
+        Fabrix connects organizations, facilitators and researchers building a sustainable textile ecosystem in Europe.
+      </p>
+      <div className="flex flex-col items-center gap-3">
+        <div className="flex items-center gap-4">
+          <Link
+            to="/register"
+            className="inline-flex items-center px-6 py-3 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            Create an account
+          </Link>
+          <Link
+            to="/login"
+            className="inline-flex items-center px-6 py-3 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Sign in
+          </Link>
+        </div>
+        <Link
+          to="/register-with-org"
+          className="text-sm text-primary hover:underline"
+        >
+          Register with your organization
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 export function HomePage() {
+  const authed = isAuthenticated();
   const me = useQuery({
     queryKey: ['me'],
     queryFn: getMe,
+    enabled: authed,
   });
+
+  if (!authed) {
+    return <LandingPage />;
+  }
 
   if (me.isLoading) {
     return <div className="p-6 text-gray-500">Loading...</div>;
