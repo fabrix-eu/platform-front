@@ -6,11 +6,13 @@ Thin SPA frontend for Fabrix. Built with TanStack Router + React Query. This is 
 
 ```bash
 npm run dev          # Vite dev server on http://localhost:4002
-npm run build        # tsc -b && vite build (must pass before commit)
+npm run typecheck    # tsc -b (must pass before commit)
+npm run build:test   # Build with localhost:4011 API (for feature specs)
+npm run build:prod   # Build with production API (for deploy only)
 npm run lint         # ESLint
 ```
 
-No tests yet. The build (`tsc -b`) is strict: unused locals/parameters are errors.
+No tests yet. The typecheck (`tsc -b`) is strict: unused locals/parameters are errors.
 
 ## Architecture
 
