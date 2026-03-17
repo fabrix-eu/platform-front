@@ -33,10 +33,11 @@ import { RegisterPage } from '../routes/register';
 import { RegisterHubPage } from '../routes/register-hub';
 import { RegisterFacilitatorPage } from '../routes/register-facilitator';
 import { RegisterWithOrgPage } from '../routes/register-with-org';
+import { RegisterInvitationPage } from '../routes/register-invitation';
 import { VerifyInstructionsPage } from '../routes/verify-instructions';
 import { VerifyEmailPage } from '../routes/verify-email';
 import { TestGoogleAddressPage } from '../routes/test/google-address';
-import { isAuthenticated, type User } from './auth';
+import { isAuthenticated, getMe, type User } from './auth';
 import { queryClient } from './queryClient';
 
 // ── Auth guards ──────────────────────────────────────────────
@@ -47,9 +48,17 @@ function requireAuth() {
   }
 }
 
-function requireOrgMember({ params }: { params: { orgSlug: string } }) {
-  const me = queryClient.getQueryData<User>(['me']);
-  if (!me) throw redirect({ to: '/login' });
+async function ensureMe(): Promise<User> {
+  const me = await queryClient.ensureQueryData<User>({
+    queryKey: ['me'],
+    queryFn: getMe,
+  });
+  return me;
+}
+
+async function requireOrgMember({ params }: { params: { orgSlug: string } }) {
+  if (!isAuthenticated()) throw redirect({ to: '/login' });
+  const me = await ensureMe();
   const isMember = me.organizations.some(
     (o) => o.organization_slug === params.orgSlug
   );
@@ -61,13 +70,13 @@ function requireOrgMember({ params }: { params: { orgSlug: string } }) {
   }
 }
 
-function requireCommunityMember({
+async function requireCommunityMember({
   params,
 }: {
   params: { orgSlug: string; communitySlug: string };
 }) {
-  const me = queryClient.getQueryData<User>(['me']);
-  if (!me) throw redirect({ to: '/login' });
+  if (!isAuthenticated()) throw redirect({ to: '/login' });
+  const me = await ensureMe();
   const org = me.organizations.find(
     (o) => o.organization_slug === params.orgSlug
   );
@@ -131,6 +140,13 @@ const registerWithOrgRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/register-with-org',
   component: RegisterWithOrgPage,
+});
+
+const registerInvitationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/register-invitation',
+  validateSearch: z.object({ token: z.string().optional() }),
+  component: RegisterInvitationPage,
 });
 
 const verifyInstructionsRoute = createRoute({
@@ -215,9 +231,9 @@ const communitiesRoute = createRoute({
 const orgRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/$orgSlug',
-  beforeLoad: ({ params }) => {
+  beforeLoad: async ({ params }) => {
     requireAuth();
-    requireOrgMember({ params });
+    await requireOrgMember({ params });
   },
   component: OrgLayout,
 });
@@ -275,8 +291,8 @@ const orgSettingsRoute = createRoute({
 const communityRoute = createRoute({
   getParentRoute: () => orgRoute,
   path: '/communities/$communitySlug',
-  beforeLoad: ({ params }) => {
-    requireCommunityMember({ params });
+  beforeLoad: async ({ params }) => {
+    await requireCommunityMember({ params });
   },
   component: CommunityLayout,
 });
@@ -319,6 +335,7 @@ const routeTree = rootRoute.addChildren([
   registerBasicRoute,
   registerFacilitatorRoute,
   registerWithOrgRoute,
+  registerInvitationRoute,
   verifyInstructionsRoute,
   verifyEmailRoute,
   forgotPasswordRoute,
