@@ -40,6 +40,14 @@ import { RegisterInvitationPage } from '../routes/register-invitation';
 import { VerifyInstructionsPage } from '../routes/verify-instructions';
 import { VerifyEmailPage } from '../routes/verify-email';
 import { TestGoogleAddressPage } from '../routes/test/google-address';
+import { DocsPage } from '../routes/docs';
+import { ChangelogPage } from '../routes/changelog';
+import { FeedbackPage } from '../routes/feedback';
+import { AdminLayout } from '../routes/admin/layout';
+import { AdminOrganizationsPage } from '../routes/admin/organizations';
+import { AdminUsersPage } from '../routes/admin/users';
+import { AdminCommunitiesPage } from '../routes/admin/communities';
+import { AdminFeedbacksPage } from '../routes/admin/feedbacks';
 import { isAuthenticated, getMe, type User } from './auth';
 import { queryClient } from './queryClient';
 
@@ -70,6 +78,14 @@ async function requireOrgMember({ params }: { params: { orgSlug: string } }) {
       to: '/organizations/$id',
       params: { id: params.orgSlug },
     });
+  }
+}
+
+async function requireAdmin() {
+  if (!isAuthenticated()) throw redirect({ to: '/login' });
+  const me = await ensureMe();
+  if (me.role !== 'admin') {
+    throw redirect({ to: '/' });
   }
 }
 
@@ -171,6 +187,27 @@ const testGoogleAddressRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/test/google-address',
   component: TestGoogleAddressPage,
+});
+
+// ── Static pages ────────────────────────────────────────────
+
+const docsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/docs',
+  component: DocsPage,
+});
+
+const changelogRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/changelog',
+  component: ChangelogPage,
+});
+
+const feedbackRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/feedback',
+  beforeLoad: requireAuth,
+  component: FeedbackPage,
 });
 
 // ── Shell A: Explorer ────────────────────────────────────────
@@ -359,6 +396,47 @@ const communityMatchmakingRoute = createRoute({
   component: CommunityMatchmakingPage,
 });
 
+// ── Admin ────────────────────────────────────────────────────
+
+const adminRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin',
+  beforeLoad: requireAdmin,
+  component: AdminLayout,
+});
+
+const adminIndexRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/',
+  beforeLoad: () => {
+    throw redirect({ to: '/admin/organizations' });
+  },
+});
+
+const adminOrganizationsRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/organizations',
+  component: AdminOrganizationsPage,
+});
+
+const adminUsersRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/users',
+  component: AdminUsersPage,
+});
+
+const adminCommunitiesRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/communities',
+  component: AdminCommunitiesPage,
+});
+
+const adminFeedbacksRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/feedbacks',
+  component: AdminFeedbacksPage,
+});
+
 // ── Route tree ───────────────────────────────────────────────
 
 const routeTree = rootRoute.addChildren([
@@ -373,6 +451,16 @@ const routeTree = rootRoute.addChildren([
   forgotPasswordRoute,
   resetPasswordRoute,
   testGoogleAddressRoute,
+  docsRoute,
+  changelogRoute,
+  feedbackRoute,
+  adminRoute.addChildren([
+    adminIndexRoute,
+    adminOrganizationsRoute,
+    adminUsersRoute,
+    adminCommunitiesRoute,
+    adminFeedbacksRoute,
+  ]),
   explorerRoute.addChildren([
     indexRoute,
     organizationsRoute.addChildren([
