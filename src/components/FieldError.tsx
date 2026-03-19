@@ -18,11 +18,24 @@ export function FormError({ mutation }: { mutation: AnyMutation }) {
   const error = mutation.error;
   if (!error) return null;
 
+  let msg: string;
   if (error instanceof ApiError) {
     const base = error.errors?.base;
-    const msg = base?.[0] || error.message;
-    return <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">{msg}</p>;
+    if (base?.[0]) {
+      msg = base[0];
+    } else {
+      switch (error.status) {
+        case 401: msg = 'You need to sign in to continue.'; break;
+        case 403: msg = 'You don\u2019t have permission to do this.'; break;
+        case 404: msg = 'The requested resource was not found.'; break;
+        case 422: msg = 'Please correct the errors below.'; break;
+        case 500: msg = 'A server error occurred. Please try again later.'; break;
+        default:  msg = 'Something went wrong. Please try again.'; break;
+      }
+    }
+  } else {
+    msg = error.message;
   }
 
-  return <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">{error.message}</p>;
+  return <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">{msg}</p>;
 }
