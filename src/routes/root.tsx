@@ -37,8 +37,19 @@ export function RootLayout() {
           )}
         </div>
 
-        {/* Right zone — user menu */}
-        <div className="flex-1 flex items-center justify-end px-6">
+        {/* Right zone — links + user menu */}
+        <div className="flex-1 flex items-center justify-end gap-4 px-6">
+          <Link to="/docs" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
+            Docs
+          </Link>
+          <Link to="/changelog" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
+            Changelog
+          </Link>
+          {authed && (
+            <Link to="/feedback" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
+              Feedback
+            </Link>
+          )}
           {authed && <UserMenu user={me.data} onLogout={handleLogout} />}
         </div>
       </header>
