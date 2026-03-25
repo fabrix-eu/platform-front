@@ -1,4 +1,5 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useRef } from 'react';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import { getInitials } from '../lib/utils';
@@ -12,19 +13,23 @@ import {
 } from '../lib/notifications';
 import { BASE } from '../lib/api';
 
-async function getAllNotifications(page: number): Promise<{ notifications: Notification[]; hasMore: boolean }> {
-  const perPage = 20;
+const PER_PAGE = 20;
+
+async function fetchPage(page: number): Promise<{ notifications: Notification[]; nextPage: number | null }> {
   const token = localStorage.getItem('access_token');
-  const res = await fetch(`${BASE}/notifications?page=${page}&per_page=${perPage}`, {
+  const res = await fetch(`${BASE}/notifications?page=${page}&per_page=${PER_PAGE}`, {
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
-  if (!res.ok) return { notifications: [], hasMore: false };
+  if (!res.ok) return { notifications: [], nextPage: null };
   const json = await res.json();
   const notifications: Notification[] = json.notifications ?? [];
-  return { notifications, hasMore: notifications.length === perPage };
+  return {
+    notifications,
+    nextPage: notifications.length === PER_PAGE ? page + 1 : null,
+  };
 }
 
 function formatDate(dateStr: string): string {
@@ -47,13 +52,41 @@ export function NotificationsPage() {
   const me = qc.getQueryData<User>(['me']) ?? null;
   const markAsRead = useMarkAsRead();
   const markAllAsRead = useMarkAllAsRead();
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const { data, isLoading } = useQuery({
+  const {
+    data,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: [...notificationKeys.list, 'full'],
-    queryFn: () => getAllNotifications(1),
+    queryFn: ({ pageParam }) => fetchPage(pageParam),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => lastPage.nextPage,
   });
 
-  const notifications = data?.notifications ?? [];
+  const notifications = data?.pages.flatMap((p) => p.notifications) ?? [];
+
+  // Intersection observer for infinite scroll
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [entry] = entries;
+      if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+    [fetchNextPage, hasNextPage, isFetchingNextPage],
+  );
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(handleObserver, { threshold: 0.1 });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [handleObserver]);
 
   function handleClick(n: Notification) {
     if (!n.read) {
@@ -99,35 +132,44 @@ export function NotificationsPage() {
           <p className="text-gray-500">No notifications yet</p>
         </div>
       ) : (
-        <div className="bg-white border border-border rounded-lg divide-y divide-border">
-          {notifications.map((n) => (
-            <button
-              key={n.id}
-              onClick={() => handleClick(n)}
-              className={`w-full flex items-start gap-3 px-4 py-4 text-left hover:bg-gray-50 transition-colors ${
-                !n.read ? 'bg-primary/5' : ''
-              }`}
-            >
-              <Avatar className="h-9 w-9 flex-shrink-0 mt-0.5">
-                <AvatarImage src={n.actor?.image_url ?? undefined} alt={n.actor?.name ?? ''} />
-                <AvatarFallback className="text-xs">
-                  {n.actor ? getInitials(n.actor.name) : '?'}
-                </AvatarFallback>
-              </Avatar>
+        <>
+          <div className="bg-white border border-border rounded-lg divide-y divide-border">
+            {notifications.map((n) => (
+              <button
+                key={n.id}
+                onClick={() => handleClick(n)}
+                className={`w-full flex items-start gap-3 px-4 py-4 text-left hover:bg-gray-50 transition-colors ${
+                  !n.read ? 'bg-primary/5' : ''
+                }`}
+              >
+                <Avatar className="h-9 w-9 flex-shrink-0 mt-0.5">
+                  <AvatarImage src={n.actor?.image_url ?? undefined} alt={n.actor?.name ?? ''} />
+                  <AvatarFallback className="text-xs">
+                    {n.actor ? getInitials(n.actor.name) : '?'}
+                  </AvatarFallback>
+                </Avatar>
 
-              <div className="flex-1 min-w-0">
-                <p className={`text-sm leading-snug ${!n.read ? 'text-gray-900 font-medium' : 'text-gray-600'}`}>
-                  {n.message}
-                </p>
-                <p className="text-xs text-gray-400 mt-1">{formatDate(n.created_at)}</p>
-              </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm leading-snug ${!n.read ? 'text-gray-900 font-medium' : 'text-gray-600'}`}>
+                    {n.message}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">{formatDate(n.created_at)}</p>
+                </div>
 
-              {!n.read && (
-                <span className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-2" />
-              )}
-            </button>
-          ))}
-        </div>
+                {!n.read && (
+                  <span className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-2" />
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Sentinel for infinite scroll */}
+          <div ref={sentinelRef} className="py-4 text-center">
+            {isFetchingNextPage && (
+              <p className="text-sm text-gray-400">Loading more...</p>
+            )}
+          </div>
+        </>
       )}
     </div>
   );
