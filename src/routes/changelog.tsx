@@ -25,6 +25,50 @@ interface Release {
 
 const RELEASES: Release[] = [
   {
+    date: 'March 25, 2026',
+    title: 'Notifications',
+    items: [
+      {
+        tag: 'new',
+        text: 'Notification bell — see unread count, preview latest notifications in a dropdown, and click to navigate to the relevant page.',
+      },
+      {
+        tag: 'new',
+        text: 'Full notifications page — browse all your notifications with mark as read and mark all as read.',
+      },
+    ],
+  },
+  {
+    date: 'March 25, 2026',
+    title: 'Join requests, claims & community browsing',
+    items: [
+      {
+        tag: 'new',
+        text: 'Organization join requests — request to join an organization from its profile, owners can accept or decline from settings.',
+      },
+      {
+        tag: 'new',
+        text: 'Community join requests — request to join a community, admins can accept or decline from a dedicated management page.',
+      },
+      {
+        tag: 'new',
+        text: 'Pending actions on homepage — see all actionable items (join requests to review) in one place.',
+      },
+      {
+        tag: 'new',
+        text: 'Claim an organization — unclaimed organizations show a claim button on their public profile.',
+      },
+      {
+        tag: 'new',
+        text: 'Browse communities — explore public community pages with description and member count.',
+      },
+      {
+        tag: 'improved',
+        text: 'Registration wizard now shows claimed/unclaimed status when searching for organizations.',
+      },
+    ],
+  },
+  {
     date: 'March 19, 2026',
     title: 'Admin section & feedback system',
     items: [
@@ -56,7 +100,7 @@ const RELEASES: Release[] = [
       },
       {
         tag: 'new',
-        text: 'Documentation and changelog pages accessible from the top navigation.',
+        text: 'Documentation, changelog, and feedback pages accessible from the top navigation.',
       },
       {
         tag: 'improved',
