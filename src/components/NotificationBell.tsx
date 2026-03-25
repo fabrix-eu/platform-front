@@ -1,12 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { getInitials } from '../lib/utils';
+import type { User } from '../lib/auth';
 import {
   useUnreadCount,
   useNotifications,
   useMarkAsRead,
   useMarkAllAsRead,
+  getNotificationUrl,
   type Notification,
 } from '../lib/notifications';
 
@@ -26,6 +29,9 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  const qc = useQueryClient();
+  const me = qc.getQueryData<User>(['me']) ?? null;
 
   const { data: unreadCount = 0 } = useUnreadCount();
   const { data: notifications = [], isLoading } = useNotifications(10);
@@ -48,7 +54,10 @@ export function NotificationBell() {
       markAsRead.mutate(notification.id);
     }
     setOpen(false);
-    // TODO: navigate to relevant resource based on notification type
+    const url = getNotificationUrl(notification, me);
+    if (url) {
+      navigate({ to: url });
+    }
   }
 
   function handleMarkAllAsRead() {

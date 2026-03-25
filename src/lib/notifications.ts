@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { api, BASE } from './api';
-import { isAuthenticated } from './auth';
+import { isAuthenticated, type User } from './auth';
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -111,6 +111,122 @@ export function useMarkAllAsRead() {
       qc.invalidateQueries({ queryKey: notificationKeys.list });
     },
   });
+}
+
+// ── URL resolver ─────────────────────────────────────────────
+
+/**
+ * Returns the URL to navigate to when clicking a notification.
+ * Uses metadata + the user's me data to resolve org/community slugs.
+ */
+export function getNotificationUrl(n: Notification, me: User | null): string | null {
+  const m = n.metadata;
+
+  // Helper: find the orgSlug from the user's orgs that gives access to a community
+  function orgSlugForCommunity(communitySlug: string): string | null {
+    if (!me) return null;
+    for (const org of me.organizations) {
+      if (org.communities.some((c) => c.community_slug === communitySlug)) {
+        return org.organization_slug;
+      }
+    }
+    // Fallback: user might be community admin without org membership
+    return me.organizations[0]?.organization_slug ?? null;
+  }
+
+  // Helper: find the orgSlug from an organization_id
+  function orgSlugForId(orgId: string): string | null {
+    if (!me) return null;
+    return me.organizations.find((o) => o.organization_id === orgId)?.organization_slug ?? null;
+  }
+
+  switch (n.notification_type) {
+    // ── Organization join requests ──
+    case 'join_request_received': {
+      const slug = orgSlugForId(m.organization_id);
+      return slug ? `/${slug}/settings/members` : null;
+    }
+    case 'join_request_accepted':
+    case 'join_request_declined':
+      return m.organization_id ? `/organizations/${m.organization_id}` : null;
+
+    // ── Community join requests ──
+    case 'community_join_request_received': {
+      const orgSlug = orgSlugForCommunity(m.community_slug);
+      return orgSlug && m.community_slug
+        ? `/${orgSlug}/communities/${m.community_slug}/join-requests`
+        : null;
+    }
+    case 'community_join_request_accepted':
+    case 'community_join_request_declined': {
+      const orgSlug = orgSlugForCommunity(m.community_slug);
+      return orgSlug && m.community_slug
+        ? `/${orgSlug}/communities/${m.community_slug}`
+        : null;
+    }
+
+    // ── Organization invitations ──
+    case 'organization_invitation_accepted':
+    case 'organization_member_joined': {
+      const slug = orgSlugForId(m.organization_id);
+      return slug ? `/${slug}/settings/members` : null;
+    }
+
+    // ── Organization claimed ──
+    case 'organization_claimed':
+      return '/my/organization_claims';
+
+    // ── Community invitations ──
+    case 'community_invitation_received':
+      return '/my/invitations';
+    case 'community_invitation_accepted': {
+      const orgSlug = orgSlugForCommunity(m.community_slug);
+      return orgSlug && m.community_slug
+        ? `/${orgSlug}/communities/${m.community_slug}`
+        : null;
+    }
+
+    // ── Community events / challenges ──
+    case 'event_created': {
+      const orgSlug = orgSlugForCommunity(m.community_slug);
+      return orgSlug && m.community_slug
+        ? `/${orgSlug}/communities/${m.community_slug}/events`
+        : null;
+    }
+    case 'challenge_created':
+    case 'challenge_application_received':
+    case 'challenge_application_accepted':
+    case 'challenge_application_rejected':
+    case 'challenge_winner_selected':
+    case 'challenge_completed': {
+      const orgSlug = orgSlugForCommunity(m.community_slug);
+      return orgSlug && m.community_slug
+        ? `/${orgSlug}/communities/${m.community_slug}/challenges`
+        : null;
+    }
+
+    // ── Community membership ──
+    case 'community_organization_created':
+    case 'organization_added_to_community':
+    case 'organization_joined_community': {
+      const orgSlug = orgSlugForCommunity(m.community_slug);
+      return orgSlug && m.community_slug
+        ? `/${orgSlug}/communities/${m.community_slug}/members`
+        : null;
+    }
+
+    // ── Nearby org ──
+    case 'nearby_organization_created':
+      return n.notifiable?.id ? `/organizations/${n.notifiable.id}` : null;
+
+    // ── Messages ──
+    case 'message_received':
+      // TODO: navigate to conversation when route exists
+      return null;
+
+    default:
+      return null;
+  }
 }
 
 /** Invalidate unread count on every route navigation */

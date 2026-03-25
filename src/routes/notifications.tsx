@@ -1,10 +1,13 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import { getInitials } from '../lib/utils';
+import type { User } from '../lib/auth';
 import {
   notificationKeys,
   useMarkAsRead,
   useMarkAllAsRead,
+  getNotificationUrl,
   type Notification,
 } from '../lib/notifications';
 import { BASE } from '../lib/api';
@@ -40,6 +43,8 @@ function formatDate(dateStr: string): string {
 
 export function NotificationsPage() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
+  const me = qc.getQueryData<User>(['me']) ?? null;
   const markAsRead = useMarkAsRead();
   const markAllAsRead = useMarkAllAsRead();
 
@@ -54,7 +59,10 @@ export function NotificationsPage() {
     if (!n.read) {
       markAsRead.mutate(n.id);
     }
-    // TODO: navigate to relevant resource
+    const url = getNotificationUrl(n, me);
+    if (url) {
+      navigate({ to: url });
+    }
   }
 
   function handleMarkAllAsRead() {
