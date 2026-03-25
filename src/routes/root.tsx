@@ -3,6 +3,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getMe, logout } from '../lib/auth';
 import { OrgSwitcher } from '../components/OrgSwitcher';
 import { UserMenu } from '../components/UserMenu';
+import { NotificationBell } from '../components/NotificationBell';
+import { useRefreshOnNavigate } from '../lib/notifications';
 
 export function RootLayout() {
   const navigate = useNavigate();
@@ -15,6 +17,8 @@ export function RootLayout() {
   });
 
   const authed = !!me.data;
+
+  useRefreshOnNavigate();
 
   const handleLogout = async () => {
     await logout();
@@ -50,6 +54,7 @@ export function RootLayout() {
               Feedback
             </Link>
           )}
+          {authed && <NotificationBell />}
           {authed && <UserMenu user={me.data} onLogout={handleLogout} />}
         </div>
       </header>

@@ -51,6 +51,7 @@ import { AdminOrganizationsPage } from '../routes/admin/organizations';
 import { AdminUsersPage } from '../routes/admin/users';
 import { AdminCommunitiesPage } from '../routes/admin/communities';
 import { AdminFeedbacksPage } from '../routes/admin/feedbacks';
+import { NotificationsPage } from '../routes/notifications';
 import { isAuthenticated, getMe, type User } from './auth';
 import { queryClient } from './queryClient';
 
@@ -215,6 +216,13 @@ const feedbackRoute = createRoute({
   path: '/feedback',
   beforeLoad: requireAuth,
   component: FeedbackPage,
+});
+
+const notificationsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/notifications',
+  beforeLoad: requireAuth,
+  component: NotificationsPage,
 });
 
 // ── Shell A: Explorer ────────────────────────────────────────
@@ -485,6 +493,7 @@ const routeTree = rootRoute.addChildren([
   docsRoute,
   changelogRoute,
   feedbackRoute,
+  notificationsRoute,
   adminRoute.addChildren([
     adminIndexRoute,
     adminOrganizationsRoute,
