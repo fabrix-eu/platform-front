@@ -69,7 +69,7 @@ export interface Organization {
   sector?: string | null;
   communities?: OrganizationCommunity[];
   relations?: unknown[];
-  related_organizations?: OrganizationRelation[];
+  related_organizations?: Organization[];
 }
 
 interface OrganizationsResponse {
