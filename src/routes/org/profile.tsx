@@ -12,7 +12,7 @@ type SectionId = 'informations' | 'data' | 'photos' | 'products' | 'services';
 
 const SECTIONS: { id: SectionId; label: string; ready: boolean }[] = [
   { id: 'informations', label: 'Informations', ready: true },
-  { id: 'data', label: 'Data', ready: false },
+  { id: 'data', label: 'Data', ready: true },
   { id: 'photos', label: 'Photos', ready: false },
   { id: 'products', label: 'Products', ready: false },
   { id: 'services', label: 'Services & Skills', ready: false },
@@ -220,6 +220,106 @@ function InformationsSection({ orgSlug }: { orgSlug: string }) {
   );
 }
 
+// ─── Data section ─────────────────────────────────────────────────────────────
+
+function DataSection({ orgSlug }: { orgSlug: string }) {
+  const queryClient = useQueryClient();
+
+  const orgQuery = useQuery({
+    queryKey: ['organizations', orgSlug],
+    queryFn: () => getOrganization(orgSlug),
+  });
+
+  const org = orgQuery.data;
+
+  const [numberOfWorkers, setNumberOfWorkers] = useState('');
+  const [turnover, setTurnover] = useState('');
+  const [initialized, setInitialized] = useState(false);
+
+  if (org && !initialized) {
+    setNumberOfWorkers(org.number_of_workers != null ? String(org.number_of_workers) : '');
+    setTurnover(org.turnover != null ? String(org.turnover) : '');
+    setInitialized(true);
+  }
+
+  const mutation = useMutation({
+    mutationFn: (data: Record<string, unknown>) => updateOrganization(orgSlug, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['organizations', orgSlug] });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    mutation.mutate({
+      number_of_workers: numberOfWorkers ? Number(numberOfWorkers) : null,
+      turnover: turnover ? Number(turnover) : null,
+    });
+  };
+
+  if (!org) {
+    return <div className="p-6 text-gray-500">Loading...</div>;
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <FormError mutation={mutation} />
+
+      {mutation.isSuccess && (
+        <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded px-3 py-2">
+          Data updated successfully.
+        </p>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="org-workers" className="block text-sm font-medium text-gray-700">
+            Number of employees
+          </label>
+          <input
+            id="org-workers"
+            type="number"
+            min="0"
+            value={numberOfWorkers}
+            onChange={(e) => setNumberOfWorkers(e.target.value)}
+            className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <FieldError mutation={mutation} field="number_of_workers" />
+        </div>
+
+        <div>
+          <label htmlFor="org-turnover" className="block text-sm font-medium text-gray-700">
+            Annual turnover
+          </label>
+          <div className="relative mt-1">
+            <input
+              id="org-turnover"
+              type="number"
+              min="0"
+              value={turnover}
+              onChange={(e) => setTurnover(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg pl-7 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">€</span>
+          </div>
+          <FieldError mutation={mutation} field="turnover" />
+        </div>
+      </div>
+
+      <div className="pt-2">
+        <button
+          type="submit"
+          disabled={mutation.isPending}
+          className="bg-primary text-primary-foreground rounded-lg px-6 py-2 text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
+        >
+          {mutation.isPending ? 'Saving...' : 'Save'}
+        </button>
+      </div>
+    </form>
+  );
+}
+
 // ─── Coming soon stub ─────────────────────────────────────────────────────────
 
 function ComingSoonSection({ label }: { label: string }) {
@@ -298,7 +398,7 @@ export function OrgProfilePage() {
             {activeSection === 'informations' && (
               <InformationsSection orgSlug={orgSlug} />
             )}
-            {activeSection === 'data' && <ComingSoonSection label="Data" />}
+            {activeSection === 'data' && <DataSection orgSlug={orgSlug} />}
             {activeSection === 'photos' && <ComingSoonSection label="Photos" />}
             {activeSection === 'products' && <ComingSoonSection label="Products" />}
             {activeSection === 'services' && <ComingSoonSection label="Services & Skills" />}

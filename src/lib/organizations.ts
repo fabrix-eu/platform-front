@@ -55,6 +55,7 @@ export interface Organization {
   lat: number | null;
   lon: number | null;
   number_of_workers: number | null;
+  turnover: number | null;
   image_url: string | null;
   claimed: boolean;
   relations_count: number;
