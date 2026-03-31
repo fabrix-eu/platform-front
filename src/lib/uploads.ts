@@ -5,10 +5,6 @@ interface PresignedResponse {
   key: string;
 }
 
-const S3_BUCKET_URL = import.meta.env.PROD
-  ? 'https://fabrix-platform.s3.nl-ams.scw.cloud'
-  : 'https://fabrix-platform.s3.nl-ams.scw.cloud';
-
 /**
  * Upload a file to S3 via presigned URL.
  * Returns the final public URL of the uploaded file.
@@ -33,7 +29,7 @@ export async function uploadFile(
   });
 
   if (!presignRes.ok) throw new Error('Failed to get presigned URL');
-  const { url, key } = (await presignRes.json()) as PresignedResponse;
+  const { url } = (await presignRes.json()) as PresignedResponse;
 
   // 2. Upload to S3
   const uploadRes = await fetch(url, {
@@ -44,6 +40,6 @@ export async function uploadFile(
 
   if (!uploadRes.ok) throw new Error('Failed to upload file');
 
-  // 3. Return final URL
-  return `${S3_BUCKET_URL}/${key}`;
+  // 3. Return final URL (presigned URL without query params)
+  return url.split('?')[0];
 }
