@@ -28,6 +28,9 @@ import { CommunityOverviewPage } from '../routes/community/index';
 import { CommunityMembersPage } from '../routes/community/members';
 import { CommunityMemberDetailPage } from '../routes/community/member-detail';
 import { CommunityEventsListPage } from '../routes/community/events';
+import { CommunityEventDetailPage } from '../routes/community/event-detail';
+import { CommunityEventNewPage } from '../routes/community/event-new';
+import { CommunityEventEditPage } from '../routes/community/event-edit';
 import { CommunityChallengesListPage } from '../routes/community/challenges';
 import { CommunityMatchmakingPage } from '../routes/community/matchmaking';
 import { CommunityJoinRequestsPage } from '../routes/community/join-requests';
@@ -435,6 +438,24 @@ const communityEventsRoute = createRoute({
   component: CommunityEventsListPage,
 });
 
+const communityEventNewRoute = createRoute({
+  getParentRoute: () => communityRoute,
+  path: '/events/new',
+  component: CommunityEventNewPage,
+});
+
+const communityEventDetailRoute = createRoute({
+  getParentRoute: () => communityRoute,
+  path: '/events/$eventId',
+  component: CommunityEventDetailPage,
+});
+
+const communityEventEditRoute = createRoute({
+  getParentRoute: () => communityRoute,
+  path: '/events/$eventId/edit',
+  component: CommunityEventEditPage,
+});
+
 const communityChallengesRoute = createRoute({
   getParentRoute: () => communityRoute,
   path: '/challenges',
@@ -552,6 +573,9 @@ const routeTree = rootRoute.addChildren([
       communityMembersRoute,
       communityMemberDetailRoute,
       communityEventsRoute,
+      communityEventNewRoute,
+      communityEventDetailRoute,
+      communityEventEditRoute,
       communityChallengesRoute,
       communityMatchmakingRoute,
       communityJoinRequestsRoute,

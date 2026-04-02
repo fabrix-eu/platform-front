@@ -1,4 +1,4 @@
-import { BASE } from './api';
+import { api, BASE } from './api';
 
 export interface CommunityEvent {
   id: string;
@@ -47,4 +47,99 @@ export async function getCommunityEvents(
   }
 
   return res.json();
+}
+
+export interface EventParticipant {
+  id: string;
+  status: 'going' | 'maybe' | 'not_going';
+  rsvp_at: string;
+  created_at: string;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    image_url: string | null;
+  };
+}
+
+export async function getCommunityEvent(
+  communityId: string,
+  eventId: string,
+): Promise<CommunityEvent> {
+  return api.get<CommunityEvent>(`/communities/${communityId}/community_events/${eventId}`);
+}
+
+export async function createCommunityEvent(
+  communityId: string,
+  data: {
+    title: string;
+    description?: string;
+    happens_at: string;
+    address?: string;
+    lon?: number;
+    lat?: number;
+    online: boolean;
+    online_url?: string;
+    image_url?: string;
+  },
+): Promise<CommunityEvent> {
+  return api.post<CommunityEvent>(`/communities/${communityId}/community_events`, {
+    community_event: data,
+  });
+}
+
+export async function updateCommunityEvent(
+  communityId: string,
+  eventId: string,
+  data: Partial<{
+    title: string;
+    description: string;
+    happens_at: string;
+    address: string;
+    lon: number;
+    lat: number;
+    online: boolean;
+    online_url: string;
+    image_url: string;
+  }>,
+): Promise<CommunityEvent> {
+  return api.patch<CommunityEvent>(`/communities/${communityId}/community_events/${eventId}`, {
+    community_event: data,
+  });
+}
+
+export async function deleteCommunityEvent(
+  communityId: string,
+  eventId: string,
+): Promise<void> {
+  return api.delete(`/communities/${communityId}/community_events/${eventId}`);
+}
+
+export async function getEventParticipants(
+  communityId: string,
+  eventId: string,
+): Promise<EventParticipant[]> {
+  return api.get<EventParticipant[]>(`/communities/${communityId}/community_events/${eventId}/participants`);
+}
+
+export async function rsvpToEvent(
+  communityId: string,
+  eventId: string,
+  status: 'going' | 'maybe' | 'not_going' = 'going',
+): Promise<EventParticipant> {
+  return api.post<EventParticipant>(
+    `/communities/${communityId}/community_events/${eventId}/participants`,
+    { status },
+  );
+}
+
+export async function cancelRsvp(
+  communityId: string,
+  eventId: string,
+  participantId: string,
+): Promise<void> {
+  return api.delete(
+    `/communities/${communityId}/community_events/${eventId}/participants/${participantId}`,
+  );
 }
