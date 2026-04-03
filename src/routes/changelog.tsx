@@ -25,6 +25,48 @@ interface Release {
 
 const RELEASES: Release[] = [
   {
+    date: 'April 3, 2026',
+    title: 'Challenges & community improvements',
+    items: [
+      {
+        tag: 'new',
+        text: 'Challenges — create, manage, and apply to challenges within a community. Any member can post a challenge, review applications, and select winners.',
+      },
+      {
+        tag: 'new',
+        text: 'Community events — full event management with create, edit, delete, and RSVP (going/maybe/not going) with participant list.',
+      },
+      {
+        tag: 'new',
+        text: 'Community overview page — see a map of members, recent events, active challenges, and latest discussions at a glance.',
+      },
+      {
+        tag: 'new',
+        text: 'Community settings — manage community admins, invite new admins, and remove existing ones.',
+      },
+      {
+        tag: 'new',
+        text: 'Organization profile revamp — multi-section management page with photos gallery (S3 upload), data section (employees & turnover), and improved editing.',
+      },
+      {
+        tag: 'new',
+        text: 'Pending invitations — see and manage pending organization invitations from the admin modal.',
+      },
+      {
+        tag: 'improved',
+        text: 'Organization kind badges now show colored indicators across the platform with a unified custom dropdown.',
+      },
+      {
+        tag: 'fixed',
+        text: 'Community tab bar now correctly highlights the active tab when navigating between pages.',
+      },
+      {
+        tag: 'fixed',
+        text: 'S3 upload URL is now derived from the presigned URL instead of a hardcoded bucket path.',
+      },
+    ],
+  },
+  {
     date: 'March 30, 2026',
     title: 'Relations & bug fixes',
     items: [
