@@ -61,6 +61,8 @@ import { AdminUsersPage } from '../routes/admin/users';
 import { AdminCommunitiesPage } from '../routes/admin/communities';
 import { AdminFeedbacksPage } from '../routes/admin/feedbacks';
 import { NotificationsPage } from '../routes/notifications';
+import { SettingsPage } from '../routes/settings';
+import { NotificationPreferencesPage } from '../routes/notification-preferences';
 import { DataLayout } from '../routes/data/layout';
 import { RotterdamPage } from '../routes/data/rotterdam';
 import { RotterdamChartsPage } from '../routes/data/rotterdam-charts';
@@ -236,6 +238,20 @@ const notificationsRoute = createRoute({
   path: '/notifications',
   beforeLoad: requireAuth,
   component: NotificationsPage,
+});
+
+const settingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/settings',
+  beforeLoad: requireAuth,
+  component: SettingsPage,
+});
+
+const notificationPreferencesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/notification-preferences',
+  beforeLoad: requireAuth,
+  component: NotificationPreferencesPage,
 });
 
 // ── Shell A: Explorer ────────────────────────────────────────
@@ -599,6 +615,8 @@ const routeTree = rootRoute.addChildren([
   changelogRoute,
   feedbackRoute,
   notificationsRoute,
+  settingsRoute,
+  notificationPreferencesRoute,
   adminRoute.addChildren([
     adminIndexRoute,
     adminOrganizationsRoute,

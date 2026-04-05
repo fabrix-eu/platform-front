@@ -50,7 +50,7 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
               type="button"
               onClick={() => {
                 setOpen(false);
-                // TODO: navigate to user settings when route exists
+                navigate({ to: '/settings' });
               }}
               className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
             >
