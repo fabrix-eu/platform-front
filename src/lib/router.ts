@@ -293,6 +293,9 @@ const organizationNewRoute = createRoute({
 const organizationShowRoute = createRoute({
   getParentRoute: () => organizationsRoute,
   path: '/$id',
+  validateSearch: z.object({
+    from: z.enum(['profile']).optional(),
+  }),
   component: OrganizationShowPage,
 });
 

@@ -468,6 +468,7 @@ export function OrgProfilePage() {
           <Link
             to="/organizations/$id"
             params={{ id: org.slug || org.id }}
+            search={{ from: 'profile' }}
             className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 font-medium"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">

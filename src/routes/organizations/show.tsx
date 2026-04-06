@@ -1,12 +1,13 @@
-import { useState } from 'react';
-import { Link, useNavigate, useParams } from '@tanstack/react-router';
+import { useState, useRef } from 'react';
+import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getOrganization, deleteOrganization, ORG_KINDS } from '../../lib/organizations';
+import { getOrganization, deleteOrganization, updateOrganization, ORG_KINDS } from '../../lib/organizations';
 import type { Organization } from '../../lib/organizations';
 import { getMockSections, COVER_IMAGES } from '../../lib/mockOrgData';
 import type { MockSection } from '../../lib/mockOrgData';
 import { getMe } from '../../lib/auth';
 import { createJoinRequest, getMyJoinRequests } from '../../lib/join-requests';
+import { uploadFile } from '../../lib/uploads';
 import { FieldError, FormError } from '../../components/FieldError';
 
 function OrgAvatar({ org, size = 'lg' }: { org: Organization; size?: 'sm' | 'lg' }) {
@@ -222,8 +223,138 @@ function JoinRequestButton({ orgId }: { orgId: string }) {
   );
 }
 
+function CoverUploadButton({
+  orgId,
+  queryKey,
+  queryClient,
+  hasCover,
+}: {
+  orgId: string;
+  queryKey: string;
+  queryClient: ReturnType<typeof useQueryClient>;
+  hasCover: boolean;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadFile(file, 'Organization', orgId);
+      await updateOrganization(orgId, { cover_url: url });
+      queryClient.invalidateQueries({ queryKey: ['organizations', queryKey] });
+    } catch {
+      // silently ignore
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleRemove() {
+    await updateOrganization(orgId, { cover_url: null });
+    queryClient.invalidateQueries({ queryKey: ['organizations', queryKey] });
+  }
+
+  return (
+    <>
+      <div className="absolute top-3 right-3 flex items-center gap-1.5 opacity-0 group-hover/cover:opacity-100 transition-opacity">
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          className="bg-black/50 hover:bg-black/70 text-white rounded-lg px-3 py-1.5 text-xs font-medium flex items-center gap-1.5 disabled:opacity-50"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z" />
+          </svg>
+          {uploading ? 'Uploading...' : 'Change cover'}
+        </button>
+        {hasCover && (
+          <button
+            type="button"
+            onClick={handleRemove}
+            className="bg-black/50 hover:bg-red-600 text-white rounded-lg p-1.5 text-xs"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+      </div>
+      <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
+    </>
+  );
+}
+
+function AvatarUploadButton({
+  orgId,
+  queryKey,
+  queryClient,
+  hasImage,
+}: {
+  orgId: string;
+  queryKey: string;
+  queryClient: ReturnType<typeof useQueryClient>;
+  hasImage: boolean;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadFile(file, 'Organization', orgId);
+      await updateOrganization(orgId, { image_url: url });
+      queryClient.invalidateQueries({ queryKey: ['organizations', queryKey] });
+    } catch {
+      // silently ignore
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleRemove() {
+    await updateOrganization(orgId, { image_url: null });
+    queryClient.invalidateQueries({ queryKey: ['organizations', queryKey] });
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => fileRef.current?.click()}
+        disabled={uploading}
+        className="absolute inset-0 flex items-center justify-center rounded-full bg-black/0 hover:bg-black/40 text-white opacity-0 group-hover/avatar:opacity-100 transition-all"
+      >
+        <svg className="w-5 h-5 drop-shadow" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z" />
+        </svg>
+      </button>
+      {hasImage && (
+        <button
+          type="button"
+          onClick={handleRemove}
+          className="absolute -top-1 -right-1 bg-white border border-gray-300 hover:bg-red-50 hover:border-red-300 text-gray-500 hover:text-red-600 rounded-full p-0.5 opacity-0 group-hover/avatar:opacity-100 transition-all shadow-sm"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+          </svg>
+        </button>
+      )}
+      <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
+    </>
+  );
+}
+
 export function OrganizationShowPage() {
   const { id } = useParams({ strict: false }) as { id: string };
+  const { from } = useSearch({ strict: false }) as { from?: string };
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -267,7 +398,8 @@ export function OrganizationShowPage() {
 
   const org = query.data!;
   const me = meQuery.data;
-  const isMember = me?.organizations.some((o) => o.organization_id === org.id) ?? false;
+  const memberOrg = me?.organizations.find((o) => o.organization_id === org.id);
+  const isMember = !!memberOrg;
   const isLoggedIn = !!me;
   const kindConfig = org.kind ? ORG_KINDS[org.kind] || ORG_KINDS.other : null;
   const coverUrl = org.cover_url || (org.kind && COVER_IMAGES[org.kind]) || COVER_IMAGES.default;
@@ -277,27 +409,45 @@ export function OrganizationShowPage() {
     <div className="max-w-4xl mx-auto pb-12">
       {/* Back link */}
       <div className="px-6 py-4">
-        <Link to="/organizations" className="text-sm text-gray-500 hover:text-gray-700">
-          ← Back to list
-        </Link>
+        {from === 'profile' && memberOrg ? (
+          <Link
+            to="/$orgSlug/profile"
+            params={{ orgSlug: memberOrg.organization_slug }}
+            className="text-sm text-gray-500 hover:text-gray-700"
+          >
+            ← Back to profile
+          </Link>
+        ) : (
+          <Link to="/organizations" className="text-sm text-gray-500 hover:text-gray-700">
+            ← Back to list
+          </Link>
+        )}
       </div>
 
       {/* Cover + Header */}
       <div className="relative">
         {/* Cover image */}
-        <div className="h-48 rounded-t-xl overflow-hidden relative">
+        <div className="h-48 rounded-t-xl overflow-hidden relative group/cover">
           <img
             src={coverUrl}
             alt=""
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
+          {isMember && (
+            <CoverUploadButton orgId={org.id} queryKey={id} queryClient={queryClient} hasCover={!!org.cover_url} />
+          )}
         </div>
 
         {/* Profile header below cover */}
         <div className="relative px-6 -mt-10">
           {/* Avatar overlapping cover */}
-          <OrgAvatar org={org} size="lg" />
+          <div className="relative inline-block group/avatar">
+            <OrgAvatar org={org} size="lg" />
+            {isMember && (
+              <AvatarUploadButton orgId={org.id} queryKey={id} queryClient={queryClient} hasImage={!!org.image_url} />
+            )}
+          </div>
 
           {/* Name + meta + actions row */}
           <div className="flex items-start justify-between mt-4">
