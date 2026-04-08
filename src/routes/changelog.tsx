@@ -60,6 +60,18 @@ const RELEASES: Release[] = [
         tag: 'new',
         text: 'Organization messages page — manage messages on behalf of your organization, accessible from the org sidebar.',
       },
+      {
+        tag: 'new',
+        text: 'Global events page — browse all events across communities with upcoming/past tabs, showing which community each event belongs to.',
+      },
+      {
+        tag: 'new',
+        text: 'Global challenges page — browse all active and completed challenges across communities with state badges and community labels.',
+      },
+      {
+        tag: 'new',
+        text: 'Admin claim requests — admins can review, approve, or reject organization claim requests with rejection reasons.',
+      },
     ],
   },
   {
