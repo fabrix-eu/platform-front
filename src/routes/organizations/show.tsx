@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
-import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router';
+import { Link, useParams, useSearch } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getOrganization, deleteOrganization, updateOrganization, ORG_KINDS } from '../../lib/organizations';
+import { getOrganization, updateOrganization, submitClaim, ORG_KINDS } from '../../lib/organizations';
 import type { Organization } from '../../lib/organizations';
 import { getMockSections, COVER_IMAGES } from '../../lib/mockOrgData';
 import type { MockSection } from '../../lib/mockOrgData';
@@ -92,53 +92,65 @@ function SectionCards({ section }: { section: MockSection }) {
   );
 }
 
-function AdminMenu({
-  orgSlug,
-  onDelete,
-  isDeleting,
-}: {
-  orgSlug: string;
-  onDelete: () => void;
-  isDeleting: boolean;
-}) {
-  const [open, setOpen] = useState(false);
+function ClaimButton({ orgId }: { orgId: string }) {
+  const queryClient = useQueryClient();
+  const [showForm, setShowForm] = useState(false);
+  const [justification, setJustification] = useState('');
+
+  const mutation = useMutation({
+    mutationFn: (text: string) => submitClaim(orgId, text),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['organizations'] });
+      queryClient.invalidateQueries({ queryKey: ['my', 'organization_claims'] });
+    },
+  });
+
+  if (mutation.isSuccess) {
+    return (
+      <span className="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium bg-green-50 text-green-700 border border-green-200">
+        Claim request sent
+      </span>
+    );
+  }
+
+  if (!showForm) {
+    return (
+      <button
+        onClick={() => setShowForm(true)}
+        className="bg-yellow-500 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-yellow-600 transition-colors"
+      >
+        Claim
+      </button>
+    );
+  }
 
   return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen(!open)}
-        className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-      >
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-        </svg>
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
-            <Link
-              to="/$orgSlug/profile"
-              params={{ orgSlug }}
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-            >
-              Manage profile
-            </Link>
-            <button
-              onClick={() => {
-                if (confirm('Delete this organization?')) {
-                  onDelete();
-                }
-                setOpen(false);
-              }}
-              disabled={isDeleting}
-              className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
-            >
-              {isDeleting ? 'Deleting...' : 'Delete'}
-            </button>
-          </div>
-        </>
-      )}
+    <div className="flex flex-col gap-2 w-80">
+      <p className="text-xs text-gray-500">Explain why you should manage this organization (min. 20 characters)</p>
+      <textarea
+        value={justification}
+        onChange={(e) => setJustification(e.target.value)}
+        placeholder="I am the owner of this organization..."
+        rows={3}
+        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-ring focus:outline-none resize-none"
+      />
+      <FieldError mutation={mutation} field="justification" />
+      <FormError mutation={mutation} />
+      <div className="flex gap-2">
+        <button
+          onClick={() => mutation.mutate(justification.trim())}
+          disabled={justification.trim().length < 20 || mutation.isPending}
+          className="bg-yellow-500 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-yellow-600 disabled:opacity-50"
+        >
+          {mutation.isPending ? 'Submitting...' : 'Submit claim'}
+        </button>
+        <button
+          onClick={() => { setShowForm(false); setJustification(''); }}
+          className="border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+        >
+          Cancel
+        </button>
+      </div>
     </div>
   );
 }
@@ -355,7 +367,6 @@ function AvatarUploadButton({
 export function OrganizationShowPage() {
   const { id } = useParams({ strict: false }) as { id: string };
   const { from } = useSearch({ strict: false }) as { from?: string };
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const meQuery = useQuery({ queryKey: ['me'], queryFn: getMe });
@@ -363,14 +374,6 @@ export function OrganizationShowPage() {
   const query = useQuery({
     queryKey: ['organizations', id],
     queryFn: () => getOrganization(id),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: () => deleteOrganization(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['organizations'] });
-      navigate({ to: '/organizations' });
-    },
   });
 
   if (query.isLoading) {
@@ -476,41 +479,31 @@ export function OrganizationShowPage() {
               </div>
             </div>
 
-            {/* Actions — vertically centered with the name */}
+            {/* Actions */}
             <div className="flex items-center gap-2 shrink-0 mt-1">
-              {!org.claimed && (
-                <button className="bg-yellow-500 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-yellow-600 transition-colors">
-                  Claim
-                </button>
+              {isLoggedIn && !org.claimed && (
+                <ClaimButton orgId={org.id} />
               )}
               {org.claimed && isLoggedIn && !isMember && (
                 <JoinRequestButton orgId={org.id} />
               )}
-              {org.email ? (
-                <a
-                  href={`mailto:${org.email}`}
-                  className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
-                >
-                  Contact
-                </a>
-              ) : (
-                <button className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors">
-                  Contact
-                </button>
-              )}
               {isLoggedIn && !isMember && (
                 <Link
                   to="/messages"
-                  className="border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
                 >
-                  Message
+                  Send message
                 </Link>
               )}
-              <AdminMenu
-                orgSlug={org.slug}
-                onDelete={() => deleteMutation.mutate()}
-                isDeleting={deleteMutation.isPending}
-              />
+              {isMember && (
+                <Link
+                  to="/$orgSlug/profile"
+                  params={{ orgSlug: memberOrg!.organization_slug }}
+                  className="border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Manage profile
+                </Link>
+              )}
             </div>
           </div>
         </div>
