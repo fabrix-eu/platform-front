@@ -13,6 +13,11 @@ export interface CommunityEvent {
   image_url: string | null;
   created_at: string;
   updated_at: string;
+  community?: {
+    id: string;
+    name: string;
+    slug: string;
+  };
 }
 
 interface CommunityEventsResponse {
@@ -142,4 +147,28 @@ export async function cancelRsvp(
   return api.delete(
     `/communities/${communityId}/community_events/${eventId}/participants/${participantId}`,
   );
+}
+
+// ── Global events (cross-community) ──────────────────────────
+
+export async function getAllEvents(
+  params: { page?: number; per_page?: number } = {},
+): Promise<CommunityEventsResponse> {
+  const qp = new URLSearchParams();
+  if (params.page) qp.set('page', String(params.page));
+  if (params.per_page) qp.set('per_page', String(params.per_page));
+
+  const token = localStorage.getItem('access_token');
+  const res = await fetch(`${BASE}/community_events?${qp}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    return { data: [], meta: { current_page: 1, total_pages: 1, total_count: 0, next_page: null, prev_page: null } };
+  }
+
+  return res.json();
 }

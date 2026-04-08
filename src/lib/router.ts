@@ -60,6 +60,9 @@ import { AdminOrganizationsPage } from '../routes/admin/organizations';
 import { AdminUsersPage } from '../routes/admin/users';
 import { AdminCommunitiesPage } from '../routes/admin/communities';
 import { AdminFeedbacksPage } from '../routes/admin/feedbacks';
+import { AdminClaimsPage } from '../routes/admin/claims';
+import { EventsListPage } from '../routes/events/list';
+import { ChallengesListPage } from '../routes/challenges/list';
 import { NotificationsPage } from '../routes/notifications';
 import { SettingsPage } from '../routes/settings';
 import { NotificationPreferencesPage } from '../routes/notification-preferences';
@@ -429,6 +432,22 @@ const marketplaceEditRoute = createRoute({
   component: MarketplaceEditPage,
 });
 
+const eventsRoute = createRoute({
+  getParentRoute: () => explorerRoute,
+  path: '/events',
+  validateSearch: z.object({ page: z.number().optional() }),
+  beforeLoad: requireAuth,
+  component: EventsListPage,
+});
+
+const challengesRoute = createRoute({
+  getParentRoute: () => explorerRoute,
+  path: '/challenges',
+  validateSearch: z.object({ page: z.number().optional() }),
+  beforeLoad: requireAuth,
+  component: ChallengesListPage,
+});
+
 // ── Shell B: Mon Organisation (/$orgSlug) ────────────────────
 
 const orgRoute = createRoute({
@@ -683,6 +702,12 @@ const adminFeedbacksRoute = createRoute({
   component: AdminFeedbacksPage,
 });
 
+const adminClaimsRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: '/claims',
+  component: AdminClaimsPage,
+});
+
 // ── Route tree ───────────────────────────────────────────────
 
 const routeTree = rootRoute.addChildren([
@@ -709,6 +734,7 @@ const routeTree = rootRoute.addChildren([
     adminUsersRoute,
     adminCommunitiesRoute,
     adminFeedbacksRoute,
+    adminClaimsRoute,
   ]),
   explorerRoute.addChildren([
     indexRoute,
@@ -731,6 +757,8 @@ const routeTree = rootRoute.addChildren([
       marketplaceShowRoute,
       marketplaceEditRoute,
     ]),
+    eventsRoute,
+    challengesRoute,
     dataRoute.addChildren([
       dataIndexRoute,
       dataRotterdamRoute,

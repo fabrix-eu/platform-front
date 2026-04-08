@@ -114,3 +114,40 @@ export function deleteAdminOrganization(id: string) {
 export function deleteAdminCommunity(id: string) {
   return api.delete(`/admin/communities/${id}`);
 }
+
+// ── Organization claims ─────────────────────────────────────
+
+export interface AdminOrganizationClaim {
+  id: string;
+  status: string;
+  justification: string;
+  rejection_reason: string | null;
+  created_at: string;
+  reviewed_at: string | null;
+  organization: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+  claimant: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  reviewed_by: {
+    id: string;
+    name: string;
+  } | null;
+}
+
+export function getAdminOrganizationClaims(params: { page?: number; per_page?: number; status?: string } = {}) {
+  return adminGet<AdminOrganizationClaim>(`/admin/organization_claims${buildQuery(params)}`);
+}
+
+export function approveAdminOrganizationClaim(id: string) {
+  return api.post(`/admin/organization_claims/${id}/approve`, {});
+}
+
+export function rejectAdminOrganizationClaim(id: string, rejection_reason: string) {
+  return api.post(`/admin/organization_claims/${id}/reject`, { rejection_reason });
+}

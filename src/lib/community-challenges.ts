@@ -17,6 +17,11 @@ export interface Challenge {
   winners_count: number;
   created_at: string;
   updated_at: string;
+  community?: {
+    id: string;
+    name: string;
+    slug: string;
+  };
   organization?: {
     id: string;
     name: string;
@@ -232,4 +237,28 @@ export async function withdrawApplication(
   return api.delete(
     `/communities/${communityId}/challenges/${challengeId}/applications/${applicationId}`,
   );
+}
+
+// ── Global challenges (cross-community) ─────────────────────
+
+export async function getAllChallenges(
+  params: { page?: number; per_page?: number } = {},
+): Promise<ChallengesResponse> {
+  const qp = new URLSearchParams();
+  if (params.page) qp.set('page', String(params.page));
+  if (params.per_page) qp.set('per_page', String(params.per_page));
+
+  const token = localStorage.getItem('access_token');
+  const res = await fetch(`${BASE}/challenges?${qp}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    return { data: [], meta: { current_page: 1, total_pages: 1, total_count: 0, next_page: null, prev_page: null } };
+  }
+
+  return res.json();
 }

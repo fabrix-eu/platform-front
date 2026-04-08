@@ -12,6 +12,8 @@ const exploreItems = [
   { label: 'Map', to: '/map' as const, exact: false },
   { label: 'Communities', to: '/communities' as const, exact: false },
   { label: 'Marketplace', to: '/marketplace' as const, exact: false },
+  { label: 'Events', to: '/events' as const, exact: false },
+  { label: 'Challenges', to: '/challenges' as const, exact: false },
   { label: 'City Data', to: '/data' as const, exact: false },
 ];
 

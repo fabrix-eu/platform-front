@@ -5,6 +5,7 @@ const navItems = [
   { key: 'users', label: 'Users', href: '/admin/users' },
   { key: 'communities', label: 'Communities', href: '/admin/communities' },
   { key: 'feedbacks', label: 'Feedbacks', href: '/admin/feedbacks' },
+  { key: 'claims', label: 'Claim requests', href: '/admin/claims' },
 ];
 
 export function AdminLayout() {
