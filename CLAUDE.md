@@ -1,6 +1,6 @@
 # CLAUDE.md — platform-front
 
-Thin SPA frontend for Fabrix. Built with TanStack Router + React Query. This is the **active frontend** — all new frontend work happens here.
+SPA frontend for Fabrix. Built with Vite + TanStack Router + React Query. This is the active frontend — all frontend work happens here.
 
 ## Commands
 
