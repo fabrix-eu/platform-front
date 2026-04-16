@@ -31,8 +31,8 @@ export function OrgLayout() {
   const navItems: SidebarItem[] = [
     { key: 'dashboard', label: 'Dashboard', href: `/${orgSlug}/dashboard` },
     { key: 'profile', label: 'Profile', href: `/${orgSlug}/profile` },
+    { key: 'assessments', label: 'Impact Compass', href: `/${orgSlug}/assessments` },
     { key: 'relations', label: 'Relations', href: `/${orgSlug}/relations` },
-    { key: 'assessments', label: 'Assessments', href: `/${orgSlug}/assessments` },
     { key: 'communities', label: 'Communities', href: `/${orgSlug}/communities` },
     { key: 'messages', label: 'Messages', href: `/${orgSlug}/messages` },
   ];
