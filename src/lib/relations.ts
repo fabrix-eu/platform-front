@@ -1,12 +1,12 @@
 import { api } from './api';
 
-export const RELATION_TYPES: Record<string, { label: string; description: string }> = {
-  input_output: { label: 'Supplier / Customer',        description: 'Exchange of materials, goods, or components — this can go in or out.' },
-  energetic:    { label: 'Industrial Symbiosis',        description: 'Flows between organisations (e.g. shared heating system, reuse of waste heat).' },
-  rnd:          { label: 'R&D',                         description: 'Joint R&D, co-development of circular solutions, or shared research.' },
-  services:     { label: 'Service Provider / Client',   description: 'One offers logistics, repair, design, consulting or other services to the other.' },
-  membership:   { label: 'Membership',                  description: 'Part of one community, incubator or accelerator.' },
-  shareholder:  { label: 'Shareholder',                 description: 'Has a financial stake in the business.' },
+export const RELATION_TYPES: Record<string, { label: string; description: string; hex: string }> = {
+  input_output: { label: 'Supplier / Customer',        description: 'Exchange of materials, goods, or components — this can go in or out.', hex: '#ef4444' },
+  energetic:    { label: 'Industrial Symbiosis',        description: 'Flows between organisations (e.g. shared heating system, reuse of waste heat).', hex: '#22c55e' },
+  rnd:          { label: 'R&D',                         description: 'Joint R&D, co-development of circular solutions, or shared research.', hex: '#3b82f6' },
+  services:     { label: 'Service Provider / Client',   description: 'One offers logistics, repair, design, consulting or other services to the other.', hex: '#facc15' },
+  membership:   { label: 'Membership',                  description: 'Part of one community, incubator or accelerator.', hex: '#a855f7' },
+  shareholder:  { label: 'Shareholder',                 description: 'Has a financial stake in the business.', hex: '#f97316' },
 };
 
 export interface Relation {

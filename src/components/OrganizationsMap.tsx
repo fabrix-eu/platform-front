@@ -6,18 +6,26 @@ import { ORG_KINDS } from '../lib/organizations';
 
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
 
+export interface MapRelationLine {
+  from: [number, number]; // [lon, lat]
+  to: [number, number];
+  color: string;
+}
+
 interface OrganizationsMapProps {
   organizations: Organization[];
   height?: string;
   selectedKinds: string[];
   linkBuilder?: (org: { id: string; slug: string }) => string;
+  relations?: MapRelationLine[];
+  highlightOrgId?: string;
 }
 
 function getKindColor(org: { kind: string | null }): string {
   return ORG_KINDS[org.kind ?? '']?.hex ?? '#6B7280';
 }
 
-export function OrganizationsMap({ organizations, height = '500px', selectedKinds, linkBuilder }: OrganizationsMapProps) {
+export function OrganizationsMap({ organizations, height = '500px', selectedKinds, linkBuilder, relations, highlightOrgId }: OrganizationsMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
@@ -70,10 +78,47 @@ export function OrganizationsMap({ organizations, height = '500px', selectedKind
     const map = mapRef.current;
 
     const update = () => {
+      // Clean up relation lines
+      const style = map.getStyle();
+      if (style?.layers) {
+        for (const layer of style.layers) {
+          if (layer.id.startsWith('relation-line-')) map.removeLayer(layer.id);
+        }
+      }
+      if (style?.sources) {
+        for (const sourceId of Object.keys(style.sources)) {
+          if (sourceId.startsWith('relation-')) map.removeSource(sourceId);
+        }
+      }
       if (map.getLayer('organizations-circles')) map.removeLayer('organizations-circles');
       if (map.getSource('organizations')) map.removeSource('organizations');
 
       if (validOrgs.length === 0) return;
+
+      // Draw relation lines first (under markers)
+      if (relations?.length) {
+        relations.forEach((rel, i) => {
+          const sourceId = `relation-${i}`;
+          const layerId = `relation-line-${i}`;
+          map.addSource(sourceId, {
+            type: 'geojson',
+            data: {
+              type: 'FeatureCollection',
+              features: [{
+                type: 'Feature',
+                geometry: { type: 'LineString', coordinates: [rel.from, rel.to] },
+                properties: {},
+              }],
+            },
+          });
+          map.addLayer({
+            id: layerId,
+            type: 'line',
+            source: sourceId,
+            paint: { 'line-color': rel.color, 'line-width': 2, 'line-opacity': 0.7 },
+          });
+        });
+      }
 
       const geojson = {
         type: 'FeatureCollection' as const,
@@ -87,6 +132,7 @@ export function OrganizationsMap({ organizations, height = '500px', selectedKind
             kind: org.kind,
             address: org.address || '',
             color: getKindColor(org),
+            isMain: highlightOrgId ? org.id === highlightOrgId : false,
           },
         })),
       };
@@ -97,10 +143,10 @@ export function OrganizationsMap({ organizations, height = '500px', selectedKind
         type: 'circle',
         source: 'organizations',
         paint: {
-          'circle-radius': 8,
+          'circle-radius': ['case', ['get', 'isMain'], 10, 8],
           'circle-color': ['get', 'color'],
           'circle-opacity': 0.85,
-          'circle-stroke-width': 2,
+          'circle-stroke-width': ['case', ['get', 'isMain'], 3, 2],
           'circle-stroke-color': '#ffffff',
         },
       });
@@ -146,7 +192,7 @@ export function OrganizationsMap({ organizations, height = '500px', selectedKind
 
     const timer = setTimeout(update, 100);
     return () => clearTimeout(timer);
-  }, [validOrgs, mapLoaded]);
+  }, [validOrgs, mapLoaded, relations, highlightOrgId]);
 
   return (
     <div

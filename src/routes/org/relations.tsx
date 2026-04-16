@@ -6,6 +6,8 @@ import type { OrganizationBasic } from '../../lib/organizations';
 import { createRelation, deleteRelation, RELATION_TYPES } from '../../lib/relations';
 import type { Relation } from '../../lib/relations';
 import { OrganizationsMap } from '../../components/OrganizationsMap';
+import type { MapRelationLine } from '../../components/OrganizationsMap';
+import { RelationLegend } from '../../components/RelationLegend';
 import { FeatureIntro } from '../../components/FeatureIntro';
 
 const PER_PAGE = 12;
@@ -291,6 +293,19 @@ export function OrgRelationsPage() {
     return [organization, ...relatedOrgs];
   }, [organization, relatedOrgs]);
 
+  const mapRelationLines = useMemo((): MapRelationLine[] => {
+    if (!organization || !organization.lon || !organization.lat) return [];
+    return relations
+      .map((rel) => {
+        const otherId = rel.from_organization_id === organization.id ? rel.to_organization_id : rel.from_organization_id;
+        const other = relatedOrgs.find((o) => o.id === otherId);
+        if (!other?.lon || !other?.lat) return null;
+        const color = RELATION_TYPES[rel.relation_type]?.hex ?? '#6B7280';
+        return { from: [organization.lon!, organization.lat!] as [number, number], to: [other.lon, other.lat] as [number, number], color };
+      })
+      .filter((l): l is MapRelationLine => l !== null);
+  }, [organization, relations, relatedOrgs]);
+
   if (org.isLoading) return <div className="p-6 text-gray-500">Loading...</div>;
   if (org.error || !organization) return <div className="p-6 text-red-600">Organization not found</div>;
 
@@ -353,8 +368,15 @@ export function OrgRelationsPage() {
       </div>
 
       {/* Map */}
-      <div className="rounded-lg overflow-hidden border border-border">
-        <OrganizationsMap organizations={mapOrgs} height="400px" selectedKinds={[]} />
+      <div className="rounded-lg overflow-hidden border border-border relative">
+        <OrganizationsMap
+          organizations={mapOrgs}
+          height="400px"
+          selectedKinds={[]}
+          relations={mapRelationLines}
+          highlightOrgId={organization.id}
+        />
+        <RelationLegend />
       </div>
 
       {/* Search + View toggle */}
