@@ -174,6 +174,15 @@ const resetPasswordRoute = createRoute({
 const registerHubRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/register',
+  validateSearch: z.object({ invitation_token: z.string().optional() }),
+  beforeLoad: ({ search }) => {
+    if (search.invitation_token) {
+      throw redirect({
+        to: '/register-invitation',
+        search: { token: search.invitation_token },
+      });
+    }
+  },
   component: RegisterHubPage,
 });
 

@@ -9,6 +9,7 @@ import {
   updateMemberRole,
   removeMember,
   cancelInvitation,
+  resendInvitation,
 } from '../../lib/organization-members';
 import type { OrganizationMember, OrganizationInvitation } from '../../lib/organization-members';
 import {
@@ -342,6 +343,13 @@ function InvitationsSection({ orgId }: { orgId: string }) {
     },
   });
 
+  const resendMutation = useMutation({
+    mutationFn: (invitationId: string) => resendInvitation(orgId, invitationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['organizations', orgId, 'invitations'] });
+    },
+  });
+
   const handleInvite = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
@@ -414,6 +422,16 @@ function InvitationsSection({ orgId }: { orgId: string }) {
                 </div>
 
                 <RoleBadge role={inv.role} />
+
+                <button
+                  type="button"
+                  onClick={() => resendMutation.mutate(inv.id)}
+                  disabled={resendMutation.isPending}
+                  className="text-xs text-primary hover:text-primary/80 disabled:opacity-30"
+                  aria-label={`Resend invitation for ${inv.email}`}
+                >
+                  {resendMutation.isPending ? 'Sending...' : 'Resend'}
+                </button>
 
                 <button
                   type="button"

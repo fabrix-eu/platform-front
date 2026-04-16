@@ -69,3 +69,7 @@ export async function removeMember(orgId: string, orgUserId: string): Promise<vo
 export async function cancelInvitation(orgId: string, invitationId: string): Promise<void> {
   await api.delete(`/organizations/${orgId}/invitations/${invitationId}`);
 }
+
+export async function resendInvitation(orgId: string, invitationId: string): Promise<void> {
+  await api.post(`/organizations/${orgId}/invitations/${invitationId}/resend`, {});
+}
