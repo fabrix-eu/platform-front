@@ -11,6 +11,7 @@ export interface CommunityEvent {
   online: boolean;
   online_url: string | null;
   image_url: string | null;
+  created_by_id: string | null;
   created_at: string;
   updated_at: string;
   community?: {

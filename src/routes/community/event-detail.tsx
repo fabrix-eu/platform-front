@@ -75,14 +75,18 @@ export function CommunityEventDetailPage() {
   const queryClient = useQueryClient();
 
   const me = useQuery({ queryKey: ['me'], queryFn: getMe });
-  const isAdmin = me.data?.accessible_communities?.some(
-    (c) => c.slug === communitySlug && c.is_admin,
-  ) ?? false;
 
   const eventQuery = useQuery({
     queryKey: ['community_events', communitySlug, eventId],
     queryFn: () => getCommunityEvent(communitySlug, eventId),
   });
+
+  const event = eventQuery.data;
+  const isAdmin = me.data?.accessible_communities?.some(
+    (c) => c.slug === communitySlug && c.is_admin,
+  ) ?? false;
+  const isCreator = !!(me.data?.id && event?.created_by_id && me.data.id === event.created_by_id);
+  const canEdit = isAdmin || isCreator;
 
   const participantsQuery = useQuery({
     queryKey: ['event_participants', communitySlug, eventId],
@@ -149,7 +153,7 @@ export function CommunityEventDetailPage() {
     );
   }
 
-  if (eventQuery.error) {
+  if (eventQuery.error || !event) {
     return (
       <div className="max-w-3xl mx-auto p-6">
         <p className="text-red-600">Event not found</p>
@@ -163,8 +167,6 @@ export function CommunityEventDetailPage() {
       </div>
     );
   }
-
-  const event = eventQuery.data!;
 
   return (
     <div className="max-w-3xl mx-auto p-6 pb-12">
@@ -298,10 +300,10 @@ export function CommunityEventDetailPage() {
         )}
       </div>
 
-      {/* Admin actions */}
-      {isAdmin && (
+      {/* Edit / Delete */}
+      {canEdit && (
         <div className="bg-white border border-border rounded-lg p-5">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Admin actions</h3>
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Manage event</h3>
           <div className="flex items-center gap-3">
             <Link
               to="/$orgSlug/communities/$communitySlug/events/$eventId/edit"
