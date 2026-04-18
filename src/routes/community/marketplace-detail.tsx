@@ -88,7 +88,6 @@ export function CommunityMarketplaceDetailPage() {
 
   const typeConfig = LISTING_TYPES[listing.listing_type];
   const categoryConfig = LISTING_CATEGORIES[listing.category];
-  const isOffer = listing.listing_type === 'offer';
 
   function handleDelete() {
     if (!confirm('Are you sure you want to delete this listing?')) return;
@@ -118,9 +117,7 @@ export function CommunityMarketplaceDetailPage() {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <span
-              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                isOffer ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-              }`}
+              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${typeConfig?.badgeColor ?? 'bg-gray-100 text-gray-800'}`}
             >
               {typeConfig?.label ?? listing.listing_type}
             </span>

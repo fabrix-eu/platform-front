@@ -142,20 +142,53 @@ src/
 3. Create the page component in `src/routes/`
 4. Add `beforeLoad` guard if the route requires auth
 
-### Forms and validation
+### URL-driven state (critical rule)
+
+**Never use React `useState` for page-level UI state that should be shareable or bookmarkable.** Use TanStack Router search params (`validateSearch` + `useSearch`) instead.
+
+Examples of state that MUST be in the URL:
+- Active tab/section on a page (`?section=services`)
+- Selected item in a list (`?selected=<id>`)
+- Filters and search terms (`?search=...&by_type=...`)
+- Modal/panel open state when it represents a distinct view
+
+Use `validateSearch` with Zod on the route definition, then read with `useSearch()` and write with `navigate({ search: ... })`.
 
 ```tsx
-// Submit to server, display errors from API response
-const mutation = useMutation({
-  mutationFn: (data) => api.post('/resource', { resource: data }),
-  onSuccess: () => queryClient.invalidateQueries({ queryKey: ['resources'] }),
+// Route definition
+const myRoute = createRoute({
+  validateSearch: z.object({
+    section: z.enum(['info', 'settings']).optional(),
+  }),
 });
 
-// In JSX:
-<FieldError errors={mutation.error} field="name" />
+// In component — read from URL, navigate to update
+const { section } = useSearch({ strict: false });
+const activeSection = section || 'info';
+
+const setSection = (id: string) => {
+  navigate({ to: '/my-page', search: { section: id } });
+};
 ```
 
-No client-side validation. The server is the source of truth.
+### Forms and validation
+
+No client-side validation. The server is the source of truth. Submit the form, display server errors via `FieldError`.
+
+**Shared form components**: Never duplicate form fields between create and edit pages. Extract a shared `<ResourceForm>` component that receives the mutation and an `onSubmit` callback. The create and edit pages handle routing, data loading, and mutation setup — the form component handles the fields.
+
+```tsx
+// components/ResourceForm.tsx — shared fields
+function ResourceForm({ mutation, onSubmit, onCancel, initialName, ... }) { ... }
+
+// routes/resources/new.tsx — create page
+const mutation = useCreateResource();
+<ResourceForm mutation={mutation} onSubmit={(data) => mutation.mutate(data)} ... />
+
+// routes/resources/edit.tsx — edit page
+const mutation = useUpdateResource();
+<ResourceForm mutation={mutation} initialName={resource.name} onSubmit={(data) => mutation.mutate({ id, payload: data })} ... />
+```
 
 ### Query keys
 

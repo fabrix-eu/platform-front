@@ -428,6 +428,10 @@ const marketplaceNewRoute = createRoute({
   path: '/new',
   beforeLoad: requireAuth,
   component: MarketplaceNewPage,
+  validateSearch: z.object({
+    type: z.string().optional(),
+    from: z.string().optional(),
+  }),
 });
 
 const marketplaceShowRoute = createRoute({
@@ -441,6 +445,9 @@ const marketplaceEditRoute = createRoute({
   path: '/$id/edit',
   beforeLoad: requireAuth,
   component: MarketplaceEditPage,
+  validateSearch: z.object({
+    from: z.string().optional(),
+  }),
 });
 
 const eventsRoute = createRoute({
@@ -493,6 +500,9 @@ const orgProfileRoute = createRoute({
   getParentRoute: () => orgRoute,
   path: '/profile',
   component: OrgProfilePage,
+  validateSearch: z.object({
+    section: z.enum(['informations', 'data', 'photos', 'services', 'materials', 'products', 'capacities']).optional(),
+  }),
 });
 
 const orgRelationsRoute = createRoute({

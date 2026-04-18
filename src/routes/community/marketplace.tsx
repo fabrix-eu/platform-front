@@ -6,18 +6,17 @@ import {
   LISTING_TYPES,
   LISTING_CATEGORIES,
   LISTING_SUBCATEGORIES,
+  getCategoriesForType,
 } from '../../lib/listings';
 import type { Listing } from '../../lib/listings';
 
 function TypeBadge({ type }: { type: string }) {
-  const isOffer = type === 'offer';
+  const config = LISTING_TYPES[type];
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-        isOffer ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-      }`}
+      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${config?.badgeColor ?? 'bg-gray-100 text-gray-800'}`}
     >
-      {LISTING_TYPES[type]?.label ?? type}
+      {config?.label ?? type}
     </span>
   );
 }
@@ -146,19 +145,21 @@ export function CommunityMarketplacePage() {
   };
 
   const updateFilter = (key: string, value: string | undefined) => {
-    const newSubcategory = key === 'by_category' ? undefined : (key === 'by_subcategory' ? value : by_subcategory);
+    const newCategory = key === 'by_type' ? undefined : (key === 'by_category' ? value : by_category);
+    const newSubcategory = (key === 'by_type' || key === 'by_category') ? undefined : (key === 'by_subcategory' ? value : by_subcategory);
     navigate({
       to: basePath,
       search: {
         search,
         page: 1,
         by_type: key === 'by_type' ? value : by_type,
-        by_category: key === 'by_category' ? value : by_category,
+        by_category: newCategory,
         by_subcategory: newSubcategory,
       },
     });
   };
 
+  const availableCategories = by_type ? getCategoriesForType(by_type) : null;
   const availableSubcategories = by_category ? LISTING_SUBCATEGORIES[by_category] : null;
 
   return (
@@ -209,8 +210,8 @@ export function CommunityMarketplacePage() {
             className="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-white"
           >
             <option value="">All categories</option>
-            {Object.entries(LISTING_CATEGORIES).map(([key, val]) => (
-              <option key={key} value={key}>{val.label}</option>
+            {(availableCategories ?? Object.entries(LISTING_CATEGORIES).map(([key, val]) => ({ value: key, label: val.label }))).map((cat) => (
+              <option key={cat.value} value={cat.value}>{cat.label}</option>
             ))}
           </select>
 
