@@ -419,6 +419,11 @@ const marketplaceIndexRoute = createRoute({
     by_type: z.string().optional(),
     by_category: z.string().optional(),
     by_subcategory: z.string().optional(),
+    country: z.string().optional(),
+    lon: z.number().optional(),
+    lat: z.number().optional(),
+    radius: z.number().optional(),
+    location_label: z.string().optional(),
   }),
   component: MarketplaceListPage,
 });
@@ -453,7 +458,15 @@ const marketplaceEditRoute = createRoute({
 const eventsRoute = createRoute({
   getParentRoute: () => explorerRoute,
   path: '/events',
-  validateSearch: z.object({ page: z.number().optional() }),
+  validateSearch: z.object({
+    page: z.number().optional(),
+    search: z.string().optional(),
+    country: z.string().optional(),
+    lon: z.number().optional(),
+    lat: z.number().optional(),
+    radius: z.number().optional(),
+    location_label: z.string().optional(),
+  }),
   beforeLoad: requireAuth,
   component: EventsListPage,
 });
@@ -461,7 +474,15 @@ const eventsRoute = createRoute({
 const challengesRoute = createRoute({
   getParentRoute: () => explorerRoute,
   path: '/challenges',
-  validateSearch: z.object({ page: z.number().optional() }),
+  validateSearch: z.object({
+    page: z.number().optional(),
+    search: z.string().optional(),
+    country: z.string().optional(),
+    lon: z.number().optional(),
+    lat: z.number().optional(),
+    radius: z.number().optional(),
+    location_label: z.string().optional(),
+  }),
   beforeLoad: requireAuth,
   component: ChallengesListPage,
 });
@@ -501,7 +522,7 @@ const orgProfileRoute = createRoute({
   path: '/profile',
   component: OrgProfilePage,
   validateSearch: z.object({
-    section: z.enum(['informations', 'data', 'photos', 'services', 'materials', 'products', 'capacities']).optional(),
+    section: z.enum(['informations', 'data', 'sustainability', 'needs', 'photos', 'services', 'materials', 'products', 'capacities']).optional(),
   }),
 });
 

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Link, useParams, useSearch, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getOrganization, updateOrganization } from '../../lib/organizations';
@@ -13,20 +13,25 @@ import {
   LISTING_SUBCATEGORIES,
 } from '../../lib/listings';
 import type { Listing } from '../../lib/listings';
+import { getForm } from '../../lib/forms';
+import { getLatestAnswer, createAnswer, updateAnswer } from '../../lib/answers';
 import { uploadFile } from '../../lib/uploads';
 import { GoogleAddressAutocomplete } from '../../components/GoogleAddressAutocomplete';
 import type { AddressData } from '../../components/GoogleAddressAutocomplete';
 import { FieldError, FormError } from '../../components/FieldError';
 import { KindSelect } from '../../components/KindSelect';
 import { useFeatureInfo, FeatureIntro, FeatureInfoTrigger } from '../../components/FeatureIntro';
+import { NaceCodeSelector } from '../../components/NaceCodeSelector';
 
 // ─── Section nav ──────────────────────────────────────────────────────────────
 
-type SectionId = 'informations' | 'data' | 'photos' | 'services' | 'materials' | 'products' | 'capacities';
+type SectionId = 'informations' | 'data' | 'sustainability' | 'needs' | 'photos' | 'services' | 'materials' | 'products' | 'capacities';
 
 const SECTIONS: { id: SectionId; label: string }[] = [
-  { id: 'informations', label: 'Informations' },
+  { id: 'informations', label: 'Information' },
   { id: 'data', label: 'Data' },
+  // { id: 'sustainability', label: 'Sustainability & Community' },
+  { id: 'needs', label: 'Needs & Opportunities' },
   { id: 'photos', label: 'Photos' },
   { id: 'services', label: 'Services' },
   { id: 'materials', label: 'Materials' },
@@ -238,11 +243,15 @@ function DataSection({ orgSlug }: { orgSlug: string }) {
 
   const [numberOfWorkers, setNumberOfWorkers] = useState('');
   const [turnover, setTurnover] = useState('');
+  const [naceCode, setNaceCode] = useState('');
+  const [secondaryNaceCodes, setSecondaryNaceCodes] = useState<string[]>([]);
   const [initialized, setInitialized] = useState(false);
 
   if (org && !initialized) {
     setNumberOfWorkers(org.number_of_workers != null ? String(org.number_of_workers) : '');
     setTurnover(org.turnover != null ? String(org.turnover) : '');
+    setNaceCode(org.nace_code || '');
+    setSecondaryNaceCodes(org.secondary_nace_codes || []);
     setInitialized(true);
   }
 
@@ -259,6 +268,8 @@ function DataSection({ orgSlug }: { orgSlug: string }) {
     mutation.mutate({
       number_of_workers: numberOfWorkers ? Number(numberOfWorkers) : null,
       turnover: turnover ? Number(turnover) : null,
+      nace_code: naceCode || null,
+      secondary_nace_codes: secondaryNaceCodes,
     });
   };
 
@@ -311,6 +322,35 @@ function DataSection({ orgSlug }: { orgSlug: string }) {
         </div>
       </div>
 
+      {/* NACE codes */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Primary NACE code
+        </label>
+        <p className="text-xs text-gray-400 mb-1.5">The main economic activity of your organization</p>
+        <NaceCodeSelector
+          value={naceCode}
+          onChange={(v) => setNaceCode(Array.isArray(v) ? v[0] || '' : v)}
+          multiple={false}
+          placeholder="Select primary NACE code..."
+        />
+        <FieldError mutation={mutation} field="nace_code" />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Secondary NACE codes
+        </label>
+        <p className="text-xs text-gray-400 mb-1.5">Additional economic activities (optional)</p>
+        <NaceCodeSelector
+          value={secondaryNaceCodes}
+          onChange={(v) => setSecondaryNaceCodes(Array.isArray(v) ? v : [v])}
+          multiple={true}
+          placeholder="Select additional NACE codes..."
+        />
+        <FieldError mutation={mutation} field="secondary_nace_codes" />
+      </div>
+
       <div className="pt-2">
         <button
           type="submit"
@@ -321,6 +361,259 @@ function DataSection({ orgSlug }: { orgSlug: string }) {
         </button>
       </div>
     </form>
+  );
+}
+
+// ─── Form section (Sustainability & Community / Needs & Opportunities) ───────
+
+const SCALE_LABELS: Record<number, string> = {
+  0: 'N/A',
+  1: 'Not at all',
+  2: 'Slightly',
+  3: 'Moderately',
+  4: 'Very',
+  5: 'Extremely',
+};
+
+function ScaleLegend({ scale }: { scale: number[] }) {
+  return (
+    <div className="flex items-center gap-3 text-[10px] text-gray-400 justify-end py-2">
+      {scale.map((s) => (
+        <span key={s} className="flex items-center gap-1">
+          <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-medium ${s === 0
+            ? 'border border-dashed border-gray-300 text-gray-400'
+            : 'border border-gray-200 text-gray-500'
+            }`}>
+            {s === 0 ? '—' : s}
+          </span>
+          {SCALE_LABELS[s]}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function TableRatingRow({
+  label,
+  value,
+  scale,
+  onChange,
+}: {
+  label: string;
+  value: number | undefined;
+  scale: number[];
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="flex items-start gap-4 py-3">
+      <p className="flex-1 text-sm text-gray-700 pt-0.5">{label}</p>
+      <div className="flex gap-1.5 shrink-0">
+        {scale.map((r) => (
+          <button
+            key={r}
+            type="button"
+            onClick={() => onChange(r)}
+            className={`w-9 h-9 rounded-full text-sm font-medium transition-all ${value === r
+              ? r === 0
+                ? 'bg-gray-400 text-white'
+                : 'bg-primary text-white'
+              : r === 0
+                ? 'border border-dashed border-gray-300 text-gray-400 hover:border-gray-400 hover:text-gray-500'
+                : 'border border-gray-200 text-gray-500 hover:border-primary hover:text-primary'
+              }`}
+          >
+            {r === 0 ? '—' : r}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function OnboardingFormSection({ orgSlug, formKey, title, featureInfoId, featureInfoTitle, featureInfoDescription }: {
+  orgSlug: string;
+  formKey: string;
+  title?: string;
+  featureInfoId?: string;
+  featureInfoTitle?: string;
+  featureInfoDescription?: string;
+}) {
+  const queryClient = useQueryClient();
+  const featureInfo = useFeatureInfo(featureInfoId ?? formKey);
+
+  const orgQuery = useQuery({
+    queryKey: ['organizations', orgSlug],
+    queryFn: () => getOrganization(orgSlug),
+  });
+  const orgId = orgQuery.data?.id;
+
+  const formQuery = useQuery({
+    queryKey: ['forms', formKey],
+    queryFn: () => getForm(formKey),
+  });
+
+  const answerQuery = useQuery({
+    queryKey: ['answers', 'latest', orgId, formKey],
+    queryFn: () => getLatestAnswer(orgId!, formKey),
+    enabled: !!orgId,
+  });
+
+  const [responses, setResponses] = useState<Record<string, unknown>>({});
+  const [initialized, setInitialized] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const answerId = useRef<string | null>(null);
+  const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Initialize from existing answer
+  if (answerQuery.data && !initialized) {
+    setResponses(answerQuery.data.responses);
+    answerId.current = answerQuery.data.id;
+    setInitialized(true);
+  }
+  if (answerQuery.isFetched && !answerQuery.data && !initialized) {
+    setInitialized(true);
+  }
+
+  const persistResponses = useCallback(
+    async (next: Record<string, unknown>) => {
+      if (!orgId || !formQuery.data) return;
+      setSaving(true);
+      setSaved(false);
+      try {
+        if (answerId.current) {
+          await updateAnswer(answerId.current, { responses: next });
+        } else {
+          const created = await createAnswer({
+            form_id: formQuery.data.id,
+            organization_id: orgId,
+            responses: next,
+          });
+          answerId.current = created.id;
+        }
+        queryClient.invalidateQueries({ queryKey: ['me'] });
+        queryClient.invalidateQueries({ queryKey: ['answers', 'latest', orgId, formKey] });
+        setSaved(true);
+      } finally {
+        setSaving(false);
+      }
+    },
+    [orgId, formKey, formQuery.data, queryClient],
+  );
+
+  const handleTableChange = (questionKey: string, rowKey: string, value: number) => {
+    const prev = (responses[questionKey] as Record<string, number>) || {};
+    const next = { ...responses, [questionKey]: { ...prev, [rowKey]: value } };
+    setResponses(next);
+    setSaved(false);
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => persistResponses(next), 500);
+  };
+
+  const handleTextChange = (questionKey: string, value: string) => {
+    const next = { ...responses, [questionKey]: value };
+    setResponses(next);
+    setSaved(false);
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => persistResponses(next), 800);
+  };
+
+  if (!formQuery.data || !initialized) {
+    return <div className="py-6 text-sm text-gray-500">Loading...</div>;
+  }
+
+  const form = formQuery.data;
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      {title && (
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-display font-bold text-gray-900">{title}</h2>
+          <div className="flex items-center gap-2 h-5 text-xs text-gray-400">
+            {saving && 'Saving...'}
+            {saved && !saving && 'Saved'}
+          </div>
+        </div>
+      )}
+      {!title && (
+        <div className="flex items-center justify-end h-5 text-xs text-gray-400">
+          {saving && 'Saving...'}
+          {saved && !saving && 'Saved'}
+        </div>
+      )}
+
+      {/* Feature intro */}
+      {featureInfoTitle && featureInfoDescription && (
+        <FeatureIntro info={featureInfo} title={featureInfoTitle} description={featureInfoDescription} />
+      )}
+
+      {form.sections.map((section) => {
+        const tableQuestions = section.questions.filter(
+          (q) => q.field_type === 'table' && q.options?.rows,
+        );
+        const firstScale = tableQuestions[0]?.options?.scale ?? [1, 2, 3, 4, 5];
+
+        return (
+          <div key={section.id}>
+            <h3 className="text-base font-medium text-gray-900">{section.title}</h3>
+            {section.description && (
+              <p className="text-sm text-gray-500 mt-1">{section.description}</p>
+            )}
+
+            {/* Scale legend */}
+            {tableQuestions.length > 0 && (
+              <ScaleLegend scale={firstScale} />
+            )}
+
+            <div className="divide-y divide-gray-100">
+              {section.questions.map((question) => {
+                // Table (rating rows)
+                if (question.field_type === 'table' && question.options?.rows) {
+                  const tableResp = (responses[question.key] as Record<string, number>) || {};
+                  const scale = question.options.scale ?? [1, 2, 3, 4, 5];
+                  return (
+                    <div key={question.id}>
+                      {section.questions.length > 1 && (
+                        <p className="text-sm font-normal text-gray-900 pt-5 pb-1">{question.text}</p>
+                      )}
+                      {question.options.rows.map((row) => (
+                        <TableRatingRow
+                          key={row.value}
+                          label={row.label}
+                          value={tableResp[row.value]}
+                          scale={scale}
+                          onChange={(v) => handleTableChange(question.key, row.value, v)}
+                        />
+                      ))}
+                    </div>
+                  );
+                }
+
+                // Text / paragraph
+                if (question.field_type === 'text') {
+                  return (
+                    <div key={question.id} className="pt-4 pb-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        {question.text}
+                      </label>
+                      <textarea
+                        value={(responses[question.key] as string) || ''}
+                        onChange={(e) => handleTextChange(question.key, e.target.value)}
+                        rows={3}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </div>
+                  );
+                }
+
+                return null;
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -701,11 +994,10 @@ export function OrgProfilePage() {
               <li key={s.id}>
                 <button
                   onClick={() => setActiveSection(s.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors ${
-                    activeSection === s.id
-                      ? 'bg-gray-100 text-gray-900 font-medium'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
+                  className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors ${activeSection === s.id
+                    ? 'bg-gray-100 text-gray-900 font-medium'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    }`}
                 >
                   {s.label}
                   {sectionCounts[s.id] != null && (
@@ -726,6 +1018,17 @@ export function OrgProfilePage() {
               <InformationsSection orgSlug={orgSlug} />
             )}
             {activeSection === 'data' && <DataSection orgSlug={orgSlug} />}
+            {activeSection === 'sustainability' && <OnboardingFormSection orgSlug={orgSlug} formKey="onboarding-form" />}
+            {activeSection === 'needs' && (
+              <OnboardingFormSection
+                orgSlug={orgSlug}
+                formKey="needs-opportunities"
+                title="Needs & Opportunities"
+                featureInfoId="profile-needs"
+                featureInfoTitle="Help your facilitator help you"
+                featureInfoDescription="By sharing your challenges and interests, you enable your community facilitator to provide tailored support, connect you with the right partners, and shape programs that address real needs across the ecosystem."
+              />
+            )}
             {activeSection === 'photos' && <PhotosSection orgSlug={orgSlug} />}
             {activeSection === 'services' && <ListingsSection orgSlug={orgSlug} listingType="service" sectionId="services" />}
             {activeSection === 'materials' && <ListingsSection orgSlug={orgSlug} listingType="material" sectionId="materials" />}
