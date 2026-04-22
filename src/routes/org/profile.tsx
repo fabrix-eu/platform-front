@@ -244,6 +244,7 @@ function DataSection({ orgSlug }: { orgSlug: string }) {
 
   const [numberOfWorkers, setNumberOfWorkers] = useState('');
   const [turnover, setTurnover] = useState('');
+  const [developmentStage, setDevelopmentStage] = useState('');
   const [naceCode, setNaceCode] = useState('');
   const [secondaryNaceCodes, setSecondaryNaceCodes] = useState<string[]>([]);
   const [selectedFacilityTypes, setSelectedFacilityTypes] = useState<string[]>([]);
@@ -253,6 +254,7 @@ function DataSection({ orgSlug }: { orgSlug: string }) {
   if (org && !initialized) {
     setNumberOfWorkers(org.number_of_workers != null ? String(org.number_of_workers) : '');
     setTurnover(org.turnover != null ? String(org.turnover) : '');
+    setDevelopmentStage(org.development_stage || '');
     setNaceCode(org.nace_code || '');
     setSecondaryNaceCodes(org.secondary_nace_codes || []);
     setSelectedFacilityTypes(org.facility_types || []);
@@ -273,6 +275,7 @@ function DataSection({ orgSlug }: { orgSlug: string }) {
     mutation.mutate({
       number_of_workers: numberOfWorkers ? Number(numberOfWorkers) : null,
       turnover: turnover ? Number(turnover) : null,
+      development_stage: developmentStage || null,
       nace_code: naceCode || null,
       secondary_nace_codes: secondaryNaceCodes,
       facility_types: selectedFacilityTypes,
@@ -327,6 +330,28 @@ function DataSection({ orgSlug }: { orgSlug: string }) {
           </div>
           <FieldError mutation={mutation} field="turnover" />
         </div>
+      </div>
+
+      {/* Development stage */}
+      <div>
+        <label htmlFor="org-dev-stage" className="block text-sm font-medium text-gray-700">
+          Development stage
+        </label>
+        <p className="text-xs text-gray-400 mb-1.5">Define the development maturity of your organization</p>
+        <select
+          id="org-dev-stage"
+          value={developmentStage}
+          onChange={(e) => setDevelopmentStage(e.target.value)}
+          className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          <option value="">Select...</option>
+          <option value="startup">1-5 years (Start-up)</option>
+          <option value="growth">2-10 years (Growth)</option>
+          <option value="maturing">5-20 years (Maturing)</option>
+          <option value="expansion">10 years + (Expansion or renewal)</option>
+          <option value="succession">Succession or exit</option>
+        </select>
+        <FieldError mutation={mutation} field="development_stage" />
       </div>
 
       {/* NACE codes */}

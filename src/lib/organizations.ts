@@ -53,6 +53,7 @@ export interface Organization {
   facility_types?: string[];
   processing_types?: string[];
   product_types?: string[];
+  development_stage?: string | null;
   nace_code?: string | null;
   secondary_nace_codes?: string[];
   sector?: string | null;
