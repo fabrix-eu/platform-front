@@ -22,6 +22,7 @@ import { FieldError, FormError } from '../../components/FieldError';
 import { KindSelect } from '../../components/KindSelect';
 import { useFeatureInfo, FeatureIntro, FeatureInfoTrigger } from '../../components/FeatureIntro';
 import { NaceCodeSelector } from '../../components/NaceCodeSelector';
+import { FacilityTypeSelector } from '../../components/FacilityTypeSelector';
 
 // ─── Section nav ──────────────────────────────────────────────────────────────
 
@@ -245,6 +246,8 @@ function DataSection({ orgSlug }: { orgSlug: string }) {
   const [turnover, setTurnover] = useState('');
   const [naceCode, setNaceCode] = useState('');
   const [secondaryNaceCodes, setSecondaryNaceCodes] = useState<string[]>([]);
+  const [selectedFacilityTypes, setSelectedFacilityTypes] = useState<string[]>([]);
+  const [selectedProcessingTypes, setSelectedProcessingTypes] = useState<string[]>([]);
   const [initialized, setInitialized] = useState(false);
 
   if (org && !initialized) {
@@ -252,6 +255,8 @@ function DataSection({ orgSlug }: { orgSlug: string }) {
     setTurnover(org.turnover != null ? String(org.turnover) : '');
     setNaceCode(org.nace_code || '');
     setSecondaryNaceCodes(org.secondary_nace_codes || []);
+    setSelectedFacilityTypes(org.facility_types || []);
+    setSelectedProcessingTypes(org.processing_types || []);
     setInitialized(true);
   }
 
@@ -270,6 +275,8 @@ function DataSection({ orgSlug }: { orgSlug: string }) {
       turnover: turnover ? Number(turnover) : null,
       nace_code: naceCode || null,
       secondary_nace_codes: secondaryNaceCodes,
+      facility_types: selectedFacilityTypes,
+      processing_types: selectedProcessingTypes,
     });
   };
 
@@ -349,6 +356,22 @@ function DataSection({ orgSlug }: { orgSlug: string }) {
           placeholder="Select additional NACE codes..."
         />
         <FieldError mutation={mutation} field="secondary_nace_codes" />
+      </div>
+
+      {/* Facility & Processing types */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          Facility & Processing types
+        </label>
+        <p className="text-xs text-gray-400 mb-2">Select your facility categories and specific operations</p>
+        <FacilityTypeSelector
+          facilityTypes={selectedFacilityTypes}
+          processingTypes={selectedProcessingTypes}
+          onFacilityTypesChange={setSelectedFacilityTypes}
+          onProcessingTypesChange={setSelectedProcessingTypes}
+        />
+        <FieldError mutation={mutation} field="facility_types" />
+        <FieldError mutation={mutation} field="processing_types" />
       </div>
 
       <div className="pt-2">
