@@ -6,6 +6,7 @@ interface SidebarItem {
   key: string;
   label: string;
   href: string;
+  badge?: string | number | null;
 }
 
 export function OrgLayout() {
@@ -31,9 +32,24 @@ export function OrgLayout() {
   const navItems: SidebarItem[] = [
     { key: 'dashboard', label: 'Dashboard', href: `/${orgSlug}/dashboard` },
     { key: 'profile', label: 'Profile', href: `/${orgSlug}/profile` },
-    { key: 'assessments', label: 'Impact Compass', href: `/${orgSlug}/assessments` },
-    { key: 'relations', label: 'Relations', href: `/${orgSlug}/relations` },
-    { key: 'communities', label: 'Communities', href: `/${orgSlug}/communities` },
+    {
+      key: 'assessments',
+      label: 'Impact Compass',
+      href: `/${orgSlug}/assessments`,
+      badge: userOrg ? `${userOrg.assessments_completed}/${userOrg.assessments_total}` : null,
+    },
+    {
+      key: 'relations',
+      label: 'Relations',
+      href: `/${orgSlug}/relations`,
+      badge: userOrg?.relations_count ?? null,
+    },
+    {
+      key: 'communities',
+      label: 'Communities',
+      href: `/${orgSlug}/communities`,
+      badge: communities.length || null,
+    },
     { key: 'messages', label: 'Messages', href: `/${orgSlug}/messages` },
   ];
 
@@ -57,13 +73,18 @@ export function OrgLayout() {
               <li key={item.key}>
                 <Link
                   to={item.href}
-                  className={`block px-3 py-2 text-sm rounded-md transition-colors ${
+                  className={`flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors ${
                     activeMap[item.key]
                       ? 'bg-gray-100 text-gray-900 font-medium'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                 >
                   {item.label}
+                  {item.badge != null && (
+                    <span className="text-[11px] tabular-nums text-gray-400 font-normal">
+                      {item.badge}
+                    </span>
+                  )}
                 </Link>
               </li>
             ))}

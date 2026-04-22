@@ -6,6 +6,8 @@ import { getOrganizationPhotos, createOrganizationPhoto, deleteOrganizationPhoto
 import {
   useListings,
   useDeleteListing,
+  getListings,
+  listingKeys,
   LISTING_TYPES,
   LISTING_CATEGORIES,
   LISTING_SUBCATEGORIES,
@@ -28,8 +30,8 @@ const SECTIONS: { id: SectionId; label: string }[] = [
   { id: 'photos', label: 'Photos' },
   { id: 'services', label: 'Services' },
   { id: 'materials', label: 'Materials' },
-  { id: 'products', label: 'Products' },
   { id: 'capacities', label: 'Capacities' },
+  { id: 'products', label: 'Products' },
 ];
 
 // ─── Informations section ─────────────────────────────────────────────────────
@@ -635,6 +637,37 @@ export function OrgProfilePage() {
   });
 
   const org = orgQuery.data;
+  const orgId = org?.id;
+
+  // Listing counts per type (lightweight: per_page=1, only reading meta.total_count)
+  const countParams = (type: string) => ({ by_organization: orgId!, by_type: type, per_page: 1 });
+  const servicesCount = useQuery({
+    queryKey: listingKeys.list(countParams('service')),
+    queryFn: () => getListings(countParams('service')),
+    enabled: !!orgId,
+  });
+  const materialsCount = useQuery({
+    queryKey: listingKeys.list(countParams('material')),
+    queryFn: () => getListings(countParams('material')),
+    enabled: !!orgId,
+  });
+  const capacitiesCount = useQuery({
+    queryKey: listingKeys.list(countParams('capacity')),
+    queryFn: () => getListings(countParams('capacity')),
+    enabled: !!orgId,
+  });
+  const productsCount = useQuery({
+    queryKey: listingKeys.list(countParams('product')),
+    queryFn: () => getListings(countParams('product')),
+    enabled: !!orgId,
+  });
+
+  const sectionCounts: Partial<Record<SectionId, number>> = {
+    services: servicesCount.data?.meta.total_count,
+    materials: materialsCount.data?.meta.total_count,
+    capacities: capacitiesCount.data?.meta.total_count,
+    products: productsCount.data?.meta.total_count,
+  };
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
@@ -664,17 +697,22 @@ export function OrgProfilePage() {
         {/* Sidebar section nav */}
         <nav className="w-48 shrink-0">
           <ul className="space-y-0.5">
-            {SECTIONS.map((section) => (
-              <li key={section.id}>
+            {SECTIONS.map((s) => (
+              <li key={s.id}>
                 <button
-                  onClick={() => setActiveSection(section.id)}
-                  className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${
-                    activeSection === section.id
+                  onClick={() => setActiveSection(s.id)}
+                  className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors ${
+                    activeSection === s.id
                       ? 'bg-gray-100 text-gray-900 font-medium'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                 >
-                  {section.label}
+                  {s.label}
+                  {sectionCounts[s.id] != null && (
+                    <span className="text-[11px] tabular-nums text-gray-400 font-normal">
+                      {sectionCounts[s.id]}
+                    </span>
+                  )}
                 </button>
               </li>
             ))}
@@ -691,8 +729,8 @@ export function OrgProfilePage() {
             {activeSection === 'photos' && <PhotosSection orgSlug={orgSlug} />}
             {activeSection === 'services' && <ListingsSection orgSlug={orgSlug} listingType="service" sectionId="services" />}
             {activeSection === 'materials' && <ListingsSection orgSlug={orgSlug} listingType="material" sectionId="materials" />}
-            {activeSection === 'products' && <ListingsSection orgSlug={orgSlug} listingType="product" sectionId="products" />}
             {activeSection === 'capacities' && <ListingsSection orgSlug={orgSlug} listingType="capacity" sectionId="capacities" />}
+            {activeSection === 'products' && <ListingsSection orgSlug={orgSlug} listingType="product" sectionId="products" />}
           </div>
         </div>
       </div>
