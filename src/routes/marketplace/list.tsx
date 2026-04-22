@@ -6,9 +6,11 @@ import {
   LISTING_TYPES,
   LISTING_CATEGORIES,
   LISTING_SUBCATEGORIES,
-  getCategoriesForType,
 } from '../../lib/listings';
 import type { Listing } from '../../lib/listings';
+import { TaxonomyFilter } from '../../components/TaxonomyFilter';
+import { LocationFilter } from '../../components/LocationFilter';
+import type { LocationFilterParams } from '../../components/LocationFilter';
 
 function TypeBadge({ type }: { type: string }) {
   const config = LISTING_TYPES[type];
@@ -88,16 +90,29 @@ function ListingCard({ listing }: { listing: Listing }) {
 
 export function MarketplaceListPage() {
   const navigate = useNavigate();
-  const { search, page, by_type, by_category, by_subcategory } = useSearch({ strict: false }) as {
+  const { search, page, by_type, by_category, by_subcategory, country, lon, lat, radius, location_label } = useSearch({ strict: false }) as {
     search?: string;
     page?: number;
     by_type?: string;
     by_category?: string;
     by_subcategory?: string;
+    country?: string;
+    lon?: number;
+    lat?: number;
+    radius?: number;
+    location_label?: string;
   };
 
+  const locationParams: Record<string, string> = {};
+  if (country) locationParams.by_country = country;
+  if (lon !== undefined && lat !== undefined) {
+    locationParams['within_distance[lon]'] = String(lon);
+    locationParams['within_distance[lat]'] = String(lat);
+    locationParams['within_distance[radius]'] = String(radius || 100);
+  }
+
   const query = useQuery({
-    queryKey: ['listings', { page, search, by_type, by_category, by_subcategory }],
+    queryKey: ['listings', { page, search, by_type, by_category, by_subcategory, country, lon, lat, radius }],
     queryFn: () =>
       getListings({
         page: page || 1,
@@ -106,11 +121,14 @@ export function MarketplaceListPage() {
         by_type,
         by_category,
         by_subcategory,
+        ...locationParams,
       }),
   });
 
   const meta = query.data?.meta;
   const listings = query.data?.data ?? [];
+
+  const locSearch = { country, lon, lat, radius, location_label };
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -118,28 +136,27 @@ export function MarketplaceListPage() {
     const q = (fd.get('search') as string) || '';
     navigate({
       to: '/marketplace',
-      search: { search: q || undefined, page: 1, by_type, by_category, by_subcategory },
+      search: { search: q || undefined, page: 1, by_type, by_category, by_subcategory, ...locSearch },
     });
   };
 
-  const updateFilter = (key: string, value: string | undefined) => {
-    // Clear category+subcategory when type changes, clear subcategory when category changes
-    const newCategory = key === 'by_type' ? undefined : (key === 'by_category' ? value : by_category);
-    const newSubcategory = (key === 'by_type' || key === 'by_category') ? undefined : (key === 'by_subcategory' ? value : by_subcategory);
+  const handleTaxonomyFilter = (params: { by_type?: string; by_category?: string; by_subcategory?: string }) => {
+    navigate({
+      to: '/marketplace',
+      search: { search, page: 1, ...params, ...locSearch },
+    });
+  };
+
+  const handleLocationFilter = (params: LocationFilterParams) => {
     navigate({
       to: '/marketplace',
       search: {
-        search,
-        page: 1,
-        by_type: key === 'by_type' ? value : by_type,
-        by_category: newCategory,
-        by_subcategory: newSubcategory,
+        search, page: 1, by_type, by_category, by_subcategory,
+        country: params.country, lon: params.lon, lat: params.lat,
+        radius: params.radius, location_label: params.location_label,
       },
     });
   };
-
-  const availableCategories = by_type ? getCategoriesForType(by_type) : null;
-  const availableSubcategories = by_category ? LISTING_SUBCATEGORIES[by_category] : null;
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">
@@ -173,57 +190,17 @@ export function MarketplaceListPage() {
           </button>
         </form>
 
-        <div className="flex gap-2 flex-wrap">
-          <select
-            value={by_type || ''}
-            onChange={(e) => updateFilter('by_type', e.target.value || undefined)}
-            className="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-white"
-          >
-            <option value="">All types</option>
-            {Object.entries(LISTING_TYPES).map(([key, val]) => (
-              <option key={key} value={key}>
-                {val.label}
-              </option>
-            ))}
-          </select>
+        <TaxonomyFilter
+          activeType={by_type}
+          activeCategory={by_category}
+          activeSubcategory={by_subcategory}
+          onFilter={handleTaxonomyFilter}
+        />
 
-          <select
-            value={by_category || ''}
-            onChange={(e) => updateFilter('by_category', e.target.value || undefined)}
-            className="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-white"
-          >
-            <option value="">All categories</option>
-            {(availableCategories ?? Object.entries(LISTING_CATEGORIES).map(([key, val]) => ({ value: key, label: val.label, badgeColor: val.badgeColor }))).map((cat) => (
-              <option key={cat.value} value={cat.value}>
-                {cat.label}
-              </option>
-            ))}
-          </select>
-
-          {availableSubcategories && (
-            <select
-              value={by_subcategory || ''}
-              onChange={(e) => updateFilter('by_subcategory', e.target.value || undefined)}
-              className="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-white"
-            >
-              <option value="">All subcategories</option>
-              {Object.entries(availableSubcategories).map(([key, val]) => (
-                <option key={key} value={key}>
-                  {val.label}
-                </option>
-              ))}
-            </select>
-          )}
-
-          {(by_type || by_category || by_subcategory || search) && (
-            <button
-              onClick={() => navigate({ to: '/marketplace', search: {} })}
-              className="text-sm text-gray-500 hover:text-gray-700 px-2"
-            >
-              Clear filters
-            </button>
-          )}
-        </div>
+        <LocationFilter
+          value={{ country, lon, lat, radius, location_label }}
+          onChange={handleLocationFilter}
+        />
       </div>
 
       {/* Content */}
@@ -279,7 +256,7 @@ export function MarketplaceListPage() {
               {meta.prev_page && (
                 <Link
                   to="/marketplace"
-                  search={{ search, page: meta.prev_page, by_type, by_category, by_subcategory }}
+                  search={{ search, page: meta.prev_page, by_type, by_category, by_subcategory, ...locSearch }}
                   className="text-sm text-muted-foreground hover:text-foreground"
                 >
                   &larr; Previous
@@ -291,7 +268,7 @@ export function MarketplaceListPage() {
               {meta.next_page && (
                 <Link
                   to="/marketplace"
-                  search={{ search, page: meta.next_page, by_type, by_category, by_subcategory }}
+                  search={{ search, page: meta.next_page, by_type, by_category, by_subcategory, ...locSearch }}
                   className="text-sm text-muted-foreground hover:text-foreground"
                 >
                   Next &rarr;

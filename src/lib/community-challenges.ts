@@ -241,12 +241,27 @@ export async function withdrawApplication(
 
 // ── Global challenges (cross-community) ─────────────────────
 
+export interface GlobalChallengeParams {
+  page?: number;
+  per_page?: number;
+  search?: string;
+  by_country?: string;
+  'within_distance[lon]'?: string;
+  'within_distance[lat]'?: string;
+  'within_distance[radius]'?: string;
+}
+
 export async function getAllChallenges(
-  params: { page?: number; per_page?: number } = {},
+  params: GlobalChallengeParams = {},
 ): Promise<ChallengesResponse> {
   const qp = new URLSearchParams();
   if (params.page) qp.set('page', String(params.page));
   if (params.per_page) qp.set('per_page', String(params.per_page));
+  if (params.search) qp.set('search', params.search);
+  if (params.by_country) qp.set('by_country', params.by_country);
+  if (params['within_distance[lon]']) qp.set('within_distance[lon]', params['within_distance[lon]']);
+  if (params['within_distance[lat]']) qp.set('within_distance[lat]', params['within_distance[lat]']);
+  if (params['within_distance[radius]']) qp.set('within_distance[radius]', params['within_distance[radius]']);
 
   const token = localStorage.getItem('access_token');
   const res = await fetch(`${BASE}/challenges?${qp}`, {

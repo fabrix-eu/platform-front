@@ -1,7 +1,9 @@
-import { Link, useSearch } from '@tanstack/react-router';
+import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getAllChallenges } from '../../lib/community-challenges';
 import type { Challenge } from '../../lib/community-challenges';
+import { LocationFilter } from '../../components/LocationFilter';
+import type { LocationFilterParams } from '../../components/LocationFilter';
 
 function stateBadge(state: string) {
   switch (state) {
@@ -68,20 +70,79 @@ function ChallengeCard({ challenge }: { challenge: Challenge }) {
 }
 
 export function ChallengesListPage() {
-  const { page } = useSearch({ strict: false }) as { page?: number };
+  const navigate = useNavigate();
+  const { page, search, country, lon, lat, radius, location_label } = useSearch({ strict: false }) as {
+    page?: number;
+    search?: string;
+    country?: string;
+    lon?: number;
+    lat?: number;
+    radius?: number;
+    location_label?: string;
+  };
+
+  const locationParams: Record<string, string> = {};
+  if (country) locationParams.by_country = country;
+  if (lon !== undefined && lat !== undefined) {
+    locationParams['within_distance[lon]'] = String(lon);
+    locationParams['within_distance[lat]'] = String(lat);
+    locationParams['within_distance[radius]'] = String(radius || 100);
+  }
 
   const query = useQuery({
-    queryKey: ['global_challenges', page],
-    queryFn: () => getAllChallenges({ page: page || 1, per_page: 20 }),
+    queryKey: ['global_challenges', page, search, country, lon, lat, radius],
+    queryFn: () => getAllChallenges({ page: page || 1, per_page: 20, search, ...locationParams }),
   });
 
   const challenges = query.data?.data ?? [];
   const meta = query.data?.meta;
 
+  const locSearch = { country, lon, lat, radius, location_label };
+
+  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const q = (fd.get('search') as string) || '';
+    navigate({ to: '/challenges', search: { search: q || undefined, page: 1, ...locSearch } });
+  };
+
+  const handleLocationFilter = (params: LocationFilterParams) => {
+    navigate({
+      to: '/challenges',
+      search: {
+        search, page: 1,
+        country: params.country, lon: params.lon, lat: params.lat,
+        radius: params.radius, location_label: params.location_label,
+      },
+    });
+  };
+
   return (
     <div className="max-w-3xl mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Challenges</h1>
+      </div>
+
+      {/* Search + Location */}
+      <div className="space-y-3 mb-6">
+        <form onSubmit={handleSearchSubmit} className="flex gap-2">
+          <input
+            name="search"
+            defaultValue={search || ''}
+            placeholder="Search challenges..."
+            className="flex-1 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <button
+            type="submit"
+            className="bg-secondary text-secondary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-secondary/80"
+          >
+            Search
+          </button>
+        </form>
+        <LocationFilter
+          value={{ country, lon, lat, radius, location_label }}
+          onChange={handleLocationFilter}
+        />
       </div>
 
       <p className="text-sm text-muted-foreground mb-4">{meta?.total_count ?? 0} challenges</p>
@@ -125,7 +186,7 @@ export function ChallengesListPage() {
           {meta.prev_page && (
             <Link
               to="/challenges"
-              search={{ page: meta.prev_page }}
+              search={{ search, page: meta.prev_page, ...locSearch }}
               className="text-sm text-muted-foreground hover:text-foreground"
             >
               &larr; Previous
@@ -137,7 +198,7 @@ export function ChallengesListPage() {
           {meta.next_page && (
             <Link
               to="/challenges"
-              search={{ page: meta.next_page }}
+              search={{ search, page: meta.next_page, ...locSearch }}
               className="text-sm text-muted-foreground hover:text-foreground"
             >
               Next &rarr;

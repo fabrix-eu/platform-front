@@ -4,10 +4,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 // ── Types ────────────────────────────────────────────────────
 
 export const LISTING_TYPES: Record<string, { label: string; badgeColor: string }> = {
-  service: { label: 'Service', badgeColor: 'bg-blue-100 text-blue-800' },
-  material: { label: 'Material', badgeColor: 'bg-emerald-100 text-emerald-800' },
-  product: { label: 'Product', badgeColor: 'bg-rose-100 text-rose-800' },
-  capacity: { label: 'Capacity', badgeColor: 'bg-amber-100 text-amber-800' },
+  service: { label: 'Services', badgeColor: 'bg-blue-100 text-blue-800' },
+  material: { label: 'Materials', badgeColor: 'bg-emerald-100 text-emerald-800' },
+  capacity: { label: 'Capacities', badgeColor: 'bg-amber-100 text-amber-800' },
+  product: { label: 'Products', badgeColor: 'bg-rose-100 text-rose-800' },
 };
 
 export const LISTING_CATEGORIES: Record<string, { label: string; badgeColor: string }> = {
@@ -234,6 +234,10 @@ export interface ListingParams {
   by_community?: string;
   by_community_id?: string;
   by_organization?: string;
+  by_country?: string;
+  'within_distance[lon]'?: string;
+  'within_distance[lat]'?: string;
+  'within_distance[radius]'?: string;
 }
 
 export interface ListingPayload {
@@ -262,6 +266,10 @@ export async function getListings(params: ListingParams = {}): Promise<ListingsR
   if (params.by_community) qs.set('by_community', params.by_community);
   if (params.by_community_id) qs.set('by_community_id', params.by_community_id);
   if (params.by_organization) qs.set('by_organization', params.by_organization);
+  if (params.by_country) qs.set('by_country', params.by_country);
+  if (params['within_distance[lon]']) qs.set('within_distance[lon]', params['within_distance[lon]']);
+  if (params['within_distance[lat]']) qs.set('within_distance[lat]', params['within_distance[lat]']);
+  if (params['within_distance[radius]']) qs.set('within_distance[radius]', params['within_distance[radius]']);
 
   const query = qs.toString();
   // The API returns { data: [...], meta: {...} } — we need both, so raw fetch

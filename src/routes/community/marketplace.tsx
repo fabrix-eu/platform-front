@@ -6,9 +6,9 @@ import {
   LISTING_TYPES,
   LISTING_CATEGORIES,
   LISTING_SUBCATEGORIES,
-  getCategoriesForType,
 } from '../../lib/listings';
 import type { Listing } from '../../lib/listings';
+import { TaxonomyFilter } from '../../components/TaxonomyFilter';
 
 function TypeBadge({ type }: { type: string }) {
   const config = LISTING_TYPES[type];
@@ -144,23 +144,12 @@ export function CommunityMarketplacePage() {
     });
   };
 
-  const updateFilter = (key: string, value: string | undefined) => {
-    const newCategory = key === 'by_type' ? undefined : (key === 'by_category' ? value : by_category);
-    const newSubcategory = (key === 'by_type' || key === 'by_category') ? undefined : (key === 'by_subcategory' ? value : by_subcategory);
+  const handleTaxonomyFilter = (params: { by_type?: string; by_category?: string; by_subcategory?: string }) => {
     navigate({
       to: basePath,
-      search: {
-        search,
-        page: 1,
-        by_type: key === 'by_type' ? value : by_type,
-        by_category: newCategory,
-        by_subcategory: newSubcategory,
-      },
+      search: { search, page: 1, ...params },
     });
   };
-
-  const availableCategories = by_type ? getCategoriesForType(by_type) : null;
-  const availableSubcategories = by_category ? LISTING_SUBCATEGORIES[by_category] : null;
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
@@ -192,51 +181,12 @@ export function CommunityMarketplacePage() {
           </button>
         </form>
 
-        <div className="flex gap-2 flex-wrap">
-          <select
-            value={by_type || ''}
-            onChange={(e) => updateFilter('by_type', e.target.value || undefined)}
-            className="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-white"
-          >
-            <option value="">All types</option>
-            {Object.entries(LISTING_TYPES).map(([key, val]) => (
-              <option key={key} value={key}>{val.label}</option>
-            ))}
-          </select>
-
-          <select
-            value={by_category || ''}
-            onChange={(e) => updateFilter('by_category', e.target.value || undefined)}
-            className="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-white"
-          >
-            <option value="">All categories</option>
-            {(availableCategories ?? Object.entries(LISTING_CATEGORIES).map(([key, val]) => ({ value: key, label: val.label }))).map((cat) => (
-              <option key={cat.value} value={cat.value}>{cat.label}</option>
-            ))}
-          </select>
-
-          {availableSubcategories && (
-            <select
-              value={by_subcategory || ''}
-              onChange={(e) => updateFilter('by_subcategory', e.target.value || undefined)}
-              className="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-white"
-            >
-              <option value="">All subcategories</option>
-              {Object.entries(availableSubcategories).map(([key, val]) => (
-                <option key={key} value={key}>{val.label}</option>
-              ))}
-            </select>
-          )}
-
-          {(by_type || by_category || by_subcategory || search) && (
-            <button
-              onClick={() => navigate({ to: basePath, search: {} })}
-              className="text-sm text-gray-500 hover:text-gray-700 px-2"
-            >
-              Clear filters
-            </button>
-          )}
-        </div>
+        <TaxonomyFilter
+          activeType={by_type}
+          activeCategory={by_category}
+          activeSubcategory={by_subcategory}
+          onFilter={handleTaxonomyFilter}
+        />
       </div>
 
       {/* Content */}

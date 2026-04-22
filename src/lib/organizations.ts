@@ -54,6 +54,7 @@ export interface Organization {
   processing_types?: string[];
   product_types?: string[];
   nace_code?: string | null;
+  secondary_nace_codes?: string[];
   sector?: string | null;
   organization_photos?: { id: string; url: string; caption: string | null; position: number }[];
   communities?: OrganizationCommunity[];

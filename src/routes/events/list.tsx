@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Link, useSearch } from '@tanstack/react-router';
+import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getAllEvents } from '../../lib/community-events';
 import type { CommunityEvent } from '../../lib/community-events';
+import { LocationFilter } from '../../components/LocationFilter';
+import type { LocationFilterParams } from '../../components/LocationFilter';
 
 function formatEventDate(iso: string): string {
   const d = new Date(iso);
@@ -78,13 +80,50 @@ function EventCard({ event }: { event: CommunityEvent }) {
 type Tab = 'upcoming' | 'past';
 
 export function EventsListPage() {
-  const { page } = useSearch({ strict: false }) as { page?: number };
+  const navigate = useNavigate();
+  const { page, search, country, lon, lat, radius, location_label } = useSearch({ strict: false }) as {
+    page?: number;
+    search?: string;
+    country?: string;
+    lon?: number;
+    lat?: number;
+    radius?: number;
+    location_label?: string;
+  };
   const [tab, setTab] = useState<Tab>('upcoming');
 
+  const locationParams: Record<string, string> = {};
+  if (country) locationParams.by_country = country;
+  if (lon !== undefined && lat !== undefined) {
+    locationParams['within_distance[lon]'] = String(lon);
+    locationParams['within_distance[lat]'] = String(lat);
+    locationParams['within_distance[radius]'] = String(radius || 100);
+  }
+
   const query = useQuery({
-    queryKey: ['global_events', page],
-    queryFn: () => getAllEvents({ page: page || 1, per_page: 50 }),
+    queryKey: ['global_events', page, search, country, lon, lat, radius],
+    queryFn: () => getAllEvents({ page: page || 1, per_page: 50, search, ...locationParams }),
   });
+
+  const locSearch = { country, lon, lat, radius, location_label };
+
+  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const q = (fd.get('search') as string) || '';
+    navigate({ to: '/events', search: { search: q || undefined, page: 1, ...locSearch } });
+  };
+
+  const handleLocationFilter = (params: LocationFilterParams) => {
+    navigate({
+      to: '/events',
+      search: {
+        search, page: 1,
+        country: params.country, lon: params.lon, lat: params.lat,
+        radius: params.radius, location_label: params.location_label,
+      },
+    });
+  };
 
   const allEvents = query.data?.data ?? [];
   const now = new Date();
@@ -103,6 +142,28 @@ export function EventsListPage() {
     <div className="max-w-3xl mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Events</h1>
+      </div>
+
+      {/* Search + Location */}
+      <div className="space-y-3 mb-6">
+        <form onSubmit={handleSearchSubmit} className="flex gap-2">
+          <input
+            name="search"
+            defaultValue={search || ''}
+            placeholder="Search events..."
+            className="flex-1 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <button
+            type="submit"
+            className="bg-secondary text-secondary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-secondary/80"
+          >
+            Search
+          </button>
+        </form>
+        <LocationFilter
+          value={{ country, lon, lat, radius, location_label }}
+          onChange={handleLocationFilter}
+        />
       </div>
 
       {/* Tabs */}
@@ -172,7 +233,7 @@ export function EventsListPage() {
           {query.data.meta.prev_page && (
             <Link
               to="/events"
-              search={{ page: query.data.meta.prev_page }}
+              search={{ search, page: query.data.meta.prev_page, ...locSearch }}
               className="text-sm text-muted-foreground hover:text-foreground"
             >
               &larr; Previous
@@ -184,7 +245,7 @@ export function EventsListPage() {
           {query.data.meta.next_page && (
             <Link
               to="/events"
-              search={{ page: query.data.meta.next_page }}
+              search={{ search, page: query.data.meta.next_page, ...locSearch }}
               className="text-sm text-muted-foreground hover:text-foreground"
             >
               Next &rarr;
