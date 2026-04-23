@@ -1,12 +1,15 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useParams, useSearch } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getOrganization, updateOrganization, submitClaim, ORG_KINDS } from '../../lib/organizations';
 import type { Organization } from '../../lib/organizations';
 import { COVER_IMAGES } from '../../lib/mockOrgData';
 import { getMe } from '../../lib/auth';
+import type { MeOrganization } from '../../lib/auth';
 import { useListings, LISTING_TYPES, LISTING_CATEGORIES } from '../../lib/listings';
 import type { Listing } from '../../lib/listings';
+import { createRelation, deleteRelation, RELATION_TYPES } from '../../lib/relations';
+import type { Relation } from '../../lib/relations';
 import { createJoinRequest, getMyJoinRequests } from '../../lib/join-requests';
 import { uploadFile } from '../../lib/uploads';
 import { FieldError, FormError } from '../../components/FieldError';
@@ -371,6 +374,305 @@ function AvatarUploadButton({
   );
 }
 
+// ── Connect button + dialog ──────────────────────────────────────
+
+function ConnectDialog({
+  targetOrg,
+  myOrgs,
+  onClose,
+}: {
+  targetOrg: Organization;
+  myOrgs: MeOrganization[];
+  onClose: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const [fromOrgId, setFromOrgId] = useState(myOrgs.length === 1 ? myOrgs[0].organization_id : '');
+  const [relationType, setRelationType] = useState('');
+  const [description, setDescription] = useState('');
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      createRelation({
+        from_organization_id: fromOrgId,
+        to_organization_id: targetOrg.id,
+        relation_type: relationType,
+        description: description || undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['organizations'] });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+      onClose();
+    },
+  });
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-24 bg-black/30" onClick={onClose}>
+      <div className="bg-white rounded-lg shadow-xl border border-border w-full max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
+        <div className="px-4 py-3 border-b border-border">
+          <h3 className="text-sm font-semibold text-gray-900">Connect with {targetOrg.name}</h3>
+        </div>
+
+        <div className="p-4 space-y-3">
+          {/* Source org selector (only if multiple) */}
+          {myOrgs.length > 1 && (
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1">Connect from</label>
+              <select
+                value={fromOrgId}
+                onChange={(e) => setFromOrgId(e.target.value)}
+                className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">Select your organization...</option>
+                {myOrgs.map((o) => (
+                  <option key={o.organization_id} value={o.organization_id}>
+                    {o.organization_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Relation type */}
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Relation type</label>
+            <div className="max-h-48 overflow-y-auto border border-border rounded-lg divide-y divide-border">
+              {Object.entries(RELATION_TYPES).map(([key, { label, description: desc }]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setRelationType(key)}
+                  className={`w-full text-left px-3 py-2 transition-colors ${
+                    relationType === key ? 'bg-primary/8' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <p className="text-sm font-medium text-gray-900">{label}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Description (optional)</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={2}
+              placeholder="Describe this relation..."
+              className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+
+          {mutation.error && (
+            <p className="text-sm text-red-600">
+              {(mutation.error as Error).message || 'Failed to create relation'}
+            </p>
+          )}
+        </div>
+
+        <div className="px-4 py-3 border-t border-border flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => mutation.mutate()}
+            disabled={!fromOrgId || !relationType || mutation.isPending}
+            className="px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50"
+          >
+            {mutation.isPending ? 'Connecting...' : 'Connect'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConnectButton({
+  org,
+  myOrgs,
+}: {
+  org: Organization;
+  myOrgs: MeOrganization[];
+}) {
+  const queryClient = useQueryClient();
+  const [showDialog, setShowDialog] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (
+        showDropdown &&
+        dropdownRef.current && !dropdownRef.current.contains(e.target as Node) &&
+        btnRef.current && !btnRef.current.contains(e.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showDropdown]);
+
+  const orgRelations = (org.relations ?? []) as Relation[];
+  const myOrgIds = myOrgs.map((o) => o.organization_id);
+
+  // Find existing relations between any of user's orgs and this org
+  const existingRelations = orgRelations.filter((r) =>
+    (myOrgIds.includes(r.from_organization_id) && r.to_organization_id === org.id) ||
+    (myOrgIds.includes(r.to_organization_id) && r.from_organization_id === org.id)
+  );
+
+  const isConnected = existingRelations.length > 0;
+
+  const removeMutation = useMutation({
+    mutationFn: (relationId: string) => deleteRelation(relationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['organizations'] });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+      setShowDropdown(false);
+    },
+  });
+
+  if (isConnected) {
+    return (
+      <div className="relative">
+        <button
+          ref={btnRef}
+          onClick={() => setShowDropdown(!showDropdown)}
+          className="inline-flex items-center gap-1.5 border border-green-300 bg-green-50 text-green-700 rounded-lg px-4 py-2 text-sm font-medium hover:bg-green-100 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+          </svg>
+          Connected
+          <svg className="w-3 h-3 ml-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+          </svg>
+        </button>
+        {showDropdown && (
+          <div ref={dropdownRef} className="absolute right-0 top-full mt-1 w-64 bg-white border border-border rounded-lg shadow-lg z-50">
+            {existingRelations.map((rel) => {
+              const myOrg = myOrgs.find(
+                (o) => o.organization_id === rel.from_organization_id || o.organization_id === rel.to_organization_id
+              );
+              const typeConfig = RELATION_TYPES[rel.relation_type];
+              return (
+                <div key={rel.id} className="flex items-center justify-between px-3 py-2 border-b border-border last:border-b-0">
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-gray-900 truncate">
+                      {myOrgs.length > 1 && myOrg ? `${myOrg.organization_name} — ` : ''}
+                      {typeConfig?.label ?? rel.relation_type}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (window.confirm('Remove this relation?')) {
+                        removeMutation.mutate(rel.id);
+                      }
+                    }}
+                    disabled={removeMutation.isPending}
+                    className="text-gray-400 hover:text-red-500 transition-colors p-1 shrink-0"
+                    title="Remove"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              );
+            })}
+            <button
+              onClick={() => { setShowDropdown(false); setShowDialog(true); }}
+              className="w-full text-left px-3 py-2 text-sm text-primary hover:bg-gray-50 font-medium"
+            >
+              + Add another relation
+            </button>
+          </div>
+        )}
+        {showDialog && (
+          <ConnectDialog
+            targetOrg={org}
+            myOrgs={myOrgs}
+            onClose={() => setShowDialog(false)}
+          />
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <button
+        onClick={() => setShowDialog(true)}
+        className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+        </svg>
+        Connect
+      </button>
+      {showDialog && (
+        <ConnectDialog
+          targetOrg={org}
+          myOrgs={myOrgs}
+          onClose={() => setShowDialog(false)}
+        />
+      )}
+    </>
+  );
+}
+
+// ── Three-dots more menu ──────────────────────────────────────────
+
+function MoreMenu({ children }: { children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (
+        open &&
+        menuRef.current && !menuRef.current.contains(e.target as Node) &&
+        btnRef.current && !btnRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [open]);
+
+  return (
+    <div className="relative">
+      <button
+        ref={btnRef}
+        onClick={() => setOpen(!open)}
+        className="border border-gray-300 rounded-lg p-2 text-gray-500 hover:bg-gray-50 transition-colors"
+        title="More options"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
+        </svg>
+      </button>
+      {open && (
+        <div
+          ref={menuRef}
+          className="absolute right-0 top-full mt-1 w-48 bg-white border border-border rounded-lg shadow-lg z-50 py-1"
+          onClick={() => setOpen(false)}
+        >
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function OrganizationShowPage() {
   const { id } = useParams({ strict: false }) as { id: string };
   const { from } = useSearch({ strict: false }) as { from?: string };
@@ -487,17 +789,14 @@ export function OrganizationShowPage() {
 
             {/* Actions */}
             <div className="flex items-center gap-2 shrink-0 mt-1">
-              {isLoggedIn && !org.claimed && (
-                <ClaimButton orgId={org.id} />
-              )}
-              {org.claimed && isLoggedIn && !isMember && (
-                <JoinRequestButton orgId={org.id} />
+              {isLoggedIn && !isMember && me.organizations.length > 0 && (
+                <ConnectButton org={org} myOrgs={me.organizations} />
               )}
               {isLoggedIn && !isMember && org.claimed && (
                 <Link
                   to="/messages"
                   search={{ to: org.id }}
-                  className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
+                  className="border border-gray-300 text-gray-700 rounded-lg px-4 py-2 text-sm font-medium hover:bg-gray-50 transition-colors"
                 >
                   Send message
                 </Link>
@@ -510,6 +809,20 @@ export function OrganizationShowPage() {
                 >
                   Manage profile
                 </Link>
+              )}
+              {isLoggedIn && !isMember && (
+                <MoreMenu>
+                  {!org.claimed && (
+                    <div className="px-3 py-2">
+                      <ClaimButton orgId={org.id} />
+                    </div>
+                  )}
+                  {org.claimed && (
+                    <div className="px-3 py-2">
+                      <JoinRequestButton orgId={org.id} />
+                    </div>
+                  )}
+                </MoreMenu>
               )}
             </div>
           </div>
