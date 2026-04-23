@@ -61,6 +61,11 @@ export interface Organization {
   communities?: OrganizationCommunity[];
   relations?: Relation[];
   related_organizations?: Organization[];
+  profile_completion?: {
+    sections: Record<string, boolean>;
+    completed: number;
+    total: number;
+  };
 }
 
 export interface OrganizationBasic {
