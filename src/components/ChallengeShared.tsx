@@ -136,6 +136,7 @@ export function ChallengeApplyForm({
           </label>
           <textarea
             id="apply-note"
+            name="note"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={3}
