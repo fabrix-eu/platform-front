@@ -385,3 +385,49 @@ export async function getAllChallenges(
 
   return res.json();
 }
+
+// ── My challenge applications ─────────────────────────────────
+
+export interface ChallengeApplicationWithChallenge extends ChallengeApplication {
+  challenge: Challenge;
+}
+
+interface MyApplicationsResponse {
+  data: ChallengeApplicationWithChallenge[];
+  meta: {
+    current_page: number;
+    total_pages: number;
+    total_count: number;
+    next_page: number | null;
+    prev_page: number | null;
+  };
+}
+
+export async function getMyApplications(
+  params: { page?: number; per_page?: number; status?: string } = {},
+): Promise<MyApplicationsResponse> {
+  const qp = new URLSearchParams();
+  if (params.page) qp.set('page', String(params.page));
+  if (params.per_page) qp.set('per_page', String(params.per_page));
+  if (params.status) qp.set('status', params.status);
+
+  const token = localStorage.getItem('access_token');
+  const res = await fetch(`${BASE}/my/challenge_applications?${qp}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    return { data: [], meta: { current_page: 1, total_pages: 1, total_count: 0, next_page: null, prev_page: null } };
+  }
+
+  return res.json();
+}
+
+export async function getMyApplication(
+  applicationId: string,
+): Promise<ChallengeApplicationWithChallenge> {
+  return api.get<ChallengeApplicationWithChallenge>(`/my/challenge_applications/${applicationId}`);
+}

@@ -69,6 +69,8 @@ import { SettingsPage } from '../routes/settings';
 import { NotificationPreferencesPage } from '../routes/notification-preferences';
 import { MessagesPage } from '../routes/messages';
 import { OrgMessagesPage } from '../routes/org/messages';
+import { OpportunitiesPage } from '../routes/org/opportunities';
+import { ApplicationDetailPage } from '../routes/org/application-detail';
 import { DataLayout } from '../routes/data/layout';
 import { RotterdamPage } from '../routes/data/rotterdam';
 import { RotterdamChartsPage } from '../routes/data/rotterdam-charts';
@@ -580,6 +582,27 @@ const orgMessagesRoute = createRoute({
   component: OrgMessagesPage,
 });
 
+const orgOpportunitiesRoute = createRoute({
+  getParentRoute: () => orgRoute,
+  path: '/opportunities',
+});
+
+const orgOpportunitiesIndexRoute = createRoute({
+  getParentRoute: () => orgOpportunitiesRoute,
+  path: '/',
+  validateSearch: z.object({
+    tab: z.string().optional(),
+    page: z.number().optional(),
+  }),
+  component: OpportunitiesPage,
+});
+
+const orgApplicationDetailRoute = createRoute({
+  getParentRoute: () => orgOpportunitiesRoute,
+  path: '/$applicationId',
+  component: ApplicationDetailPage,
+});
+
 const orgCommunitiesRoute = createRoute({
   getParentRoute: () => orgRoute,
   path: '/communities',
@@ -844,6 +867,10 @@ const routeTree = rootRoute.addChildren([
     orgAssessmentResultsRoute,
     orgAssessmentFormRoute,
     orgMessagesRoute,
+    orgOpportunitiesRoute.addChildren([
+      orgOpportunitiesIndexRoute,
+      orgApplicationDetailRoute,
+    ]),
     orgCommunitiesRoute,
     orgSettingsRoute.addChildren([
       orgSettingsIndexRoute,

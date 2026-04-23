@@ -1,12 +1,14 @@
 import { Link, Outlet, useParams, useMatch } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getMe } from '../../lib/auth';
+import { getMyApplications } from '../../lib/community-challenges';
 
 interface SidebarItem {
   key: string;
   label: string;
   href: string;
   badge?: string | number | null;
+  badgeVariant?: 'default' | 'highlight';
 }
 
 export function OrgLayout() {
@@ -26,8 +28,15 @@ export function OrgLayout() {
   const isAssessments = useMatch({ from: '/$orgSlug/assessments', shouldThrow: false });
   const isCommunities = useMatch({ from: '/$orgSlug/communities', shouldThrow: false });
   const isMessages = useMatch({ from: '/$orgSlug/messages', shouldThrow: false });
+  const isOpportunities = useMatch({ from: '/$orgSlug/opportunities', shouldThrow: false });
   const isSettingsMembers = useMatch({ from: '/$orgSlug/settings/members', shouldThrow: false });
   const isSettings = !!isSettingsMembers;
+
+  const pendingQuery = useQuery({
+    queryKey: ['my_challenge_applications_pending_count'],
+    queryFn: () => getMyApplications({ status: 'pending', per_page: 1 }),
+  });
+  const pendingCount = pendingQuery.data?.meta.total_count ?? 0;
 
   const navItems: SidebarItem[] = [
     { key: 'dashboard', label: 'Dashboard', href: `/${orgSlug}/dashboard` },
@@ -51,6 +60,13 @@ export function OrgLayout() {
       badge: communities.length || null,
     },
     { key: 'messages', label: 'Messages', href: `/${orgSlug}/messages` },
+    {
+      key: 'opportunities',
+      label: 'Opportunities',
+      href: `/${orgSlug}/opportunities`,
+      badge: pendingCount || null,
+      badgeVariant: 'highlight',
+    },
   ];
 
   const activeMap: Record<string, boolean> = {
@@ -60,6 +76,7 @@ export function OrgLayout() {
     assessments: !!isAssessments,
     communities: !!isCommunities,
     messages: !!isMessages,
+    opportunities: !!isOpportunities,
   };
 
   return (
@@ -81,7 +98,11 @@ export function OrgLayout() {
                 >
                   {item.label}
                   {item.badge != null && (
-                    <span className="text-[11px] tabular-nums text-gray-400 font-normal">
+                    <span className={
+                      item.badgeVariant === 'highlight'
+                        ? 'text-[10px] px-1.5 py-0.5 rounded-full bg-yellow-100 text-yellow-700 font-medium tabular-nums'
+                        : 'text-[11px] tabular-nums text-gray-400 font-normal'
+                    }>
                       {item.badge}
                     </span>
                   )}
