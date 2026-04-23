@@ -71,6 +71,8 @@ function InformationsSection({ orgSlug }: { orgSlug: string }) {
   const [website, setWebsite] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [linkedin, setLinkedin] = useState('');
+  const [instagram, setInstagram] = useState('');
   const [addressData, setAddressData] = useState<AddressData | null>(null);
   const [initialized, setInitialized] = useState(false);
 
@@ -81,6 +83,8 @@ function InformationsSection({ orgSlug }: { orgSlug: string }) {
     setWebsite(org.website || '');
     setEmail(org.email || '');
     setPhone(org.phone || '');
+    setLinkedin(org.linkedin || '');
+    setInstagram(org.instagram || '');
     if (org.address && org.lat && org.lon) {
       setAddressData({
         address: org.address,
@@ -109,6 +113,8 @@ function InformationsSection({ orgSlug }: { orgSlug: string }) {
       website: website || null,
       email: email || null,
       phone: phone || null,
+      linkedin: linkedin || null,
+      instagram: instagram || null,
     };
 
     if (addressData) {
@@ -228,6 +234,39 @@ function InformationsSection({ orgSlug }: { orgSlug: string }) {
           className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
         <FieldError mutation={mutation} field="phone" />
+      </div>
+
+      {/* Social links */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="org-linkedin" className="block text-sm font-medium text-gray-700">
+            LinkedIn
+          </label>
+          <input
+            id="org-linkedin"
+            type="url"
+            value={linkedin}
+            onChange={(e) => setLinkedin(e.target.value)}
+            placeholder="https://linkedin.com/company/..."
+            className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <FieldError mutation={mutation} field="linkedin" />
+        </div>
+
+        <div>
+          <label htmlFor="org-instagram" className="block text-sm font-medium text-gray-700">
+            Instagram
+          </label>
+          <input
+            id="org-instagram"
+            type="url"
+            value={instagram}
+            onChange={(e) => setInstagram(e.target.value)}
+            placeholder="https://instagram.com/..."
+            className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <FieldError mutation={mutation} field="instagram" />
+        </div>
       </div>
 
       <div className="pt-2">

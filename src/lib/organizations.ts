@@ -50,6 +50,8 @@ export interface Organization {
   website?: string | null;
   email?: string | null;
   phone?: string | null;
+  linkedin?: string | null;
+  instagram?: string | null;
   facility_types?: string[];
   processing_types?: string[];
   product_types?: string[];
