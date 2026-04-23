@@ -247,6 +247,7 @@ function InformationsSection({ orgSlug }: { orgSlug: string }) {
 
 function DataSection({ orgSlug }: { orgSlug: string }) {
   const queryClient = useQueryClient();
+  const dataInfo = useFeatureInfo('data-privacy');
 
   const orgQuery = useQuery({
     queryKey: ['organizations', orgSlug],
@@ -302,6 +303,12 @@ function DataSection({ orgSlug }: { orgSlug: string }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      <FeatureIntro
+        info={dataInfo}
+        title="Your data stays private"
+        description="This information is never displayed on your public profile. It is used exclusively to produce anonymous, aggregated statistics that help researchers and policymakers optimize local textile ecosystems, improve access to funding, inform urban planning decisions, and shape better legislation for the circular economy."
+      />
+
       <FormError mutation={mutation} />
 
       {mutation.isSuccess && (
