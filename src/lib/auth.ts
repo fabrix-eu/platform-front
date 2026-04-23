@@ -67,3 +67,13 @@ export async function getMe(): Promise<User> {
 export function isAuthenticated(): boolean {
   return !!localStorage.getItem('access_token');
 }
+
+const ACTIVE_ORG_KEY = 'active_org_slug';
+
+export function getActiveOrgSlug(): string | null {
+  return localStorage.getItem(ACTIVE_ORG_KEY);
+}
+
+export function setActiveOrgSlug(slug: string): void {
+  localStorage.setItem(ACTIVE_ORG_KEY, slug);
+}

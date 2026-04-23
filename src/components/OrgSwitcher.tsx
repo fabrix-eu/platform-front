@@ -1,9 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useParams, useRouter } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { getMe, type MeOrganization } from '../lib/auth';
+import { getMe, getActiveOrgSlug, setActiveOrgSlug, type MeOrganization } from '../lib/auth';
 import { ORG_KINDS } from '../lib/organizations';
-import { getPendingActions } from '../lib/pending-actions';
 
 function OrgAvatar({ org }: { org: MeOrganization }) {
   const initials = org.organization_name
@@ -55,12 +54,6 @@ function getOrgSwitchPath(
   return pathname.replace(`/${currentSlug}`, `/${newSlug}`);
 }
 
-const HomeIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-  </svg>
-);
-
 const ChevronDown = () => (
   <svg className="h-3 w-3 opacity-50" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
@@ -77,22 +70,15 @@ export function OrgSwitcher() {
   const me = useQuery({ queryKey: ['me'], queryFn: getMe });
   const organizations = me.data?.organizations ?? [];
 
-  const ownedOrgs = organizations
-    .filter((o) => o.role === 'owner')
-    .map((o) => ({ id: o.organization_id, slug: o.organization_slug, name: o.organization_name }));
+  const resolvedSlug = orgSlug || getActiveOrgSlug();
+  const currentOrg = (resolvedSlug
+    ? organizations.find((o) => o.organization_slug === resolvedSlug)
+    : null) ?? organizations[0] ?? null;
 
-  const pendingActions = useQuery({
-    queryKey: ['pending-actions', ownedOrgs.map((o) => o.id)],
-    queryFn: () => getPendingActions(ownedOrgs),
-    enabled: !!me.data,
-    staleTime: 60_000,
-  });
-
-  const hasPendingActions = (pendingActions.data?.total ?? 0) > 0;
-
-  const currentOrg = orgSlug
-    ? organizations.find((o) => o.organization_slug === orgSlug)
-    : null;
+  // Persist active org whenever it changes
+  useEffect(() => {
+    if (currentOrg) setActiveOrgSlug(currentOrg.organization_slug);
+  }, [currentOrg]);
 
   // Close on outside click
   useEffect(() => {
@@ -107,6 +93,8 @@ export function OrgSwitcher() {
 
   if (organizations.length === 0) return null;
 
+  const activeSlug = currentOrg?.organization_slug;
+
   const handleOrgClick = (org: MeOrganization) => {
     setOpen(false);
     const pathname = router.state.location.pathname;
@@ -116,21 +104,6 @@ export function OrgSwitcher() {
 
   return (
     <nav className="flex items-center gap-0 text-sm min-w-0">
-      {/* Home link */}
-      <Link
-        to="/"
-        className="relative flex items-center text-gray-400 hover:text-gray-700 transition-colors p-1 rounded-md hover:bg-gray-100"
-        title="Explorer"
-      >
-        <HomeIcon />
-        {hasPendingActions && (
-          <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-amber-500 border-2 border-white" />
-        )}
-      </Link>
-
-      {/* Separator */}
-      <span className="text-gray-300 mx-1.5 select-none">/</span>
-
       {/* Org switcher dropdown */}
       <div ref={dropdownRef} className="relative min-w-0">
         <button
@@ -166,7 +139,7 @@ export function OrgSwitcher() {
                     type="button"
                     onClick={() => handleOrgClick(org)}
                     className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-gray-50 transition-colors text-left ${
-                      org.organization_slug === orgSlug ? 'bg-gray-50 font-medium' : 'text-gray-700'
+                      org.organization_slug === activeSlug ? 'bg-gray-50 font-medium' : 'text-gray-700'
                     }`}
                   >
                     <OrgAvatar org={org} />

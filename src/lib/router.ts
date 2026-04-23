@@ -301,6 +301,22 @@ const explorerRoute = createRoute({
 const indexRoute = createRoute({
   getParentRoute: () => explorerRoute,
   path: '/',
+  beforeLoad: async () => {
+    if (isAuthenticated()) {
+      try {
+        const me = await ensureMe();
+        if (me.organizations.length > 0) {
+          throw redirect({
+            to: '/$orgSlug/dashboard',
+            params: { orgSlug: me.organizations[0].organization_slug },
+          });
+        }
+      } catch (e) {
+        if (e && typeof e === 'object' && 'to' in e) throw e;
+        // auth failed, show home page
+      }
+    }
+  },
   component: HomePage,
 });
 
