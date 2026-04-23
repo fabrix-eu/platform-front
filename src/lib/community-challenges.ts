@@ -239,12 +239,119 @@ export async function withdrawApplication(
   );
 }
 
+// ── Global challenge CRUD ────────────────────────────────────
+
+export async function createGlobalChallenge(data: {
+  title: string;
+  description: string;
+  organization_id: string;
+  number_of_winners?: number;
+  start_on?: string;
+  end_on?: string;
+  state?: string;
+  requires_attachment?: boolean;
+  image_url?: string;
+}): Promise<Challenge> {
+  return api.post<Challenge>('/challenges', { challenge: data });
+}
+
+export async function updateGlobalChallenge(
+  challengeId: string,
+  data: Partial<{
+    title: string;
+    description: string;
+    number_of_winners: number;
+    start_on: string;
+    end_on: string;
+    state: string;
+    requires_attachment: boolean;
+    image_url: string;
+  }>,
+): Promise<Challenge> {
+  return api.patch<Challenge>(`/challenges/${challengeId}`, { challenge: data });
+}
+
+export async function deleteGlobalChallenge(challengeId: string): Promise<void> {
+  return api.delete(`/challenges/${challengeId}`);
+}
+
+export async function getGlobalChallengeDetail(
+  challengeId: string,
+): Promise<Challenge> {
+  return api.get<Challenge>(`/challenges/${challengeId}`);
+}
+
+// ── Global challenge applications ───────────────────────────
+
+export async function createGlobalApplication(
+  challengeId: string,
+  data: { note?: string; attachment_url?: string; attachment_key?: string },
+): Promise<ChallengeApplication> {
+  return api.post<ChallengeApplication>(
+    `/challenges/${challengeId}/applications`,
+    { challenge_application: data },
+  );
+}
+
+export async function getGlobalApplications(
+  challengeId: string,
+  params: { per_page?: number } = {},
+): Promise<ApplicationsResponse> {
+  const qp = new URLSearchParams();
+  if (params.per_page) qp.set('per_page', String(params.per_page));
+
+  const token = localStorage.getItem('access_token');
+  const res = await fetch(`${BASE}/challenges/${challengeId}/applications?${qp}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    return { data: [], meta: { current_page: 1, total_pages: 1, total_count: 0, next_page: null, prev_page: null } };
+  }
+
+  return res.json();
+}
+
+export async function acceptGlobalApplication(
+  challengeId: string,
+  applicationId: string,
+): Promise<ChallengeApplication> {
+  return api.patch<ChallengeApplication>(
+    `/challenges/${challengeId}/applications/${applicationId}/accept`,
+    {},
+  );
+}
+
+export async function rejectGlobalApplication(
+  challengeId: string,
+  applicationId: string,
+): Promise<ChallengeApplication> {
+  return api.patch<ChallengeApplication>(
+    `/challenges/${challengeId}/applications/${applicationId}/reject`,
+    {},
+  );
+}
+
+export async function selectGlobalWinner(
+  challengeId: string,
+  applicationId: string,
+): Promise<ChallengeApplication> {
+  return api.patch<ChallengeApplication>(
+    `/challenges/${challengeId}/applications/${applicationId}/select_winner`,
+    {},
+  );
+}
+
 // ── Global challenges (cross-community) ─────────────────────
 
 export interface GlobalChallengeParams {
   page?: number;
   per_page?: number;
   search?: string;
+  by_organization?: string;
   by_country?: string;
   'within_distance[lon]'?: string;
   'within_distance[lat]'?: string;
@@ -258,6 +365,7 @@ export async function getAllChallenges(
   if (params.page) qp.set('page', String(params.page));
   if (params.per_page) qp.set('per_page', String(params.per_page));
   if (params.search) qp.set('search', params.search);
+  if (params.by_organization) qp.set('by_organization', params.by_organization);
   if (params.by_country) qp.set('by_country', params.by_country);
   if (params['within_distance[lon]']) qp.set('within_distance[lon]', params['within_distance[lon]']);
   if (params['within_distance[lat]']) qp.set('within_distance[lat]', params['within_distance[lat]']);

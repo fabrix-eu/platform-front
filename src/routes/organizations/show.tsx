@@ -3,9 +3,10 @@ import { Link, useParams, useSearch } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getOrganization, updateOrganization, submitClaim, ORG_KINDS } from '../../lib/organizations';
 import type { Organization } from '../../lib/organizations';
-import { getMockSections, COVER_IMAGES } from '../../lib/mockOrgData';
-import type { MockSection } from '../../lib/mockOrgData';
+import { COVER_IMAGES } from '../../lib/mockOrgData';
 import { getMe } from '../../lib/auth';
+import { useListings, LISTING_TYPES, LISTING_CATEGORIES } from '../../lib/listings';
+import type { Listing } from '../../lib/listings';
 import { createJoinRequest, getMyJoinRequests } from '../../lib/join-requests';
 import { uploadFile } from '../../lib/uploads';
 import { FieldError, FormError } from '../../components/FieldError';
@@ -47,48 +48,54 @@ function KindBadge({ kind }: { kind: string | null }) {
   );
 }
 
-function SectionCards({ section }: { section: MockSection }) {
+function ListingCard({ listing }: { listing: Listing }) {
+  const categoryConfig = LISTING_CATEGORIES[listing.category];
   return (
-    <div>
-      <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-4">
-        <span>{section.icon}</span>
-        {section.title}
-      </h3>
-      {section.title === 'Looking for' ? (
-        <div className="flex flex-wrap gap-2">
-          {section.items.map((item) => (
-            <div
-              key={item.title}
-              className="bg-primary/5 border border-primary/20 rounded-lg px-4 py-3 flex-1 min-w-[200px]"
-            >
-              <p className="text-sm font-medium text-gray-900">{item.title}</p>
-              <p className="text-xs text-gray-500 mt-1">{item.description}</p>
-            </div>
-          ))}
-        </div>
+    <Link
+      to="/marketplace/$id"
+      params={{ id: listing.id }}
+      className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md hover:border-gray-300 transition-all"
+    >
+      {listing.thumbnail_url ? (
+        <img src={listing.thumbnail_url} alt="" className="w-full h-36 object-cover" />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {section.items.map((item) => (
-            <div
-              key={item.title}
-              className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
-            >
-              {item.image && (
-                <img
-                  src={item.image}
-                  alt={item.title}
-                  className="w-full h-36 object-cover"
-                />
-              )}
-              <div className="p-3">
-                <p className="text-sm font-medium text-gray-900">{item.title}</p>
-                <p className="text-xs text-gray-500 mt-1">{item.description}</p>
-              </div>
-            </div>
-          ))}
+        <div className="w-full h-36 bg-gray-50 flex items-center justify-center">
+          <svg className="w-8 h-8 text-gray-200" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
+          </svg>
         </div>
       )}
-    </div>
+      <div className="p-3">
+        <p className="text-sm font-medium text-gray-900 truncate">{listing.title}</p>
+        {categoryConfig && (
+          <span className={`inline-flex items-center mt-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${categoryConfig.badgeColor}`}>
+            {categoryConfig.label}
+          </span>
+        )}
+        {listing.description && (
+          <p className="text-xs text-gray-500 mt-1 line-clamp-2">{listing.description}</p>
+        )}
+      </div>
+    </Link>
+  );
+}
+
+function ListingsSection({ orgId, listingType }: { orgId: string; listingType: string }) {
+  const listingsQuery = useListings({ by_organization: orgId, by_type: listingType, per_page: 6 });
+  const listings = listingsQuery.data?.data ?? [];
+  const typeConfig = LISTING_TYPES[listingType];
+
+  if (listingsQuery.isLoading || listings.length === 0) return null;
+
+  return (
+    <section className="bg-white border border-gray-200 rounded-lg p-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">{typeConfig?.label ?? listingType}</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {listings.map((listing) => (
+          <ListingCard key={listing.id} listing={listing} />
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -406,7 +413,6 @@ export function OrganizationShowPage() {
   const isLoggedIn = !!me;
   const kindConfig = org.kind ? ORG_KINDS[org.kind] || ORG_KINDS.other : null;
   const coverUrl = org.cover_url || (org.kind && COVER_IMAGES[org.kind]) || COVER_IMAGES.default;
-  const sections = getMockSections(org.kind);
 
   return (
     <div className="max-w-4xl mx-auto pb-12">
@@ -575,12 +581,11 @@ export function OrganizationShowPage() {
           </section>
         )}
 
-        {/* Mock sections (Products / Machines / Capacities / Looking for) */}
-        {sections.map((section) => (
-          <section key={section.title} className="bg-white border border-gray-200 rounded-lg p-6">
-            <SectionCards section={section} />
-          </section>
-        ))}
+        {/* Listings */}
+        <ListingsSection orgId={org.id} listingType="product" />
+        <ListingsSection orgId={org.id} listingType="service" />
+        <ListingsSection orgId={org.id} listingType="capacity" />
+        <ListingsSection orgId={org.id} listingType="material" />
 
         {/* Communities */}
         {org.communities && org.communities.length > 0 && (
