@@ -10,6 +10,7 @@ import {
   ChallengeDateRange,
   ChallengeMeta,
 } from '../../components/ChallengeShared';
+import { useFeatureInfo, FeatureIntro, FeatureInfoTrigger } from '../../components/FeatureIntro';
 
 function ChallengeCard({ challenge }: { challenge: Challenge }) {
   return (
@@ -42,6 +43,7 @@ function ChallengeCard({ challenge }: { challenge: Challenge }) {
 }
 
 export function ChallengesListPage() {
+  const challengesInfo = useFeatureInfo('challenges');
   const navigate = useNavigate();
   const { page, search, country, lon, lat, radius, location_label } = useSearch({ strict: false }) as {
     page?: number;
@@ -92,8 +94,17 @@ export function ChallengesListPage() {
   return (
     <div className="max-w-3xl mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Challenges</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold">Challenges</h1>
+          <FeatureInfoTrigger info={challengesInfo} />
+        </div>
       </div>
+
+      <FeatureIntro
+        info={challengesInfo}
+        title="Challenges"
+        description="Explore open challenges posted by communities and organizations. Apply to contribute your expertise, collaborate on circular textile projects, and win recognition for your solutions."
+      />
 
       {/* Search + Location */}
       <div className="space-y-3 mb-6">

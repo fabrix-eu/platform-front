@@ -5,6 +5,7 @@ import { getAllEvents } from '../../lib/community-events';
 import type { CommunityEvent } from '../../lib/community-events';
 import { LocationFilter } from '../../components/LocationFilter';
 import type { LocationFilterParams } from '../../components/LocationFilter';
+import { useFeatureInfo, FeatureIntro, FeatureInfoTrigger } from '../../components/FeatureIntro';
 
 function formatEventDate(iso: string): string {
   const d = new Date(iso);
@@ -80,6 +81,7 @@ function EventCard({ event }: { event: CommunityEvent }) {
 type Tab = 'upcoming' | 'past';
 
 export function EventsListPage() {
+  const eventsInfo = useFeatureInfo('events');
   const navigate = useNavigate();
   const { page, search, country, lon, lat, radius, location_label } = useSearch({ strict: false }) as {
     page?: number;
@@ -141,8 +143,17 @@ export function EventsListPage() {
   return (
     <div className="max-w-3xl mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Events</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold">Events</h1>
+          <FeatureInfoTrigger info={eventsInfo} />
+        </div>
       </div>
+
+      <FeatureIntro
+        info={eventsInfo}
+        title="Events"
+        description="Discover events organized by communities across the circular textile ecosystem. Workshops, conferences, networking sessions and more — find opportunities to connect and learn."
+      />
 
       {/* Search + Location */}
       <div className="space-y-3 mb-6">

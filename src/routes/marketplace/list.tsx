@@ -11,6 +11,7 @@ import type { Listing } from '../../lib/listings';
 import { TaxonomyFilter } from '../../components/TaxonomyFilter';
 import { LocationFilter } from '../../components/LocationFilter';
 import type { LocationFilterParams } from '../../components/LocationFilter';
+import { useFeatureInfo, FeatureIntro, FeatureInfoTrigger } from '../../components/FeatureIntro';
 
 function TypeBadge({ type }: { type: string }) {
   const config = LISTING_TYPES[type];
@@ -89,6 +90,7 @@ function ListingCard({ listing }: { listing: Listing }) {
 }
 
 export function MarketplaceListPage() {
+  const marketplaceInfo = useFeatureInfo('marketplace');
   const navigate = useNavigate();
   const { search, page, by_type, by_category, by_subcategory, country, lon, lat, radius, location_label } = useSearch({ strict: false }) as {
     search?: string;
@@ -162,7 +164,10 @@ export function MarketplaceListPage() {
     <div className="max-w-5xl mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Marketplace</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold">Marketplace</h1>
+          <FeatureInfoTrigger info={marketplaceInfo} />
+        </div>
         {isAuthenticated() && (
           <Link
             to="/marketplace/new"
@@ -172,6 +177,12 @@ export function MarketplaceListPage() {
           </Link>
         )}
       </div>
+
+      <FeatureIntro
+        info={marketplaceInfo}
+        title="Marketplace"
+        description="Browse and publish listings for services, materials, capacities and products. Connect with organizations across the circular textile ecosystem to find what you need or offer what you have."
+      />
 
       {/* Search + Filters */}
       <div className="space-y-3">

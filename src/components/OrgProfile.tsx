@@ -595,8 +595,7 @@ function MoreMenu({ children }: { children: React.ReactNode }) {
       {open && (
         <div
           ref={menuRef}
-          className="absolute right-0 top-full mt-1 w-48 bg-white border border-border rounded-lg shadow-lg z-50 py-1"
-          onClick={() => setOpen(false)}
+          className="absolute right-0 top-full mt-1 min-w-48 bg-white border border-border rounded-lg shadow-lg z-50 py-1"
         >
           {children}
         </div>

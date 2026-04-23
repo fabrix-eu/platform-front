@@ -1,4 +1,5 @@
 import { Link, Outlet, useMatches } from '@tanstack/react-router';
+import { useFeatureInfo, FeatureIntro, FeatureInfoTrigger } from '../../components/FeatureIntro';
 
 const tabs = [
   { label: 'Rotterdam', to: '/data/rotterdam' as const },
@@ -6,6 +7,7 @@ const tabs = [
 ];
 
 export function DataLayout() {
+  const dataInfo = useFeatureInfo('city-data');
   const matches = useMatches();
   const currentPath = matches[matches.length - 1]?.fullPath ?? '';
 
@@ -14,6 +16,7 @@ export function DataLayout() {
       <div className="border-b border-border bg-white px-6 pt-4">
         <div className="flex items-center gap-3 mb-3">
           <h1 className="text-lg font-semibold font-display">Data</h1>
+          <FeatureInfoTrigger info={dataInfo} />
         </div>
         <nav className="flex gap-4">
           {tabs.map((tab) => {
@@ -35,6 +38,11 @@ export function DataLayout() {
         </nav>
       </div>
       <div className="flex-1 overflow-auto p-6">
+        <FeatureIntro
+          info={dataInfo}
+          title="City Data"
+          description="Explore interactive maps and statistics about the textile industry at city level. Visualize company density, sector distribution, and economic trends across European cities."
+        />
         <Outlet />
       </div>
     </div>

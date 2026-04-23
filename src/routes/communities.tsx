@@ -3,8 +3,10 @@ import { Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getCommunities } from '../lib/communities';
 import { getMe } from '../lib/auth';
+import { useFeatureInfo, FeatureIntro, FeatureInfoTrigger } from '../components/FeatureIntro';
 
 export function CommunitiesPage() {
+  const communitiesInfo = useFeatureInfo('communities');
   const [search, setSearch] = useState('');
 
   const query = useQuery({
@@ -20,7 +22,10 @@ export function CommunitiesPage() {
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-gray-900">Communities</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-display font-bold text-gray-900">Communities</h1>
+            <FeatureInfoTrigger info={communitiesInfo} />
+          </div>
           <p className="text-sm text-gray-500 mt-1">
             Discover communities and request to join with your organization.
           </p>
@@ -34,6 +39,12 @@ export function CommunitiesPage() {
           </Link>
         )}
       </div>
+
+      <FeatureIntro
+        info={communitiesInfo}
+        title="Communities"
+        description="Communities bring together organizations around shared goals in circular textile. Join a community to access events, challenges, matchmaking, and collaboration with facilitators and peers."
+      />
 
       <input
         type="text"

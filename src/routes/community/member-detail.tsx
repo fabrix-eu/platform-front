@@ -8,8 +8,144 @@ import {
   removeCommunityOrganization,
 } from '../../lib/community-organizations';
 import type { CommunityOrganization } from '../../lib/community-organizations';
+import { getOrganization } from '../../lib/organizations';
+import { getFormsWithAnswers } from '../../lib/forms';
 import { useFacilitatorPanel } from '../../components/FacilitatorPanel';
 import { OrgProfile } from '../../components/OrgProfile';
+
+// ── Facilitator data sections ────────────────────────────────────
+
+function InfoRow({ label, value }: { label: string; value: string | number | null | undefined }) {
+  if (value == null || value === '') return null;
+  return (
+    <div>
+      <p className="text-xs text-gray-400">{label}</p>
+      <p className="text-sm text-gray-700">{value}</p>
+    </div>
+  );
+}
+
+function OrgDataSection({ orgId }: { orgId: string }) {
+  const query = useQuery({
+    queryKey: ['organizations', orgId],
+    queryFn: () => getOrganization(orgId),
+  });
+
+  if (query.isLoading) {
+    return (
+      <div className="bg-white/80 rounded-lg p-3">
+        <div className="animate-pulse space-y-2">
+          <div className="h-3 bg-gray-200 rounded w-1/2" />
+          <div className="h-3 bg-gray-200 rounded w-3/4" />
+        </div>
+      </div>
+    );
+  }
+
+  const org = query.data;
+  if (!org) return null;
+
+  const hasData = org.number_of_workers != null || org.turnover != null || org.nace_code ||
+    (org.facility_types && org.facility_types.length > 0) ||
+    (org.processing_types && org.processing_types.length > 0) ||
+    (org.product_types && org.product_types.length > 0) ||
+    org.development_stage || org.sector;
+
+  return (
+    <div className="bg-white/80 rounded-lg p-3 space-y-3">
+      <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Organization data</h4>
+      {!hasData ? (
+        <p className="text-xs text-gray-400 italic">No data filled yet</p>
+      ) : (
+        <>
+          <InfoRow label="Workers" value={org.number_of_workers} />
+          <InfoRow label="Turnover" value={org.turnover != null ? `€${org.turnover.toLocaleString()}` : null} />
+          <InfoRow label="NACE code" value={org.nace_code} />
+          <InfoRow label="Sector" value={org.sector} />
+          <InfoRow label="Stage" value={org.development_stage} />
+          {org.facility_types && org.facility_types.length > 0 && (
+            <div>
+              <p className="text-xs text-gray-400">Facility types</p>
+              <p className="text-sm text-gray-700">{org.facility_types.join(', ')}</p>
+            </div>
+          )}
+          {org.processing_types && org.processing_types.length > 0 && (
+            <div>
+              <p className="text-xs text-gray-400">Processing types</p>
+              <p className="text-sm text-gray-700">{org.processing_types.join(', ')}</p>
+            </div>
+          )}
+          {org.product_types && org.product_types.length > 0 && (
+            <div>
+              <p className="text-xs text-gray-400">Product types</p>
+              <p className="text-sm text-gray-700">{org.product_types.join(', ')}</p>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+const STATUS_STYLES: Record<string, { label: string; className: string }> = {
+  completed: { label: 'Completed', className: 'text-emerald-700 bg-emerald-50' },
+  in_progress: { label: 'In progress', className: 'text-amber-700 bg-amber-50' },
+  draft: { label: 'Draft', className: 'text-gray-500 bg-gray-50' },
+};
+
+function AssessmentsSection({ orgId }: { orgId: string }) {
+  const query = useQuery({
+    queryKey: ['assessments', orgId],
+    queryFn: () => getFormsWithAnswers(orgId),
+  });
+
+  if (query.isLoading) {
+    return (
+      <div className="bg-white/80 rounded-lg p-3">
+        <div className="animate-pulse space-y-2">
+          <div className="h-3 bg-gray-200 rounded w-1/2" />
+          <div className="h-3 bg-gray-200 rounded w-3/4" />
+        </div>
+      </div>
+    );
+  }
+
+  const forms = query.data ?? [];
+  if (forms.length === 0) return null;
+
+  return (
+    <div className="bg-white/80 rounded-lg p-3 space-y-3">
+      <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Assessments</h4>
+      <div className="space-y-2">
+        {forms.map((form) => {
+          const latest = [...form.answers]
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+          const style = latest ? STATUS_STYLES[latest.status] || STATUS_STYLES.draft : null;
+
+          return (
+            <div key={form.id} className="flex items-center justify-between gap-2">
+              <span className="text-sm text-gray-700 truncate">{form.title}</span>
+              {latest ? (
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {latest.status === 'completed' && (
+                    <span className="text-xs font-medium text-emerald-700">
+                      {Math.round(latest.normalized_score)}%
+                    </span>
+                  )}
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${style!.className}`}>
+                    {style!.label}
+                  </span>
+                </div>
+              ) : (
+                <span className="text-[10px] text-gray-400 italic shrink-0">Not started</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 // ── Facilitator sidebar (community-specific) ────────────────────
 
@@ -151,6 +287,12 @@ function FacilitatorSidebar({
           </div>
         )}
       </div>
+
+      {/* Org data */}
+      <OrgDataSection orgId={membership.organization_id} />
+
+      {/* Assessments */}
+      <AssessmentsSection orgId={membership.organization_id} />
 
       {/* Remove member */}
       <div className="bg-white/80 border border-red-200/50 rounded-lg p-3">
