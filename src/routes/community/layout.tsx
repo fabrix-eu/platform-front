@@ -1,6 +1,7 @@
 import { Link, Outlet, useParams, useLocation } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getMe } from '../../lib/auth';
+import { FacilitatorPanelProvider, FacilitatorPanelSlot } from '../../components/FacilitatorPanel';
 
 interface TabItem {
   key: string;
@@ -70,9 +71,14 @@ export function CommunityLayout() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 bg-gray-50/50">
-        <Outlet />
-      </div>
+      <FacilitatorPanelProvider>
+        <div className="flex-1 flex min-h-0">
+          <div className="flex-1 bg-gray-50/50 overflow-y-auto">
+            <Outlet />
+          </div>
+          {isAdmin && <FacilitatorPanelSlot />}
+        </div>
+      </FacilitatorPanelProvider>
     </div>
   );
 }
