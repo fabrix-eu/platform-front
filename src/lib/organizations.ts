@@ -89,11 +89,25 @@ export async function getOrganizations(params: {
   page?: number;
   per_page?: number;
   search?: string;
+  kinds?: string;
+  by_claimed?: string;
+  by_country?: string;
+  lon?: number;
+  lat?: number;
+  radius?: number;
 }): Promise<OrganizationsResponse> {
   const qs = new URLSearchParams();
   if (params.page) qs.set('page', String(params.page));
   if (params.per_page) qs.set('per_page', String(params.per_page));
   if (params.search) qs.set('search', params.search);
+  if (params.kinds) qs.set('kinds', params.kinds);
+  if (params.by_claimed !== undefined) qs.set('by_claimed', params.by_claimed);
+  if (params.by_country) qs.set('by_country', params.by_country);
+  if (params.lon !== undefined && params.lat !== undefined) {
+    qs.set('within_distance[lon]', String(params.lon));
+    qs.set('within_distance[lat]', String(params.lat));
+    if (params.radius) qs.set('within_distance[radius]', String(params.radius));
+  }
 
   const suffix = qs.toString() ? `?${qs}` : '';
 

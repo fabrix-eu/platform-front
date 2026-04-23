@@ -312,6 +312,13 @@ const organizationsIndexRoute = createRoute({
   validateSearch: z.object({
     page: z.number().optional(),
     search: z.string().optional(),
+    kinds: z.string().optional(),
+    claimed: z.string().optional(),
+    country: z.string().optional(),
+    lon: z.number().optional(),
+    lat: z.number().optional(),
+    radius: z.number().optional(),
+    location_label: z.string().optional(),
   }),
   component: OrganizationsListPage,
 });
