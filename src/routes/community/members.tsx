@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useParams, useNavigate, useSearch } from '@tanstack/react-router';
+import { useState, useRef, useEffect } from 'react';
+import { useParams, useNavigate, useSearch } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getMe } from '../../lib/auth';
 import { ORG_KINDS } from '../../lib/organizations';
@@ -9,79 +9,9 @@ import {
   addCommunityOrganization,
 } from '../../lib/community-organizations';
 import { getOrganizations } from '../../lib/organizations';
+import { OrgAvatar, KindBadge, OrgCard, OrgListRow } from '../../components/OrgShared';
 
-// ── Shared components (same as directory) ────────────────────
-
-function OrgAvatar({ org }: { org: Organization }) {
-  if (org.image_url) {
-    return (
-      <img
-        src={org.image_url}
-        alt={org.name}
-        className="w-10 h-10 rounded-full object-cover bg-gray-100"
-      />
-    );
-  }
-  const initials = org.name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
-  return (
-    <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold">
-      {initials}
-    </div>
-  );
-}
-
-function KindBadge({ kind }: { kind: string | null }) {
-  if (!kind) return null;
-  const config = ORG_KINDS[kind] || ORG_KINDS.other;
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${config.badgeColor}`}>
-      {config.label}
-    </span>
-  );
-}
-
-function OrgCard({ org, linkTo }: { org: Organization; linkTo: string }) {
-  const kind = org.kind ? ORG_KINDS[org.kind] || ORG_KINDS.other : null;
-  return (
-    <Link
-      to={linkTo}
-      className="block bg-white rounded-lg border border-border hover:border-gray-300 hover:shadow-md transition-all group"
-    >
-      <div className="p-4">
-        <div className="flex items-start gap-3">
-          <OrgAvatar org={org} />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between">
-              <h3 className="font-display font-semibold text-sm text-gray-900 truncate">
-                {org.name}
-              </h3>
-              <svg className="h-4 w-4 text-gray-400 group-hover:text-gray-600 transition-colors shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-              </svg>
-            </div>
-            <div className="flex items-center gap-2 mt-1">
-              {kind && (
-                <span className={`inline-block text-[10px] px-1.5 py-0 rounded-full ${kind.badgeColor}`}>
-                  {kind.label}
-                </span>
-              )}
-            </div>
-            {org.address && (
-              <p className="text-xs text-muted-foreground mt-2 truncate">
-                {[org.address, org.country_code].filter(Boolean).join(', ')}
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
-}
+const ALL_KINDS = Object.entries(ORG_KINDS);
 
 // ── Add member modal ─────────────────────────────────────────
 
@@ -199,10 +129,31 @@ export function CommunityMembersPage() {
   const { orgSlug, communitySlug } = useParams({ strict: false }) as { orgSlug: string; communitySlug: string };
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { search, page } = useSearch({ strict: false }) as { search?: string; page?: number };
+  const searchParams = useSearch({ strict: false }) as { search?: string; page?: number; kinds?: string };
+  const { search, page, kinds } = searchParams;
 
-  const [view, setView] = useState<'list' | 'cards'>('list');
+  const selectedKinds = kinds ? kinds.split(',') : [];
+  const [view, setView] = useState<'list' | 'cards'>('cards');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
+  const filterBtnRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (
+        filtersOpen &&
+        filterRef.current && !filterRef.current.contains(e.target as Node) &&
+        filterBtnRef.current && !filterBtnRef.current.contains(e.target as Node)
+      ) {
+        setFiltersOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [filtersOpen]);
+
+  const activeFilterCount = selectedKinds.length > 0 ? 1 : 0;
 
   const me = useQuery({ queryKey: ['me'], queryFn: getMe });
   const isAdmin = me.data?.accessible_communities?.some(
@@ -210,47 +161,80 @@ export function CommunityMembersPage() {
   ) ?? false;
 
   const query = useQuery({
-    queryKey: ['community_organizations', communitySlug, { page, search }],
-    queryFn: () => getCommunityOrganizations(communitySlug, { page: page || 1, per_page: 20, search }),
+    queryKey: ['community_organizations', communitySlug, { page, search, kinds }],
+    queryFn: () => getCommunityOrganizations(communitySlug, { page: page || 1, per_page: 20, search, kinds }),
   });
 
   const meta = query.data?.meta;
   const members = query.data?.data ?? [];
 
-  const goToPage = (params: { search?: string; page?: number }) => {
-    const sp = new URLSearchParams();
-    if (params.search) sp.set('search', params.search);
-    if (params.page && params.page > 1) sp.set('page', String(params.page));
-    const qs = sp.toString();
-    navigate({ to: location.pathname + (qs ? `?${qs}` : '') });
+  const updateSearch = (updates: Record<string, unknown>) => {
+    navigate({
+      to: '/$orgSlug/communities/$communitySlug/members',
+      params: { orgSlug, communitySlug },
+      search: { ...searchParams, page: 1, ...updates },
+    });
   };
 
-  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     const q = (fd.get('search') as string) || '';
-    goToPage({ search: q || undefined, page: 1 });
+    updateSearch({ search: q || undefined });
+  };
+
+  const toggleKind = (kind: string) => {
+    const next = selectedKinds.includes(kind)
+      ? selectedKinds.filter((k) => k !== kind)
+      : [...selectedKinds, kind];
+    updateSearch({ kinds: next.length > 0 ? next.join(',') : undefined });
+  };
+
+  const setPage = (p: number) => {
+    updateSearch({ page: p > 1 ? p : undefined });
   };
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
-      {/* Header */}
       <h2 className="text-lg font-display font-bold text-gray-900">Members</h2>
 
-      {/* Search + View toggle + Add */}
-      <form onSubmit={handleSearch} className="flex gap-2">
-        <input
-          name="search"
-          defaultValue={search || ''}
-          placeholder="Search members..."
-          className="flex-1 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-        <button
-          type="submit"
-          className="bg-secondary text-secondary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-secondary/80"
-        >
-          Search
-        </button>
+      {/* Search + Filter + View toggle + Add */}
+      <div className="flex gap-2 items-center">
+        <form onSubmit={handleSearchSubmit} className="flex-1 relative">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+          </svg>
+          <input
+            name="search"
+            defaultValue={search || ''}
+            placeholder="Search members..."
+            className="w-full border border-border rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </form>
+
+        <div className="relative">
+          <button
+            ref={filterBtnRef}
+            type="button"
+            onClick={() => setFiltersOpen(!filtersOpen)}
+            className={`relative border rounded-lg px-3 py-2 text-sm transition-colors ${
+              filtersOpen || activeFilterCount > 0
+                ? 'border-primary bg-primary/5 text-primary'
+                : 'border-border text-muted-foreground hover:bg-muted/50'
+            }`}
+            title="Filters"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75M10.5 18a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 18H7.5m6-6h6.75M13.5 12a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 12h7.5" />
+            </svg>
+            {activeFilterCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-primary text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+        </div>
+
         <div className="flex border border-border rounded-lg overflow-hidden">
           <button
             type="button"
@@ -273,6 +257,7 @@ export function CommunityMembersPage() {
             </svg>
           </button>
         </div>
+
         {isAdmin && (
           <button
             type="button"
@@ -282,7 +267,44 @@ export function CommunityMembersPage() {
             Add member
           </button>
         )}
-      </form>
+      </div>
+
+      {/* Filter panel */}
+      {filtersOpen && (
+        <div ref={filterRef} className="border border-border rounded-lg bg-white p-4 space-y-4 shadow-sm">
+          <div>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Organization type</label>
+            <div className="flex flex-wrap gap-1.5">
+              {ALL_KINDS.map(([key, cfg]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => toggleKind(key)}
+                  className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                    selectedKinds.includes(key)
+                      ? `${cfg.badgeColor} ring-2 ring-offset-1 ring-primary/30`
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {cfg.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {activeFilterCount > 0 && (
+            <div className="pt-2 border-t border-border">
+              <button
+                type="button"
+                onClick={() => updateSearch({ kinds: undefined })}
+                className="text-sm text-gray-500 hover:text-gray-700"
+              >
+                Clear all filters
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Content */}
       {query.isLoading && <p className="text-muted-foreground">Loading...</p>}
@@ -295,35 +317,11 @@ export function CommunityMembersPage() {
           {view === 'list' && (
             <div className="divide-y divide-border border border-border rounded-lg bg-card">
               {members.map((m) => (
-                <Link
+                <OrgListRow
                   key={m.id}
-                  to="/$orgSlug/communities/$communitySlug/members/$memberId"
-                  params={{ orgSlug, communitySlug, memberId: m.id }}
-                  className="flex items-center gap-4 px-4 py-3 hover:bg-muted/50 transition-colors"
-                >
-                  <OrgAvatar org={m.organization} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-foreground truncate">{m.organization.name}</p>
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <KindBadge kind={m.organization.kind} />
-                      {m.organization.address && (
-                        <span className="text-xs text-muted-foreground truncate">
-                          {[m.organization.address, m.organization.country_code].filter(Boolean).join(', ')}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    {m.organization.relations_count > 0 && (
-                      <span className="text-xs text-muted-foreground">
-                        {m.organization.relations_count} rel.
-                      </span>
-                    )}
-                    <span className="text-muted-foreground">&rarr;</span>
-                  </div>
-                </Link>
+                  org={m.organization}
+                  linkTo={`/${orgSlug}/communities/${communitySlug}/members/${m.id}`}
+                />
               ))}
               {members.length === 0 && (
                 <p className="px-4 py-8 text-center text-muted-foreground">No members found</p>
@@ -351,10 +349,10 @@ export function CommunityMembersPage() {
             <div className="flex items-center justify-center gap-4">
               {meta.prev_page && (
                 <button
-                  onClick={() => goToPage({ search, page: meta.prev_page ?? undefined })}
+                  onClick={() => setPage(meta.prev_page!)}
                   className="text-sm text-muted-foreground hover:text-foreground"
                 >
-                  ← Previous
+                  &larr; Previous
                 </button>
               )}
               <span className="text-sm text-muted-foreground">
@@ -362,10 +360,10 @@ export function CommunityMembersPage() {
               </span>
               {meta.next_page && (
                 <button
-                  onClick={() => goToPage({ search, page: meta.next_page ?? undefined })}
+                  onClick={() => setPage(meta.next_page!)}
                   className="text-sm text-muted-foreground hover:text-foreground"
                 >
-                  Next →
+                  Next &rarr;
                 </button>
               )}
             </div>
@@ -373,7 +371,6 @@ export function CommunityMembersPage() {
         </>
       )}
 
-      {/* Add member modal */}
       {showAddModal && (
         <AddMemberModal
           communitySlug={communitySlug}

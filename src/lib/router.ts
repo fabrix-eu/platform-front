@@ -655,6 +655,7 @@ const communityMembersRoute = createRoute({
   validateSearch: z.object({
     search: z.string().optional(),
     page: z.number().optional(),
+    kinds: z.string().optional(),
   }),
   component: CommunityMembersPage,
 });

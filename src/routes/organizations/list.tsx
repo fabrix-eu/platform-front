@@ -2,92 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getOrganizations, ORG_KINDS } from '../../lib/organizations';
-import type { Organization } from '../../lib/organizations';
 import { LocationFilter } from '../../components/LocationFilter';
 import type { LocationFilterParams } from '../../components/LocationFilter';
-
-function OrgAvatar({ org }: { org: Organization }) {
-  if (org.image_url) {
-    return (
-      <img
-        src={org.image_url}
-        alt={org.name}
-        className="w-10 h-10 rounded-full object-cover bg-gray-100"
-      />
-    );
-  }
-
-  const initials = org.name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
-
-  return (
-    <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold">
-      {initials}
-    </div>
-  );
-}
-
-function KindBadge({ kind }: { kind: string | null }) {
-  if (!kind) return null;
-  const config = ORG_KINDS[kind] || ORG_KINDS.other;
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${config.badgeColor}`}>
-      {config.label}
-    </span>
-  );
-}
-
-function OrgCard({ org }: { org: Organization }) {
-  const kind = org.kind ? ORG_KINDS[org.kind] || ORG_KINDS.other : null;
-
-  return (
-    <Link
-      to="/organizations/$id"
-      params={{ id: org.slug || org.id }}
-      className="block bg-white rounded-lg border border-border hover:border-gray-300 hover:shadow-md transition-all group"
-    >
-      <div className="p-4">
-        <div className="flex items-start gap-3">
-          <OrgAvatar org={org} />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between">
-              <h3 className="font-display font-semibold text-sm text-gray-900 truncate">
-                {org.name}
-              </h3>
-              <svg className="h-4 w-4 text-gray-400 group-hover:text-gray-600 transition-colors shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-              </svg>
-            </div>
-            <div className="flex items-center gap-2 mt-1">
-              {kind && (
-                <span className={`inline-block text-[10px] px-1.5 py-0 rounded-full ${kind.badgeColor}`}>
-                  {kind.label}
-                </span>
-              )}
-              {!org.claimed && (
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-yellow-100 text-yellow-800 uppercase tracking-wide">
-                  Unclaimed
-                </span>
-              )}
-            </div>
-            {org.address && (
-              <p className="text-xs text-muted-foreground mt-2 truncate">
-                {[org.address, org.country_code].filter(Boolean).join(', ')}
-              </p>
-            )}
-            {org.relations_count > 0 && (
-              <p className="text-xs text-muted-foreground mt-1">{org.relations_count} relations</p>
-            )}
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
-}
+import { OrgCard, OrgListRow } from '../../components/OrgShared';
 
 const ALL_KINDS = Object.entries(ORG_KINDS);
 
@@ -105,9 +22,8 @@ export function OrganizationsListPage() {
     location_label?: string;
   };
 
-  const { search, page, kinds, claimed, country, lon, lat, radius, location_label } = searchParams;
+  const { search, page, kinds, claimed, country, lon, lat, radius } = searchParams;
 
-  // claimed: undefined (default) = 'true', 'true' = claimed, 'false' = unclaimed, 'all' = no filter
   const claimedFilter = claimed ?? 'true';
   const byClaimedParam = claimedFilter === 'all' ? undefined : claimedFilter;
 
@@ -116,7 +32,6 @@ export function OrganizationsListPage() {
   const filterRef = useRef<HTMLDivElement>(null);
   const filterBtnRef = useRef<HTMLButtonElement>(null);
 
-  // Close filters on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (
@@ -199,7 +114,6 @@ export function OrganizationsListPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      {/* Header */}
       <h1 className="text-2xl font-bold">Directory</h1>
 
       {/* Search bar + Filter icon + View toggle + Add */}
@@ -216,7 +130,6 @@ export function OrganizationsListPage() {
           />
         </form>
 
-        {/* Filter button */}
         <div className="relative">
           <button
             ref={filterBtnRef}
@@ -240,7 +153,6 @@ export function OrganizationsListPage() {
           </button>
         </div>
 
-        {/* View toggle */}
         <div className="flex border border-border rounded-lg overflow-hidden">
           <button
             type="button"
@@ -275,7 +187,6 @@ export function OrganizationsListPage() {
       {/* Filter panel */}
       {filtersOpen && (
         <div ref={filterRef} className="border border-border rounded-lg bg-white p-4 space-y-4 shadow-sm">
-          {/* Claimed / Unclaimed */}
           <div>
             <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Status</label>
             <div className="flex gap-2">
@@ -300,7 +211,6 @@ export function OrganizationsListPage() {
             </div>
           </div>
 
-          {/* Organization type */}
           <div>
             <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Organization type</label>
             <div className="flex flex-wrap gap-1.5">
@@ -321,16 +231,14 @@ export function OrganizationsListPage() {
             </div>
           </div>
 
-          {/* Location */}
           <div>
             <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Location</label>
             <LocationFilter
-              value={{ country, lon, lat, radius, location_label }}
+              value={{ country, lon, lat, radius, location_label: searchParams.location_label }}
               onChange={handleLocationChange}
             />
           </div>
 
-          {/* Clear all */}
           {activeFilterCount > 0 && (
             <div className="pt-2 border-t border-border">
               <button
@@ -356,42 +264,11 @@ export function OrganizationsListPage() {
           {view === 'list' && (
             <div className="divide-y divide-border border border-border rounded-lg bg-card">
               {query.data.organizations.map((org) => (
-                <Link
+                <OrgListRow
                   key={org.id}
-                  to="/organizations/$id"
-                  params={{ id: org.slug || org.id }}
-                  className="flex items-center gap-4 px-4 py-3 hover:bg-muted/50 transition-colors"
-                >
-                  <OrgAvatar org={org} />
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-foreground truncate">{org.name}</p>
-                      {!org.claimed && (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-yellow-100 text-yellow-800 uppercase tracking-wide">
-                          Unclaimed
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <KindBadge kind={org.kind} />
-                      {org.address && (
-                        <span className="text-xs text-muted-foreground truncate">
-                          {[org.address, org.country_code].filter(Boolean).join(', ')}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 shrink-0">
-                    {org.relations_count > 0 && (
-                      <span className="text-xs text-muted-foreground">
-                        {org.relations_count} rel.
-                      </span>
-                    )}
-                    <span className="text-muted-foreground">&rarr;</span>
-                  </div>
-                </Link>
+                  org={org}
+                  linkTo={`/organizations/${org.slug || org.id}`}
+                />
               ))}
               {query.data.organizations.length === 0 && (
                 <p className="px-4 py-8 text-center text-muted-foreground">No organizations found</p>
@@ -402,7 +279,7 @@ export function OrganizationsListPage() {
           {view === 'cards' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {query.data.organizations.map((org) => (
-                <OrgCard key={org.id} org={org} />
+                <OrgCard key={org.id} org={org} linkTo={`/organizations/${org.slug || org.id}`} />
               ))}
               {query.data.organizations.length === 0 && (
                 <p className="text-center text-muted-foreground col-span-2">No organizations found</p>
@@ -410,7 +287,6 @@ export function OrganizationsListPage() {
             </div>
           )}
 
-          {/* Pagination */}
           {meta && meta.total_pages > 1 && (
             <div className="flex items-center justify-center gap-4">
               {meta.prev_page && (

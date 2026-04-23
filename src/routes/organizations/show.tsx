@@ -13,43 +13,7 @@ import type { Relation } from '../../lib/relations';
 import { createJoinRequest, getMyJoinRequests } from '../../lib/join-requests';
 import { uploadFile } from '../../lib/uploads';
 import { FieldError, FormError } from '../../components/FieldError';
-
-function OrgAvatar({ org, size = 'lg' }: { org: Organization; size?: 'sm' | 'lg' }) {
-  const sizeClass = size === 'lg' ? 'w-20 h-20 text-2xl' : 'w-10 h-10 text-sm';
-
-  if (org.image_url) {
-    return (
-      <img
-        src={org.image_url}
-        alt={org.name}
-        className={`${sizeClass} rounded-full object-cover bg-white shadow-lg border-4 border-white`}
-      />
-    );
-  }
-
-  const initials = (org.name || '?')
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
-
-  return (
-    <div className={`${sizeClass} rounded-full bg-white text-primary flex items-center justify-center font-bold shadow-lg border-4 border-white`}>
-      {initials}
-    </div>
-  );
-}
-
-function KindBadge({ kind }: { kind: string | null }) {
-  if (!kind) return null;
-  const config = ORG_KINDS[kind] || ORG_KINDS.other;
-  return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${config.badgeColor}`}>
-      {config.label}
-    </span>
-  );
-}
+import { OrgAvatar, KindBadge } from '../../components/OrgShared';
 
 function ListingCard({ listing }: { listing: Listing }) {
   const categoryConfig = LISTING_CATEGORIES[listing.category];
@@ -754,7 +718,7 @@ export function OrganizationShowPage() {
         <div className="relative px-6 -mt-10">
           {/* Avatar overlapping cover */}
           <div className="relative inline-block group/avatar">
-            <OrgAvatar org={org} size="lg" />
+            <OrgAvatar org={org} size="lg" variant="profile" />
             {isMember && (
               <AvatarUploadButton orgId={org.id} queryKey={id} queryClient={queryClient} hasImage={!!org.image_url} />
             )}
@@ -819,6 +783,7 @@ export function OrganizationShowPage() {
                   )}
                   {org.claimed && (
                     <div className="px-3 py-2">
+                      <p className="text-xs text-gray-500 mb-2">Are you a member of this organization?</p>
                       <JoinRequestButton orgId={org.id} />
                     </div>
                   )}

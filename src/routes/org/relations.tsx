@@ -9,43 +9,9 @@ import { OrganizationsMap } from '../../components/OrganizationsMap';
 import type { MapRelationLine } from '../../components/OrganizationsMap';
 import { RelationLegend } from '../../components/RelationLegend';
 import { useFeatureInfo, FeatureIntro, FeatureInfoTrigger } from '../../components/FeatureIntro';
+import { OrgAvatar, KindBadge } from '../../components/OrgShared';
 
 const PER_PAGE = 12;
-
-function OrgAvatar({ org }: { org: { name: string; image_url: string | null } }) {
-  if (org.image_url) {
-    return (
-      <img
-        src={org.image_url}
-        alt={org.name}
-        className="w-10 h-10 rounded-full object-cover bg-gray-100"
-      />
-    );
-  }
-
-  const initials = org.name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
-
-  return (
-    <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold">
-      {initials}
-    </div>
-  );
-}
-
-function KindBadge({ kind }: { kind: string | null }) {
-  if (!kind) return null;
-  const config = ORG_KINDS[kind] || ORG_KINDS.other;
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${config.badgeColor}`}>
-      {config.label}
-    </span>
-  );
-}
 
 function RelationTypeBadge({ type }: { type: string }) {
   const config = RELATION_TYPES[type];

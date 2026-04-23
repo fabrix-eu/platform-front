@@ -3,7 +3,6 @@ import { Link, useParams } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getMe } from '../../lib/auth';
 import { ORG_KINDS } from '../../lib/organizations';
-import type { Organization } from '../../lib/organizations';
 import {
   getCommunityOrganization,
   updateCommunityOrganization,
@@ -12,45 +11,7 @@ import {
 import type { CommunityOrganization } from '../../lib/community-organizations';
 import { getMockSections, COVER_IMAGES } from '../../lib/mockOrgData';
 import type { MockSection } from '../../lib/mockOrgData';
-
-// ── Reused components from org profile ───────────────────────
-
-function OrgAvatar({ org, size = 'lg' }: { org: Organization; size?: 'sm' | 'lg' }) {
-  const sizeClass = size === 'lg' ? 'w-20 h-20 text-2xl' : 'w-10 h-10 text-sm';
-
-  if (org.image_url) {
-    return (
-      <img
-        src={org.image_url}
-        alt={org.name}
-        className={`${sizeClass} rounded-full object-cover bg-white shadow-lg border-4 border-white`}
-      />
-    );
-  }
-
-  const initials = (org.name || '?')
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase();
-
-  return (
-    <div className={`${sizeClass} rounded-full bg-white text-primary flex items-center justify-center font-bold shadow-lg border-4 border-white`}>
-      {initials}
-    </div>
-  );
-}
-
-function KindBadge({ kind }: { kind: string | null }) {
-  if (!kind) return null;
-  const config = ORG_KINDS[kind] || ORG_KINDS.other;
-  return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${config.badgeColor}`}>
-      {config.label}
-    </span>
-  );
-}
+import { OrgAvatar, KindBadge } from '../../components/OrgShared';
 
 function SectionCards({ section }: { section: MockSection }) {
   return (
@@ -357,7 +318,7 @@ export function CommunityMemberDetailPage() {
         </div>
 
         <div className="relative px-6 -mt-10">
-          <OrgAvatar org={org} size="lg" />
+          <OrgAvatar org={org} size="lg" variant="profile" />
 
           <div className="flex items-start justify-between mt-4">
             <div className="min-w-0">
