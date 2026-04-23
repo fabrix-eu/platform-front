@@ -194,7 +194,7 @@ export function OrganizationsListPage() {
     });
   };
 
-  const [view, setView] = useState<'list' | 'cards'>('list');
+  const [view, setView] = useState<'list' | 'cards'>('cards');
   const meta = query.data?.meta;
 
   return (
