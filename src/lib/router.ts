@@ -258,7 +258,7 @@ const feedbackRoute = createRoute({
 });
 
 const notificationsRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => explorerRoute,
   path: '/notifications',
   beforeLoad: requireAuth,
   component: NotificationsPage,
@@ -838,7 +838,6 @@ const routeTree = rootRoute.addChildren([
   docsRoute,
   changelogRoute,
   feedbackRoute,
-  notificationsRoute,
   settingsRoute,
   notificationPreferencesRoute,
   adminRoute.addChildren([
@@ -864,6 +863,7 @@ const routeTree = rootRoute.addChildren([
       communityShowRoute,
     ]),
     messagesRoute,
+    notificationsRoute,
     marketplaceRoute.addChildren([
       marketplaceIndexRoute,
       marketplaceNewRoute,

@@ -5,6 +5,7 @@ import { OrgSwitcher } from '../components/OrgSwitcher';
 import { UserMenu } from '../components/UserMenu';
 import { NotificationBell } from '../components/NotificationBell';
 import { MessageBell } from '../components/MessageBell';
+import { AppSidebar } from '../components/AppSidebar';
 import { useRefreshOnNavigate } from '../lib/notifications';
 
 export function RootLayout() {
@@ -60,8 +61,11 @@ export function RootLayout() {
           {authed && <UserMenu user={me.data} onLogout={handleLogout} />}
         </div>
       </header>
-      <main>
-        <Outlet />
+      <main className="flex min-h-[calc(100vh-56px)]">
+        {authed && <AppSidebar />}
+        <div className="flex-1">
+          <Outlet />
+        </div>
       </main>
     </div>
   );
