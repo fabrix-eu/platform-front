@@ -92,7 +92,7 @@ export function MessagingLayout({ orgId, replyAsOrgId, selectedId, newConversati
       <div className="w-80 border-r border-border bg-white flex flex-col flex-shrink-0">
         <div className="px-4 py-3 border-b border-border">
           <h2 className="text-sm font-semibold text-gray-900">
-            {orgId ? 'Organization messages' : 'Messages'}
+            {orgId ? 'Organization messages' : 'Personal Messages'}
           </h2>
         </div>
         <div className="flex-1 overflow-y-auto">
