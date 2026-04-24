@@ -7,6 +7,7 @@ interface TabItem {
   key: string;
   label: string;
   path: string;
+  badge?: string;
 }
 
 export function CommunityLayout() {
@@ -29,7 +30,7 @@ export function CommunityLayout() {
     { key: 'members', label: 'Members', path: `${basePath}/members` },
     { key: 'events', label: 'Events', path: `${basePath}/events` },
     { key: 'challenges', label: 'Challenges', path: `${basePath}/challenges` },
-    { key: 'marketplace', label: 'Marketplace', path: `${basePath}/marketplace` },
+    { key: 'marketplace', label: 'Marketplace', path: `${basePath}/marketplace`, badge: 'new' },
     { key: 'matchmaking', label: 'Matchmaking', path: `${basePath}/matchmaking` },
     ...(isAdmin ? [
       { key: 'join-requests', label: 'Join Requests', path: `${basePath}/join-requests` },
@@ -65,6 +66,11 @@ export function CommunityLayout() {
               }`}
             >
               {tab.label}
+              {tab.badge && (
+                <span className="ml-1.5 px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none rounded-full bg-primary/10 text-primary">
+                  {tab.badge}
+                </span>
+              )}
             </Link>
           ))}
         </div>

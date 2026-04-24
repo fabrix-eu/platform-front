@@ -241,7 +241,7 @@ function CommunitiesNav({
 const exploreItems = [
   { key: 'directory', label: 'Directory', href: '/organizations' },
   { key: 'map', label: 'Map', href: '/map' },
-  { key: 'marketplace', label: 'Marketplace', href: '/marketplace' },
+  { key: 'marketplace', label: 'Marketplace', href: '/marketplace', badge: 'new' },
   { key: 'events', label: 'Events', href: '/events' },
   { key: 'challenges', label: 'Challenges', href: '/challenges' },
   { key: 'communities', label: 'Communities', href: '/communities' },
@@ -263,6 +263,11 @@ function ExploreNav({ pathname }: { pathname: string }) {
               }`}
             >
               {item.label}
+              {'badge' in item && (
+                <span className="ml-1.5 px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none rounded-full bg-primary/10 text-primary">
+                  {String(item.badge)}
+                </span>
+              )}
             </Link>
           </li>
         );
