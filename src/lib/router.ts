@@ -27,6 +27,7 @@ import { CommunityLayout } from '../routes/community/layout';
 import { CommunityOverviewPage } from '../routes/community/index';
 import { CommunityMembersPage } from '../routes/community/members';
 import { CommunityMemberDetailPage } from '../routes/community/member-detail';
+import { CommunityMemberAssessmentPage } from '../routes/community/member-assessment';
 import { CommunityEventsListPage } from '../routes/community/events';
 import { CommunityEventDetailPage } from '../routes/community/event-detail';
 import { CommunityEventNewPage } from '../routes/community/event-new';
@@ -666,6 +667,12 @@ const communityMemberDetailRoute = createRoute({
   component: CommunityMemberDetailPage,
 });
 
+const communityMemberAssessmentRoute = createRoute({
+  getParentRoute: () => communityRoute,
+  path: '/members/$memberId/assessments/$formKey',
+  component: CommunityMemberAssessmentPage,
+});
+
 const communityEventsRoute = createRoute({
   getParentRoute: () => communityRoute,
   path: '/events',
@@ -881,6 +888,7 @@ const routeTree = rootRoute.addChildren([
       communityIndexRoute,
       communityMembersRoute,
       communityMemberDetailRoute,
+      communityMemberAssessmentRoute,
       communityEventsRoute,
       communityEventNewRoute,
       communityEventDetailRoute,

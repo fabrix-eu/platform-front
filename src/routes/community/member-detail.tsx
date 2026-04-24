@@ -9,7 +9,8 @@ import {
 } from '../../lib/community-organizations';
 import type { CommunityOrganization } from '../../lib/community-organizations';
 import { getOrganization } from '../../lib/organizations';
-import { getFormsWithAnswers } from '../../lib/forms';
+import { getFormsWithAnswers, getForm, isQuestionVisible } from '../../lib/forms';
+import { getLatestAnswer } from '../../lib/answers';
 import { useFacilitatorPanel } from '../../components/FacilitatorPanel';
 import { OrgProfile } from '../../components/OrgProfile';
 
@@ -93,7 +94,17 @@ const STATUS_STYLES: Record<string, { label: string; className: string }> = {
   draft: { label: 'Draft', className: 'text-gray-500 bg-gray-50' },
 };
 
-function AssessmentsSection({ orgId }: { orgId: string }) {
+function AssessmentsSection({
+  orgId,
+  orgSlug,
+  communitySlug,
+  memberId,
+}: {
+  orgId: string;
+  orgSlug: string;
+  communitySlug: string;
+  memberId: string;
+}) {
   const query = useQuery({
     queryKey: ['assessments', orgId],
     queryFn: () => getFormsWithAnswers(orgId),
@@ -121,10 +132,11 @@ function AssessmentsSection({ orgId }: { orgId: string }) {
           const latest = [...form.answers]
             .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
           const style = latest ? STATUS_STYLES[latest.status] || STATUS_STYLES.draft : null;
+          const hasAnswer = !!latest;
 
-          return (
-            <div key={form.id} className="flex items-center justify-between gap-2">
-              <span className="text-sm text-gray-700 truncate">{form.title}</span>
+          const row = (
+            <div className="flex items-center justify-between gap-2">
+              <span className={`text-sm truncate ${hasAnswer ? 'text-gray-700' : 'text-gray-400'}`}>{form.title}</span>
               {latest ? (
                 <div className="flex items-center gap-1.5 shrink-0">
                   {latest.status === 'completed' && (
@@ -141,8 +153,98 @@ function AssessmentsSection({ orgId }: { orgId: string }) {
               )}
             </div>
           );
+
+          if (!hasAnswer) return <div key={form.id}>{row}</div>;
+
+          return (
+            <Link
+              key={form.id}
+              to="/$orgSlug/communities/$communitySlug/members/$memberId/assessments/$formKey"
+              params={{ orgSlug, communitySlug, memberId, formKey: form.key }}
+              className="block hover:bg-gray-50 -mx-1 px-1 py-0.5 rounded transition-colors"
+            >
+              {row}
+            </Link>
+          );
         })}
       </div>
+    </div>
+  );
+}
+
+function NeedsSection({ orgId }: { orgId: string }) {
+  const formQuery = useQuery({
+    queryKey: ['forms', 'needs-opportunities'],
+    queryFn: () => getForm('needs-opportunities'),
+  });
+
+  const answerQuery = useQuery({
+    queryKey: ['answers', 'latest', orgId, 'needs-opportunities'],
+    queryFn: () => getLatestAnswer(orgId, 'needs-opportunities'),
+    enabled: !!orgId,
+  });
+
+  if (formQuery.isLoading || answerQuery.isLoading) {
+    return (
+      <div className="bg-white/80 rounded-lg p-3">
+        <div className="animate-pulse space-y-2">
+          <div className="h-3 bg-gray-200 rounded w-1/2" />
+          <div className="h-3 bg-gray-200 rounded w-3/4" />
+        </div>
+      </div>
+    );
+  }
+
+  const form = formQuery.data;
+  const answer = answerQuery.data;
+  if (!form) return null;
+
+  const responses = answer?.responses ?? {};
+  const allQuestions = form.sections.flatMap((s) =>
+    s.questions.filter((q) => isQuestionVisible(q, responses)),
+  );
+
+  const answered = allQuestions.filter((q) => {
+    const v = responses[q.key];
+    return v != null && v !== '' && !(Array.isArray(v) && v.length === 0);
+  });
+
+  return (
+    <div className="bg-white/80 rounded-lg p-3 space-y-3">
+      <div className="flex items-center justify-between">
+        <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Needs & Opportunities</h4>
+        {answer && (
+          <span className="text-[10px] text-gray-400">{answered.length}/{allQuestions.length}</span>
+        )}
+      </div>
+      {!answer ? (
+        <p className="text-xs text-gray-400 italic">Not filled yet</p>
+      ) : (
+        <div className="space-y-2">
+          {allQuestions.map((q) => {
+            const v = responses[q.key];
+            const hasVal = v != null && v !== '' && !(Array.isArray(v) && v.length === 0);
+            let display: string;
+
+            if (!hasVal) {
+              display = '—';
+            } else if (q.field_type === 'select' && q.options?.choices) {
+              display = q.options.choices.find((c) => c.value === v)?.label || String(v);
+            } else if (q.field_type === 'multiselect' && Array.isArray(v) && q.options?.choices) {
+              display = (v as string[]).map((val) => q.options?.choices?.find((c) => c.value === val)?.label || val).join(', ');
+            } else {
+              display = String(v);
+            }
+
+            return (
+              <div key={q.id}>
+                <p className="text-xs text-gray-400">{q.text}</p>
+                <p className={`text-sm ${hasVal ? 'text-gray-700' : 'text-gray-300 italic'}`}>{display}</p>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -151,10 +253,14 @@ function AssessmentsSection({ orgId }: { orgId: string }) {
 
 function FacilitatorSidebar({
   membership,
+  orgSlug,
   communitySlug,
+  memberId,
 }: {
   membership: CommunityOrganization;
+  orgSlug: string;
   communitySlug: string;
+  memberId: string;
 }) {
   const qc = useQueryClient();
   const [editingNotes, setEditingNotes] = useState(false);
@@ -225,74 +331,31 @@ function FacilitatorSidebar({
         )}
       </div>
 
-      {/* Member info */}
-      <div className="bg-white/80 rounded-lg p-3 space-y-3">
-        <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Member info</h4>
-
-        {membership.added_by && (
-          <div>
-            <p className="text-xs text-gray-400">Added by</p>
-            <p className="text-sm text-gray-700">{membership.added_by.name}</p>
-          </div>
-        )}
-
-        {membership.added_at && (
-          <div>
-            <p className="text-xs text-gray-400">Member since</p>
-            <p className="text-sm text-gray-700">
-              {new Date(membership.added_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-            </p>
-          </div>
-        )}
-
-        {membership.specialization && (
-          <div>
-            <p className="text-xs text-gray-400">Specialization</p>
-            <p className="text-sm text-gray-700">{membership.specialization}</p>
-          </div>
-        )}
-
-        {membership.number_of_employees != null && (
-          <div>
-            <p className="text-xs text-gray-400">Employees</p>
-            <p className="text-sm text-gray-700">{membership.number_of_employees}</p>
-          </div>
-        )}
-
-        {membership.economic_health && (
-          <div>
-            <p className="text-xs text-gray-400">Economic health</p>
-            <p className="text-sm text-gray-700">{membership.economic_health}</p>
-          </div>
-        )}
-
-        {membership.environmental_score && (
-          <div>
-            <p className="text-xs text-gray-400">Environmental score</p>
-            <p className="text-sm text-gray-700">{membership.environmental_score}</p>
-          </div>
-        )}
-
-        {membership.annual_turnover && (
-          <div>
-            <p className="text-xs text-gray-400">Annual turnover</p>
-            <p className="text-sm text-gray-700">{membership.annual_turnover}</p>
-          </div>
-        )}
-
-        {membership.growth_rate && (
-          <div>
-            <p className="text-xs text-gray-400">Growth rate</p>
-            <p className="text-sm text-gray-700">{membership.growth_rate}</p>
-          </div>
-        )}
-      </div>
-
       {/* Org data */}
       <OrgDataSection orgId={membership.organization_id} />
 
+      {/* Needs & Opportunities */}
+      <NeedsSection orgId={membership.organization_id} />
+
       {/* Assessments */}
-      <AssessmentsSection orgId={membership.organization_id} />
+      <AssessmentsSection orgId={membership.organization_id} orgSlug={orgSlug} communitySlug={communitySlug} memberId={memberId} />
+
+      {/* Member info */}
+      <div className="bg-white/80 rounded-lg p-3 space-y-3">
+        <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Member info</h4>
+        {membership.added_by && (
+          <InfoRow label="Added by" value={membership.added_by.name} />
+        )}
+        {membership.added_at && (
+          <InfoRow label="Member since" value={new Date(membership.added_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} />
+        )}
+        <InfoRow label="Specialization" value={membership.specialization} />
+        <InfoRow label="Employees" value={membership.number_of_employees} />
+        <InfoRow label="Economic health" value={membership.economic_health} />
+        <InfoRow label="Environmental score" value={membership.environmental_score} />
+        <InfoRow label="Annual turnover" value={membership.annual_turnover} />
+        <InfoRow label="Growth rate" value={membership.growth_rate} />
+      </div>
 
       {/* Remove member */}
       <div className="bg-white/80 border border-red-200/50 rounded-lg p-3">
@@ -352,7 +415,7 @@ export function CommunityMemberDetailPage() {
   const membership = query.data ?? null;
   useFacilitatorPanel(
     isAdmin && membership ? (
-      <FacilitatorSidebar membership={membership} communitySlug={communitySlug} />
+      <FacilitatorSidebar membership={membership} orgSlug={orgSlug} communitySlug={communitySlug} memberId={memberId} />
     ) : null,
   );
 

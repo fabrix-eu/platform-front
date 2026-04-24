@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { updateOrganization, submitClaim, ORG_KINDS } from '../lib/organizations';
 import type { Organization } from '../lib/organizations';
 import { COVER_IMAGES } from '../lib/mockOrgData';
@@ -559,48 +560,30 @@ function ConnectButton({ org, myOrgs }: { org: Organization; myOrgs: MeOrganizat
   );
 }
 
-// ── Three-dots more menu ────────────────────────────────────────
+// ── Three-dots more menu (Radix DropdownMenu) ─────────────────
 
 function MoreMenu({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const btnRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (
-        open &&
-        menuRef.current && !menuRef.current.contains(e.target as Node) &&
-        btnRef.current && !btnRef.current.contains(e.target as Node)
-      ) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [open]);
-
   return (
-    <div className="relative">
-      <button
-        ref={btnRef}
-        onClick={() => setOpen(!open)}
-        className="border border-gray-300 rounded-lg p-2 text-gray-500 hover:bg-gray-50 transition-colors"
-        title="More options"
-      >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
-        </svg>
-      </button>
-      {open && (
-        <div
-          ref={menuRef}
-          className="absolute right-0 top-full mt-1 min-w-48 bg-white border border-border rounded-lg shadow-lg z-50 py-1"
+    <DropdownMenu.Root modal={false}>
+      <DropdownMenu.Trigger asChild>
+        <button
+          className="border border-gray-300 rounded-lg p-2 text-gray-500 hover:bg-gray-50 transition-colors"
+          title="More options"
         >
-          {children}
-        </div>
-      )}
-    </div>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
+          </svg>
+        </button>
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Content
+        align="end"
+        sideOffset={4}
+        className="min-w-48 bg-white border border-border rounded-lg shadow-lg z-50 py-1"
+        onCloseAutoFocus={(e) => e.preventDefault()}
+      >
+        {children}
+      </DropdownMenu.Content>
+    </DropdownMenu.Root>
   );
 }
 
