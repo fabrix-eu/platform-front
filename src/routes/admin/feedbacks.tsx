@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
 import { DataTable, type Column } from '../../components/admin/DataTable';
 import { getAdminFeedbacks, type AdminFeedback } from '../../lib/admin';
+import { useCreateConversation } from '../../lib/conversations';
 
 const CATEGORY_COLORS: Record<string, string> = {
   bug: 'bg-red-100 text-red-800',
@@ -13,6 +15,24 @@ export function AdminFeedbacksPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const createConversation = useCreateConversation();
+
+  function handleReply(feedback: AdminFeedback) {
+    const truncated = feedback.message.length > 100
+      ? feedback.message.slice(0, 100) + '...'
+      : feedback.message;
+    const content = `About your feedback: "${truncated}"\n\n`;
+
+    createConversation.mutate(
+      { recipient_user_id: feedback.user.id, content },
+      {
+        onSuccess: (conversation) => {
+          navigate({ to: '/messages', search: { selected: conversation.id } });
+        },
+      },
+    );
+  }
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin', 'feedbacks', page, search],
@@ -75,6 +95,19 @@ export function AdminFeedbacksPage() {
       key: 'created_at',
       label: 'Created',
       render: (row) => new Date(row.created_at).toLocaleDateString(),
+    },
+    {
+      key: 'actions',
+      label: '',
+      render: (row) => (
+        <button
+          onClick={() => handleReply(row)}
+          disabled={createConversation.isPending}
+          className="px-2.5 py-1 text-xs font-medium bg-primary/10 text-primary border border-primary/20 rounded-md hover:bg-primary/20 transition-colors disabled:opacity-50"
+        >
+          Reply
+        </button>
+      ),
     },
   ];
 
