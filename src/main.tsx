@@ -6,6 +6,15 @@ import { queryClient } from './lib/queryClient';
 import { router } from './lib/router';
 import './index.css';
 
+declare global {
+  interface Window { _paq?: Array<unknown[]>; }
+}
+
+router.subscribe('onResolved', () => {
+  window._paq?.push(['setCustomUrl', window.location.href]);
+  window._paq?.push(['trackPageView']);
+});
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
