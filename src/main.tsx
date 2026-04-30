@@ -10,10 +10,24 @@ declare global {
   interface Window { _paq?: Array<unknown[]>; }
 }
 
-router.subscribe('onResolved', () => {
-  window._paq?.push(['setCustomUrl', window.location.href]);
-  window._paq?.push(['trackPageView']);
-});
+const matomoUrl = import.meta.env.VITE_MATOMO_URL;
+const matomoSiteId = import.meta.env.VITE_MATOMO_SITE_ID;
+
+if (matomoUrl && matomoSiteId) {
+  const _paq = (window._paq = window._paq || []);
+  _paq.push(['enableLinkTracking']);
+  _paq.push(['setTrackerUrl', `${matomoUrl}matomo.php`]);
+  _paq.push(['setSiteId', matomoSiteId]);
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = `${matomoUrl}matomo.js`;
+  document.head.appendChild(script);
+
+  router.subscribe('onResolved', () => {
+    window._paq?.push(['setCustomUrl', window.location.href]);
+    window._paq?.push(['trackPageView']);
+  });
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
