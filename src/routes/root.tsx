@@ -1,4 +1,4 @@
-import { Link, Outlet, useNavigate } from '@tanstack/react-router';
+import { Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getMe, logout } from '../lib/auth';
 import { OrgSwitcher } from '../components/OrgSwitcher';
@@ -19,6 +19,9 @@ export function RootLayout() {
   });
 
   const authed = !!me.data;
+
+  const { pathname } = useLocation();
+  const isAdmin = pathname.startsWith('/admin');
 
   useRefreshOnNavigate();
 
@@ -62,7 +65,7 @@ export function RootLayout() {
         </div>
       </header>
       <main className="flex min-h-[calc(100vh-56px)]">
-        {authed && <AppSidebar />}
+        {authed && !isAdmin && <AppSidebar />}
         <div className="flex-1">
           <Outlet />
         </div>

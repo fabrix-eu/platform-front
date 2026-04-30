@@ -14,7 +14,7 @@ export function AdminLayout() {
   return (
     <div className="flex min-h-[calc(100vh-56px)]">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-border bg-white flex-shrink-0 flex flex-col">
+      <aside className="w-64 border-r border-border bg-white flex-shrink-0 flex flex-col min-h-[calc(100vh-56px)]">
         <div className="p-4 border-b border-border">
           <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
             <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -47,7 +47,7 @@ export function AdminLayout() {
         </nav>
 
         {/* Back to app */}
-        <div className="p-2 border-t border-border">
+        <div className="p-2 border-t border-border bg-white sticky bottom-0">
           <Link
             to="/"
             className="flex items-center gap-2 px-3 py-2 text-sm text-gray-500 hover:text-gray-900 rounded-md hover:bg-gray-50 transition-colors"
