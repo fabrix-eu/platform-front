@@ -25,6 +25,168 @@ interface Release {
 
 const RELEASES: Release[] = [
   {
+    date: 'April 24, 2026',
+    title: 'Unified navigation & Directory Map',
+    items: [
+      {
+        tag: 'new',
+        text: 'Unified sidebar — always visible across all pages with org navigation, communities section, and Explore links.',
+      },
+      {
+        tag: 'new',
+        text: 'User zone — Home, Personal Messages, and Notifications icons pinned at the bottom of the sidebar.',
+      },
+      {
+        tag: 'new',
+        text: 'Directory Map — split view combining the organization list and interactive map side by side with shared filters.',
+      },
+      {
+        tag: 'new',
+        text: 'Infinite scroll on the directory list — pages load automatically as you scroll down, no more pagination clicks.',
+      },
+      {
+        tag: 'improved',
+        text: '"New" badge on Marketplace navigation items in the sidebar and header.',
+      },
+    ],
+  },
+  {
+    date: 'April 21, 2026',
+    title: 'Facilitator tools & Organization profiles',
+    items: [
+      {
+        tag: 'new',
+        text: 'Facilitator panel — info banner, org data overview, and assessment sections on community member detail pages.',
+      },
+      {
+        tag: 'new',
+        text: 'Facilitator assessment detail page with needs section in sidebar.',
+      },
+      {
+        tag: 'new',
+        text: 'Connect button on organization profiles — directly start a conversation with any organization.',
+      },
+      {
+        tag: 'new',
+        text: 'LinkedIn and Instagram fields on organization profiles.',
+      },
+      {
+        tag: 'improved',
+        text: 'Unified organization profile view across directory and community member pages.',
+      },
+      {
+        tag: 'improved',
+        text: 'Join and Claim actions moved to a three-dots menu on organization profiles for a cleaner layout.',
+      },
+    ],
+  },
+  {
+    date: 'April 17, 2026',
+    title: 'Opportunities, challenges & profile completion',
+    items: [
+      {
+        tag: 'new',
+        text: 'Opportunities page — view and manage challenge applications with detail sidebar and badge counter.',
+      },
+      {
+        tag: 'new',
+        text: 'Public challenge detail page — challenge info, timeline, and apply button accessible without community membership.',
+      },
+      {
+        tag: 'new',
+        text: 'Profile completion widget on organization dashboard showing progress across all sections.',
+      },
+      {
+        tag: 'new',
+        text: 'Profile challenges section showing applied and won challenges.',
+      },
+      {
+        tag: 'new',
+        text: 'Counter badges on sidebar navigation and profile section tabs.',
+      },
+      {
+        tag: 'new',
+        text: 'Privacy info banner on profile Data section.',
+      },
+      {
+        tag: 'improved',
+        text: 'Default directory view changed to cards.',
+      },
+    ],
+  },
+  {
+    date: 'April 14, 2026',
+    title: 'Directory filters & Profile expansion',
+    items: [
+      {
+        tag: 'new',
+        text: 'Directory filters — filter by claimed/unclaimed status, organization type, and geographic location with radius search.',
+      },
+      {
+        tag: 'new',
+        text: 'Needs & Opportunities profile tab — describe what your organization is looking for and what it offers.',
+      },
+      {
+        tag: 'new',
+        text: 'Sustainability & Community profile tab — sustainability practices and community engagement.',
+      },
+      {
+        tag: 'new',
+        text: 'Facility & processing type selector on profile Data tab.',
+      },
+      {
+        tag: 'new',
+        text: 'Development stage field on organizations.',
+      },
+      {
+        tag: 'new',
+        text: 'Marketplace mega menu with category navigation, location filter, and NACE code selector.',
+      },
+    ],
+  },
+  {
+    date: 'April 10, 2026',
+    title: 'Platform improvements',
+    items: [
+      {
+        tag: 'new',
+        text: 'Route-driven messaging — contact organizations directly from marketplace listings with conversation context.',
+      },
+      {
+        tag: 'new',
+        text: 'Admin feedback reply — message users directly from the admin feedbacks page.',
+      },
+      {
+        tag: 'improved',
+        text: 'Listing taxonomy refactored from offer/demand to 4 entity types: material, service, equipment, and space.',
+      },
+      {
+        tag: 'improved',
+        text: 'Feature intro banners are now dismissible and persist dismissal in localStorage.',
+      },
+      {
+        tag: 'improved',
+        text: 'Relations map shows connecting lines between related organizations with a legend.',
+      },
+      {
+        tag: 'improved',
+        text: 'All community members can now create events, and event creators can edit and delete their own events.',
+      },
+      {
+        tag: 'improved',
+        text: '"Assessments" renamed to "Impact Compass" throughout the platform.',
+      },
+      {
+        tag: 'fixed',
+        text: 'Invitation link routing now works correctly, with resend invitation action.',
+      },
+      {
+        tag: 'fixed',
+        text: 'Google Maps API key now loads correctly in production builds.',
+      },
+    ],
+  },
+  {
     date: 'April 8, 2026',
     title: 'Marketplace & messaging',
     items: [
