@@ -109,7 +109,7 @@ export function OrgListRow({ org, linkTo }: { org: Organization; linkTo: string 
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2 mt-1">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
           <KindBadge kind={org.kind} />
           {org.address && (
             <span className="text-xs text-muted-foreground truncate">

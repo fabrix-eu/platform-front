@@ -68,7 +68,7 @@ export function OrganizationsListPage() {
 
   const updateSearch = (updates: Record<string, unknown>) => {
     navigate({
-      to: '/organizations',
+      to: '/directory',
       search: { ...searchParams, page: 1, ...updates },
     });
   };
@@ -291,7 +291,7 @@ export function OrganizationsListPage() {
             <div className="flex items-center justify-center gap-4">
               {meta.prev_page && (
                 <Link
-                  to="/organizations"
+                  to="/directory"
                   search={{ ...searchParams, page: meta.prev_page }}
                   className="text-sm text-muted-foreground hover:text-foreground"
                 >
@@ -303,7 +303,7 @@ export function OrganizationsListPage() {
               </span>
               {meta.next_page && (
                 <Link
-                  to="/organizations"
+                  to="/directory"
                   search={{ ...searchParams, page: meta.next_page }}
                   className="text-sm text-muted-foreground hover:text-foreground"
                 >
