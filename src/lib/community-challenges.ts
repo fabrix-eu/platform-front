@@ -4,6 +4,7 @@ export interface Challenge {
   id: string;
   community_id: string;
   organization_id: string | null;
+  created_by_user_id: string;
   title: string;
   description: string;
   number_of_winners: number | null;
@@ -28,6 +29,11 @@ export interface Challenge {
     slug: string;
     kind: string;
     image_url: string | null;
+  } | null;
+  created_by_user?: {
+    id: string;
+    name: string;
+    email: string;
   } | null;
   my_application?: ChallengeApplication | null;
 }
@@ -342,6 +348,15 @@ export async function selectGlobalWinner(
   return api.patch<ChallengeApplication>(
     `/challenges/${challengeId}/applications/${applicationId}/select_winner`,
     {},
+  );
+}
+
+export async function withdrawGlobalApplication(
+  challengeId: string,
+  applicationId: string,
+): Promise<void> {
+  return api.delete(
+    `/challenges/${challengeId}/applications/${applicationId}`,
   );
 }
 

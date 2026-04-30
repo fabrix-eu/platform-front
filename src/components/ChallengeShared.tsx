@@ -102,10 +102,12 @@ export function ChallengeApplyForm({
   challenge,
   onApply,
   invalidateKeys,
+  onSuccess,
 }: {
   challenge: Challenge;
   onApply: (data: { note?: string }) => Promise<ChallengeApplication>;
   invalidateKeys: string[][];
+  onSuccess?: () => void;
 }) {
   const queryClient = useQueryClient();
   const [note, setNote] = useState('');
@@ -117,6 +119,7 @@ export function ChallengeApplyForm({
         queryClient.invalidateQueries({ queryKey: key });
       }
       setNote('');
+      onSuccess?.();
     },
   });
 
@@ -241,16 +244,133 @@ export function ChallengeApplicationCard({
   );
 }
 
-export function MyApplicationStatus({ application }: { application: ChallengeApplication }) {
+export function MyApplicationStatus({
+  application,
+  justApplied,
+  creatorName,
+  creatorOrgId,
+  onWithdraw,
+}: {
+  application: ChallengeApplication;
+  justApplied?: boolean;
+  creatorName?: string;
+  creatorOrgId?: string;
+  onWithdraw?: () => void;
+}) {
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const canWithdraw = onWithdraw && (application.status === 'pending' || application.status === 'accepted');
+
+  const handleWithdraw = async () => {
+    if (!onWithdraw) return;
+    setBusy(true);
+    try {
+      onWithdraw();
+    } finally {
+      setBusy(false);
+      setConfirming(false);
+    }
+  };
+
   return (
-    <div className="bg-white border border-border rounded-lg p-5">
-      <h3 className="text-sm font-semibold text-gray-900 mb-2">Your application</h3>
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-gray-600">Status:</span>
-        {challengeAppStatusBadge(application.status)}
+    <div className="bg-white border border-border rounded-lg p-5 space-y-4">
+      {/* Success banner after just applying */}
+      {justApplied && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-green-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+            <div>
+              <p className="text-sm font-medium text-green-800">Application submitted successfully</p>
+              <p className="text-sm text-green-700 mt-1">
+                {creatorName
+                  ? `${creatorName} will be notified and will get back to you.`
+                  : 'The challenge creator will be notified and will get back to you.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Application details */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">Your application</h3>
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-sm text-gray-600">Status:</span>
+          {challengeAppStatusBadge(application.status)}
+        </div>
+        {application.note && (
+          <div className="mt-2">
+            <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Your note</span>
+            <p className="text-sm text-gray-700 mt-1 whitespace-pre-line">{application.note}</p>
+          </div>
+        )}
+        {application.attachment_url && (
+          <div className="mt-2">
+            <a
+              href={application.attachment_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" />
+              </svg>
+              View attachment
+            </a>
+          </div>
+        )}
+        <p className="text-xs text-gray-400 mt-2">
+          Submitted on {new Date(application.submitted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+        </p>
       </div>
-      {application.note && (
-        <p className="text-sm text-gray-600 mt-2">{application.note}</p>
+
+      {/* Actions */}
+      {(creatorOrgId || canWithdraw) && (
+        <div className="pt-3 border-t border-border flex items-center gap-3 flex-wrap">
+          {creatorOrgId && (
+            <a
+              href={`/messages?to=${creatorOrgId}`}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 border border-border rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+              </svg>
+              Message {creatorName || 'creator'}
+            </a>
+          )}
+          {canWithdraw && (
+            <>
+              {confirming ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-600">Are you sure?</span>
+                  <button
+                    onClick={handleWithdraw}
+                    disabled={busy}
+                    className="px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-50"
+                  >
+                    {busy ? 'Withdrawing...' : 'Yes, withdraw'}
+                  </button>
+                  <button
+                    onClick={() => setConfirming(false)}
+                    disabled={busy}
+                    className="px-3 py-1.5 text-xs font-medium text-gray-600 border border-border rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirming(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                >
+                  Withdraw application
+                </button>
+              )}
+            </>
+          )}
+        </div>
       )}
     </div>
   );
