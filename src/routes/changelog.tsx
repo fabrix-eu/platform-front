@@ -26,6 +26,32 @@ interface Release {
 const RELEASES: Release[] = [
   {
     date: 'April 30, 2026',
+    title: 'Challenge applications & unified detail view',
+    items: [
+      {
+        tag: 'new',
+        text: 'Withdraw application — you can now leave a challenge you applied to, as long as your application is still pending or accepted.',
+      },
+      {
+        tag: 'new',
+        text: 'Application status panel — after applying, see a success banner and your full application details (note, attachment, submission date) with actions to message the creator or withdraw.',
+      },
+      {
+        tag: 'new',
+        text: 'Application management on global challenges — challenge owners and creators can now view, accept, reject, and select winners directly from the challenge page.',
+      },
+      {
+        tag: 'improved',
+        text: 'Unified challenge detail view — community and global challenges now share the same polished layout with hero image, info cards, and consistent design.',
+      },
+      {
+        tag: 'improved',
+        text: 'Challenge creator tracking — every challenge now shows who posted it (organization or user), even for facilitators without an organization.',
+      },
+    ],
+  },
+  {
+    date: 'April 30, 2026',
     title: 'Personal account & Admin layout',
     items: [
       {
