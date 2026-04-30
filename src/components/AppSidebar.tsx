@@ -1,6 +1,6 @@
 import { Link, useParams, useLocation } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { getMe, getActiveOrgSlug, type MeOrganization } from '../lib/auth';
+import { getMe, getActiveOrgSlug, isPersonalMode, type MeOrganization } from '../lib/auth';
 import { getMyApplications } from '../lib/community-challenges';
 
 interface SidebarItem {
@@ -21,7 +21,8 @@ export function AppSidebar() {
   if (!user) return null;
 
   const hasOrgs = user.organizations.length > 0;
-  const orgSlug = hasOrgs
+  const personalMode = !params.orgSlug && isPersonalMode();
+  const orgSlug = hasOrgs && !personalMode
     ? params.orgSlug || getActiveOrgSlug() || user.organizations[0].organization_slug
     : undefined;
   const userOrg = orgSlug ? user.organizations.find((o) => o.organization_slug === orgSlug) : undefined;
@@ -32,13 +33,16 @@ export function AppSidebar() {
         {/* Org section */}
         {orgSlug && <OrgNav orgSlug={orgSlug} userOrg={userOrg} pathname={pathname} />}
 
+        {/* Personal section (no org selected) */}
+        {!orgSlug && <PersonalNav pathname={pathname} />}
+
         {/* My communities */}
         {orgSlug && (
           <CommunitiesNav orgSlug={orgSlug} communities={userOrg?.communities ?? []} pathname={pathname} />
         )}
 
         {/* Explore section */}
-        <div className={hasOrgs ? 'mt-4 pt-4 border-t border-border' : ''}>
+        <div className="mt-4 pt-4 border-t border-border">
           <div className="px-3 mb-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
             Explore
           </div>
@@ -135,6 +139,36 @@ function OrgNav({
           Members
         </Link>
       </li>
+    </ul>
+  );
+}
+
+function PersonalNav({ pathname }: { pathname: string }) {
+  const items = [
+    { key: 'dashboard', label: 'Dashboard', href: '/', exact: true },
+    { key: 'messages', label: 'Messages', href: '/messages', exact: false },
+    { key: 'notifications', label: 'Notifications', href: '/notifications', exact: false },
+  ];
+
+  return (
+    <ul className="space-y-0.5">
+      {items.map((item) => {
+        const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
+        return (
+          <li key={item.key}>
+            <Link
+              to={item.href}
+              className={`block px-3 py-2 text-sm rounded-md transition-colors ${
+                isActive
+                  ? 'bg-gray-100 text-gray-900 font-medium'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+            >
+              {item.label}
+            </Link>
+          </li>
+        );
+      })}
     </ul>
   );
 }

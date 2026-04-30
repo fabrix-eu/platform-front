@@ -25,6 +25,28 @@ interface Release {
 
 const RELEASES: Release[] = [
   {
+    date: 'April 30, 2026',
+    title: 'Personal account & Admin layout',
+    items: [
+      {
+        tag: 'new',
+        text: 'Personal account mode — switch between your personal profile and your organizations from the account switcher, like on LinkedIn.',
+      },
+      {
+        tag: 'new',
+        text: 'Personal sidebar — Dashboard, Messages, and Notifications links when viewing as your personal account.',
+      },
+      {
+        tag: 'improved',
+        text: 'Admin sidebar now replaces the main sidebar instead of stacking alongside it.',
+      },
+      {
+        tag: 'improved',
+        text: 'Account switcher avatars now use the standard avatar size, matching the user menu.',
+      },
+    ],
+  },
+  {
     date: 'April 24, 2026',
     title: 'Unified navigation & Directory Map',
     items: [

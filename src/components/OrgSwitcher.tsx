@@ -1,8 +1,19 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useParams, useRouter } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { getMe, getActiveOrgSlug, setActiveOrgSlug, type MeOrganization } from '../lib/auth';
+import { getMe, getActiveOrgSlug, setActiveOrgSlug, isPersonalMode, setPersonalMode, type MeOrganization } from '../lib/auth';
 import { ORG_KINDS } from '../lib/organizations';
+import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
+import { getInitials } from '../lib/utils';
+
+function UserAvatar({ user }: { user: { name: string; image_url: string | null } }) {
+  return (
+    <Avatar>
+      <AvatarImage src={user.image_url ?? undefined} alt={user.name} />
+      <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+    </Avatar>
+  );
+}
 
 function OrgAvatar({ org }: { org: MeOrganization }) {
   const initials = org.organization_name
@@ -12,20 +23,11 @@ function OrgAvatar({ org }: { org: MeOrganization }) {
     .slice(0, 2)
     .toUpperCase();
 
-  if (org.organization_image_url) {
-    return (
-      <img
-        src={org.organization_image_url}
-        alt={org.organization_name}
-        className="h-5 w-5 rounded-full object-cover"
-      />
-    );
-  }
-
   return (
-    <div className="h-5 w-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[9px] font-semibold">
-      {initials}
-    </div>
+    <Avatar>
+      <AvatarImage src={org.organization_image_url ?? undefined} alt={org.organization_name} />
+      <AvatarFallback className="bg-primary/10 text-primary">{initials}</AvatarFallback>
+    </Avatar>
   );
 }
 
@@ -68,12 +70,16 @@ export function OrgSwitcher() {
   const orgSlug = (params as Record<string, string | undefined>).orgSlug;
 
   const me = useQuery({ queryKey: ['me'], queryFn: getMe });
-  const organizations = me.data?.organizations ?? [];
+  const user = me.data;
+  const organizations = user?.organizations ?? [];
 
+  const personalMode = !orgSlug && isPersonalMode();
   const resolvedSlug = orgSlug || getActiveOrgSlug();
-  const currentOrg = (resolvedSlug
-    ? organizations.find((o) => o.organization_slug === resolvedSlug)
-    : null) ?? organizations[0] ?? null;
+  const currentOrg = personalMode
+    ? null
+    : (resolvedSlug
+      ? organizations.find((o) => o.organization_slug === resolvedSlug)
+      : null) ?? organizations[0] ?? null;
 
   // Persist active org whenever it changes
   useEffect(() => {
@@ -102,6 +108,12 @@ export function OrgSwitcher() {
     router.navigate({ to: dest });
   };
 
+  const handlePersonalClick = () => {
+    setOpen(false);
+    setPersonalMode();
+    router.navigate({ to: '/' });
+  };
+
   return (
     <nav className="flex items-center gap-0 text-sm min-w-0">
       {/* Org switcher dropdown */}
@@ -110,10 +122,17 @@ export function OrgSwitcher() {
           onClick={() => setOpen(!open)}
           className="flex items-center gap-1.5 px-1.5 py-1 rounded-md hover:bg-gray-100 transition-colors min-w-0"
         >
-          {currentOrg ? (
+          {personalMode && user ? (
+            <>
+              <UserAvatar user={user} />
+              <span className="truncate font-medium text-gray-700">
+                {user.name}
+              </span>
+            </>
+          ) : currentOrg ? (
             <>
               <OrgAvatar org={currentOrg} />
-              <span className="max-w-[120px] truncate font-medium text-gray-700">
+              <span className="truncate font-medium text-gray-700">
                 {currentOrg.organization_name}
               </span>
             </>
@@ -127,8 +146,25 @@ export function OrgSwitcher() {
 
         {open && (
           <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-border rounded-lg shadow-lg z-50 py-1">
-            <div className="px-3 py-1.5 text-xs font-medium text-gray-400 uppercase tracking-wider">
-              Organizations
+            {user && (
+              <button
+                type="button"
+                onClick={handlePersonalClick}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-gray-50 transition-colors text-left ${
+                  personalMode ? 'bg-gray-50 font-medium' : 'text-gray-700'
+                }`}
+              >
+                <UserAvatar user={user} />
+                <div className="flex-1 min-w-0">
+                  <div className="truncate">{user.name}</div>
+                  <span className="text-[10px] text-gray-400">Personal account</span>
+                </div>
+              </button>
+            )}
+            <div className="border-t border-border mt-1 pt-1">
+              <div className="px-3 py-1.5 text-xs font-medium text-gray-400 uppercase tracking-wider">
+                Organizations
+              </div>
             </div>
             <div className="max-h-64 overflow-y-auto">
               {organizations.map((org) => {

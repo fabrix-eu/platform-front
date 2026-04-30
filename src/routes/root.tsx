@@ -36,7 +36,7 @@ export function RootLayout() {
     <div className="min-h-screen bg-muted/40">
       <header className="bg-white border-b border-border h-14 flex items-center">
         {/* Left zone — aligned with sidebar width */}
-        <div className="w-64 flex-shrink-0 px-4 h-full flex items-center">
+        <div className="w-64 flex-shrink-0 px-4 h-full flex items-center border-r border-border">
           {authed && me.data && me.data.organizations.length > 0 ? (
             <OrgSwitcher />
           ) : (

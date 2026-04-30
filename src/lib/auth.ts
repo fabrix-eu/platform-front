@@ -69,11 +69,21 @@ export function isAuthenticated(): boolean {
 }
 
 const ACTIVE_ORG_KEY = 'active_org_slug';
+const PERSONAL_MODE_VALUE = '__personal__';
 
 export function getActiveOrgSlug(): string | null {
-  return localStorage.getItem(ACTIVE_ORG_KEY);
+  const value = localStorage.getItem(ACTIVE_ORG_KEY);
+  return value === PERSONAL_MODE_VALUE ? null : value;
 }
 
 export function setActiveOrgSlug(slug: string): void {
   localStorage.setItem(ACTIVE_ORG_KEY, slug);
+}
+
+export function isPersonalMode(): boolean {
+  return localStorage.getItem(ACTIVE_ORG_KEY) === PERSONAL_MODE_VALUE;
+}
+
+export function setPersonalMode(): void {
+  localStorage.setItem(ACTIVE_ORG_KEY, PERSONAL_MODE_VALUE);
 }
