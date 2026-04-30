@@ -40,6 +40,7 @@ import { CommunityMatchmakingPage } from '../routes/community/matchmaking';
 import { CommunityJoinRequestsPage } from '../routes/community/join-requests';
 import { CommunitySettingsPage } from '../routes/community/settings';
 import { MapPage } from '../routes/map';
+import { DirectoryMapPage } from '../routes/directory-map';
 import { CommunitiesPage } from '../routes/communities';
 import { CommunityShowPage } from '../routes/communities/show';
 import { CommunityNewPage } from '../routes/communities/new';
@@ -330,7 +331,6 @@ const organizationsIndexRoute = createRoute({
   getParentRoute: () => organizationsRoute,
   path: '/',
   validateSearch: z.object({
-    page: z.number().optional(),
     search: z.string().optional(),
     kinds: z.string().optional(),
     claimed: z.string().optional(),
@@ -340,7 +340,7 @@ const organizationsIndexRoute = createRoute({
     radius: z.number().optional(),
     location_label: z.string().optional(),
   }),
-  component: OrganizationsListPage,
+  component: DirectoryMapPage,
 });
 
 const organizationNewRoute = createRoute({
@@ -369,6 +369,24 @@ const mapRoute = createRoute({
   path: '/map',
   beforeLoad: requireAuth,
   component: MapPage,
+});
+
+const directoryRoute = createRoute({
+  getParentRoute: () => explorerRoute,
+  path: '/directory',
+  beforeLoad: requireAuth,
+  validateSearch: z.object({
+    page: z.number().optional(),
+    search: z.string().optional(),
+    kinds: z.string().optional(),
+    claimed: z.string().optional(),
+    country: z.string().optional(),
+    lon: z.number().optional(),
+    lat: z.number().optional(),
+    radius: z.number().optional(),
+    location_label: z.string().optional(),
+  }),
+  component: OrganizationsListPage,
 });
 
 const communitiesRoute = createRoute({
@@ -857,6 +875,7 @@ const routeTree = rootRoute.addChildren([
       organizationEditRoute,
     ]),
     mapRoute,
+    directoryRoute,
     communitiesRoute.addChildren([
       communitiesIndexRoute,
       communityNewRoute,

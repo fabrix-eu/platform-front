@@ -239,8 +239,7 @@ function CommunitiesNav({
 }
 
 const exploreItems = [
-  { key: 'directory', label: 'Directory', href: '/organizations' },
-  { key: 'map', label: 'Map', href: '/map' },
+  { key: 'directory-map', label: 'Directory Map', href: '/organizations' },
   { key: 'marketplace', label: 'Marketplace', href: '/marketplace', badge: 'new' },
   { key: 'events', label: 'Events', href: '/events' },
   { key: 'challenges', label: 'Challenges', href: '/challenges' },
