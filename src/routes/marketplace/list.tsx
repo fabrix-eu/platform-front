@@ -201,12 +201,20 @@ export function MarketplaceListPage() {
           </button>
         </form>
 
-        <TaxonomyFilter
-          activeType={by_type}
-          activeCategory={by_category}
-          activeSubcategory={by_subcategory}
-          onFilter={handleTaxonomyFilter}
-        />
+        <div className="flex items-center gap-3">
+          <TaxonomyFilter
+            activeType={by_type}
+            activeCategory={by_category}
+            activeSubcategory={by_subcategory}
+            onFilter={handleTaxonomyFilter}
+          />
+          <Link
+            to="/value-chain"
+            className="shrink-0 text-xs text-gray-500 hover:text-primary transition-colors"
+          >
+            View value chain &rarr;
+          </Link>
+        </div>
 
         <LocationFilter
           value={{ country, lon, lat, radius, location_label }}
