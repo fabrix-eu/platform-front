@@ -1,5 +1,4 @@
 import { useRef, useCallback } from 'react';
-import { Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import {
   LISTING_TYPES,
@@ -198,12 +197,6 @@ export function ValueChainPage() {
     <div className="px-6 py-8">
       {/* Header */}
       <div className="mb-6">
-        <Link
-          to="/marketplace"
-          className="text-sm text-gray-500 hover:text-gray-700 mb-3 inline-block"
-        >
-          &larr; Back to Marketplace
-        </Link>
         <h1 className="text-2xl font-bold text-gray-900">Circular Textile Value Chain</h1>
         <p className="text-gray-500 mt-1 text-sm">
           Each column represents a stage of the value chain — from raw materials to distribution.
