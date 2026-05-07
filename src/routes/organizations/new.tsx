@@ -321,6 +321,7 @@ export function OrganizationNewPage() {
         country_code: data.country_code,
         lat: data.lat,
         lon: data.lon,
+        specialties: data.specialties,
         claimed: ownership === 'owner',
       }),
     onSuccess: (org) => {

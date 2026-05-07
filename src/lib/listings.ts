@@ -4,41 +4,51 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 // ── Types ────────────────────────────────────────────────────
 
 export const LISTING_TYPES: Record<string, { label: string; badgeColor: string }> = {
-  service: { label: 'Services', badgeColor: 'bg-blue-100 text-blue-800' },
   material: { label: 'Materials', badgeColor: 'bg-emerald-100 text-emerald-800' },
   capacity: { label: 'Capacities', badgeColor: 'bg-amber-100 text-amber-800' },
+  service: { label: 'Services', badgeColor: 'bg-blue-100 text-blue-800' },
   product: { label: 'Products', badgeColor: 'bg-rose-100 text-rose-800' },
+  distribution: { label: 'Distribution', badgeColor: 'bg-violet-100 text-violet-800' },
 };
 
 export const LISTING_CATEGORIES: Record<string, { label: string; badgeColor: string }> = {
-  // Service categories
-  production_manufacturing: { label: 'Production & Manufacturing', badgeColor: 'bg-blue-100 text-blue-800' },
-  sorting_processing: { label: 'Sorting & Processing', badgeColor: 'bg-cyan-100 text-cyan-800' },
-  design_development: { label: 'Design & Development', badgeColor: 'bg-indigo-100 text-indigo-800' },
-  logistics_collection: { label: 'Logistics & Collection', badgeColor: 'bg-orange-100 text-orange-800' },
-  consulting_training: { label: 'Consulting & Training', badgeColor: 'bg-fuchsia-100 text-fuchsia-800' },
   // Material categories
   waste_streams: { label: 'Waste Streams', badgeColor: 'bg-lime-100 text-lime-800' },
   raw_materials: { label: 'Raw Materials', badgeColor: 'bg-emerald-100 text-emerald-800' },
   intermediate_materials: { label: 'Intermediate Materials', badgeColor: 'bg-teal-100 text-teal-800' },
+  certified_materials: { label: 'Certified Materials', badgeColor: 'bg-green-100 text-green-800' },
+  // Capacity categories
+  equipment: { label: 'Equipment', badgeColor: 'bg-amber-100 text-amber-800' },
+  facilities: { label: 'Facilities', badgeColor: 'bg-yellow-100 text-yellow-800' },
+  open_spaces: { label: 'Open Spaces', badgeColor: 'bg-sky-100 text-sky-800' },
+  workforce: { label: 'Workforce', badgeColor: 'bg-orange-100 text-orange-800' },
+  financing_programs: { label: 'Financing & Programs', badgeColor: 'bg-amber-100 text-amber-900' },
+  // Service categories
+  production_manufacturing: { label: 'Production & Manufacturing', badgeColor: 'bg-blue-100 text-blue-800' },
+  sorting_processing: { label: 'Sorting & Processing', badgeColor: 'bg-cyan-100 text-cyan-800' },
+  design_development: { label: 'Design & Development', badgeColor: 'bg-indigo-100 text-indigo-800' },
+  logistics_collection: { label: 'Logistics & Collection', badgeColor: 'bg-blue-100 text-blue-900' },
+  consulting_training: { label: 'Consulting & Training', badgeColor: 'bg-fuchsia-100 text-fuchsia-800' },
+  certification_auditing: { label: 'Certification & Auditing', badgeColor: 'bg-purple-100 text-purple-800' },
+  end_of_life: { label: 'End-of-life & Second Life', badgeColor: 'bg-teal-100 text-teal-800' },
   // Product categories
   apparel_accessories: { label: 'Apparel & Accessories', badgeColor: 'bg-rose-100 text-rose-800' },
   home_living: { label: 'Home & Living', badgeColor: 'bg-pink-100 text-pink-800' },
   technical_industrial: { label: 'Technical & Industrial', badgeColor: 'bg-slate-100 text-slate-800' },
   upcycled_circular: { label: 'Upcycled & Circular', badgeColor: 'bg-green-100 text-green-800' },
-  // Capacity categories
-  equipment: { label: 'Equipment', badgeColor: 'bg-amber-100 text-amber-800' },
-  facilities: { label: 'Facilities', badgeColor: 'bg-violet-100 text-violet-800' },
-  open_spaces: { label: 'Open Spaces', badgeColor: 'bg-sky-100 text-sky-800' },
-  expertise_skills: { label: 'Expertise & Skills', badgeColor: 'bg-purple-100 text-purple-800' },
+  // Distribution categories
+  retail_resale: { label: 'Retail & Resale', badgeColor: 'bg-violet-100 text-violet-800' },
+  wholesale: { label: 'Wholesale', badgeColor: 'bg-purple-100 text-purple-800' },
+  ecommerce_platforms: { label: 'E-commerce & Platforms', badgeColor: 'bg-fuchsia-100 text-fuchsia-800' },
 };
 
 /** Categories grouped by listing type */
 export const CATEGORIES_BY_TYPE: Record<string, string[]> = {
-  service: ['production_manufacturing', 'sorting_processing', 'design_development', 'logistics_collection', 'consulting_training'],
-  material: ['waste_streams', 'raw_materials', 'intermediate_materials'],
+  material: ['waste_streams', 'raw_materials', 'intermediate_materials', 'certified_materials'],
+  capacity: ['equipment', 'facilities', 'open_spaces', 'workforce', 'financing_programs'],
+  service: ['production_manufacturing', 'sorting_processing', 'design_development', 'logistics_collection', 'consulting_training', 'certification_auditing', 'end_of_life'],
   product: ['apparel_accessories', 'home_living', 'technical_industrial', 'upcycled_circular'],
-  capacity: ['equipment', 'facilities', 'open_spaces', 'expertise_skills'],
+  distribution: ['retail_resale', 'wholesale', 'ecommerce_platforms'],
 };
 
 export const LISTING_SUBCATEGORIES: Record<string, Record<string, { label: string }>> = {
@@ -75,9 +85,24 @@ export const LISTING_SUBCATEGORIES: Record<string, Record<string, { label: strin
   consulting_training: {
     circular_economy_strategy: { label: 'Circular Economy Strategy' },
     life_cycle_assessment: { label: 'Life Cycle Assessment (LCA)' },
-    certification_support: { label: 'Certification Support' },
     training_workshops: { label: 'Training & Workshops' },
     impact_measurement: { label: 'Impact Measurement' },
+  },
+  // Service > Certification & Auditing
+  certification_auditing: {
+    gots_certification: { label: 'GOTS Certification' },
+    oeko_tex: { label: 'OEKO-TEX' },
+    grs_certification: { label: 'GRS (Global Recycled Standard)' },
+    social_auditing: { label: 'Social Auditing' },
+    environmental_auditing: { label: 'Environmental Auditing' },
+    other_certification: { label: 'Other Certification' },
+  },
+  // Service > End-of-life & Second Life
+  end_of_life: {
+    reuse_redistribution: { label: 'Reuse & Redistribution' },
+    donation_programs: { label: 'Donation Programs' },
+    take_back_schemes: { label: 'Take-back Schemes' },
+    disassembly: { label: 'Disassembly & Component Recovery' },
   },
   // Material > Waste Streams
   waste_streams: {
@@ -99,6 +124,13 @@ export const LISTING_SUBCATEGORIES: Record<string, Record<string, { label: strin
     finished_fabric: { label: 'Finished Fabric' },
     trimmings_accessories: { label: 'Trimmings & Accessories' },
     technical_substrates: { label: 'Technical Substrates' },
+  },
+  // Material > Certified Materials
+  certified_materials: {
+    organic_certified: { label: 'Organic Certified (GOTS)' },
+    recycled_certified: { label: 'Recycled Certified (GRS)' },
+    fair_trade: { label: 'Fair Trade' },
+    bio_based: { label: 'Bio-based & Innovative' },
   },
   // Product > Apparel & Accessories
   apparel_accessories: {
@@ -150,12 +182,39 @@ export const LISTING_SUBCATEGORIES: Record<string, Record<string, { label: strin
     shared_atelier: { label: 'Shared Atelier / Makerspace' },
     coworking_space: { label: 'Coworking Space' },
   },
-  // Capacity > Expertise & Skills
-  expertise_skills: {
+  // Capacity > Workforce
+  workforce: {
     traditional_craft: { label: 'Traditional Craft Techniques' },
     industrial_techniques: { label: 'Industrial Techniques' },
     material_expertise: { label: 'Material Expertise' },
     mentoring: { label: 'Mentoring & Knowledge Transfer' },
+    seasonal_workforce: { label: 'Seasonal / Temporary Workforce' },
+  },
+  // Capacity > Financing & Programs
+  financing_programs: {
+    subsidies_grants: { label: 'Subsidies & Grants' },
+    incubation_acceleration: { label: 'Incubation & Acceleration' },
+    circular_economy_funds: { label: 'Circular Economy Funds' },
+    micro_financing: { label: 'Micro-financing' },
+  },
+  // Distribution > Retail & Resale
+  retail_resale: {
+    brick_and_mortar: { label: 'Brick & Mortar Stores' },
+    pop_up_shops: { label: 'Pop-up Shops' },
+    thrift_vintage: { label: 'Thrift & Vintage Shops' },
+    charity_shops: { label: 'Charity Shops' },
+  },
+  // Distribution > Wholesale
+  wholesale: {
+    b2b_wholesale: { label: 'B2B Wholesale' },
+    bulk_sourcing: { label: 'Bulk Sourcing' },
+    trade_fairs: { label: 'Trade Fairs & Showrooms' },
+  },
+  // Distribution > E-commerce & Platforms
+  ecommerce_platforms: {
+    online_marketplace: { label: 'Online Marketplace' },
+    resale_platform: { label: 'Resale Platform' },
+    rental_subscription: { label: 'Rental & Subscription' },
   },
 };
 

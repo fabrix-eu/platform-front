@@ -6,6 +6,7 @@ import {
 } from '../GoogleAddressAutocomplete';
 import { FormError, FieldError } from '../FieldError';
 import { KindSelect } from '../KindSelect';
+import { SpecialtySelector } from '../SpecialtySelector';
 
 export interface OrgData {
   name: string;
@@ -14,6 +15,7 @@ export interface OrgData {
   country_code: string;
   lat?: number;
   lon?: number;
+  specialties?: string[];
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -42,6 +44,7 @@ export function OrgDetailsStep({
 }: OrgDetailsStepProps) {
   const [name, setName] = useState(initialData.name);
   const [kind, setKind] = useState(initialData.kind);
+  const [specialties, setSpecialties] = useState<string[]>(initialData.specialties ?? []);
   const [addressData, setAddressData] = useState<AddressData | null>(
     initialData.address
       ? {
@@ -73,6 +76,7 @@ export function OrgDetailsStep({
       country_code: addressData?.country_code ?? '',
       lat: addressData?.lat,
       lon: addressData?.lon,
+      specialties,
     });
   };
 
@@ -132,6 +136,8 @@ export function OrgDetailsStep({
       )}
       {mutation && <FieldError mutation={mutation} field="address" />}
       {mutation && <FieldError mutation={mutation} field="country_code" />}
+
+      <SpecialtySelector value={specialties} onChange={setSpecialties} />
 
       {footer && <div className="mt-4">{footer}</div>}
 

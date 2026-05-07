@@ -81,6 +81,7 @@ import { MarketplaceListPage } from '../routes/marketplace/list';
 import { MarketplaceShowPage } from '../routes/marketplace/show';
 import { MarketplaceNewPage } from '../routes/marketplace/new';
 import { MarketplaceEditPage } from '../routes/marketplace/edit';
+import { ValueChainPage } from '../routes/value-chain';
 import { CommunityMarketplacePage } from '../routes/community/marketplace';
 import { CommunityMarketplaceDetailPage } from '../routes/community/marketplace-detail';
 import { isAuthenticated, getMe, type User } from './auth';
@@ -500,6 +501,13 @@ const marketplaceEditRoute = createRoute({
   }),
 });
 
+const valueChainRoute = createRoute({
+  getParentRoute: () => explorerRoute,
+  path: '/value-chain',
+  beforeLoad: requireAuth,
+  component: ValueChainPage,
+});
+
 const eventsRoute = createRoute({
   getParentRoute: () => explorerRoute,
   path: '/events',
@@ -889,6 +897,7 @@ const routeTree = rootRoute.addChildren([
       marketplaceShowRoute,
       marketplaceEditRoute,
     ]),
+    valueChainRoute,
     eventsRoute,
     challengesRoute.addChildren([
       challengesIndexRoute,

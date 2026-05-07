@@ -60,6 +60,7 @@ function AccountStep({
           country_code: orgData.country_code,
           lat: orgData.lat,
           lon: orgData.lon,
+          specialties: orgData.specialties,
         },
       });
     },

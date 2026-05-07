@@ -275,6 +275,7 @@ function CommunitiesNav({
 const exploreItems = [
   { key: 'directory-map', label: 'Directory Map', href: '/organizations' },
   { key: 'marketplace', label: 'Marketplace', href: '/marketplace', badge: 'new' },
+  { key: 'value-chain', label: 'Value Chain', href: '/value-chain', badge: 'new' },
   { key: 'events', label: 'Events', href: '/events' },
   { key: 'challenges', label: 'Challenges', href: '/challenges' },
   { key: 'communities', label: 'Communities', href: '/communities' },

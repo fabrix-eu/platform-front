@@ -52,6 +52,7 @@ export interface Organization {
   phone?: string | null;
   linkedin?: string | null;
   instagram?: string | null;
+  specialties?: string[];
   facility_types?: string[];
   processing_types?: string[];
   product_types?: string[];

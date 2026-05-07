@@ -66,7 +66,7 @@ export function RootLayout() {
       </header>
       <main className="flex min-h-[calc(100vh-56px)]">
         {authed && !isAdmin && <AppSidebar />}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <Outlet />
         </div>
       </main>
