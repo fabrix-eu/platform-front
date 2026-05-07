@@ -5,9 +5,8 @@ import {
   LISTING_CATEGORIES,
   LISTING_SUBCATEGORIES,
   CATEGORIES_BY_TYPE,
-  getListings,
 } from '../lib/listings';
-import { getOrganizations } from '../lib/organizations';
+import { api } from '../lib/api';
 
 const TYPE_COLORS: Record<string, { bg: string; border: string; text: string; accent: string }> = {
   material: { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-900', accent: 'bg-emerald-500' },
@@ -160,37 +159,24 @@ function useDragScroll() {
   return { ref, onMouseDown, onMouseUp, onMouseLeave: onMouseUp, onMouseMove };
 }
 
+interface ValueChainStats {
+  listing_counts: Record<string, number>;
+  organization_counts: Record<string, number>;
+  taxonomy: {
+    types: string[];
+    categories_by_type: Record<string, string[]>;
+  };
+}
+
 export function ValueChainPage() {
-  const listings = useQuery({
-    queryKey: ['value-chain', 'listings'],
-    queryFn: () => getListings({ per_page: 999 }),
+  const { data, isLoading } = useQuery({
+    queryKey: ['value-chain', 'stats'],
+    queryFn: () => api.get<ValueChainStats>('/value_chain/stats'),
+    staleTime: 5 * 60 * 1000,
   });
 
-  const orgs = useQuery({
-    queryKey: ['value-chain', 'organizations'],
-    queryFn: () => getOrganizations({ per_page: 999 }),
-  });
-
-  const listingCounts: Record<string, number> = {};
-  if (listings.data?.data) {
-    for (const listing of listings.data.data) {
-      listingCounts[listing.category] = (listingCounts[listing.category] || 0) + 1;
-    }
-  }
-
-  const orgCounts: Record<string, number> = {};
-  if (orgs.data?.organizations) {
-    for (const org of orgs.data.organizations) {
-      const specialties = org.specialties ?? [];
-      for (const spec of specialties) {
-        if (LISTING_CATEGORIES[spec]) {
-          orgCounts[spec] = (orgCounts[spec] || 0) + 1;
-        }
-      }
-    }
-  }
-
-  const isLoading = listings.isLoading || orgs.isLoading;
+  const listingCounts = data?.listing_counts ?? {};
+  const orgCounts = data?.organization_counts ?? {};
   const drag = useDragScroll();
 
   return (
