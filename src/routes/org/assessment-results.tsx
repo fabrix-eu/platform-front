@@ -1,83 +1,61 @@
 import { useParams, useSearch, Link } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getForm } from '../../lib/forms';
-import type { Form } from '../../lib/forms';
+import { getForm, isQuestionVisible } from '../../lib/forms';
+import type { Form, FormQuestion } from '../../lib/forms';
 import { getAnswer, getLatestAnswer, getAnswers } from '../../lib/answers';
 import type { Answer } from '../../lib/answers';
 import type { User } from '../../lib/auth';
+import { FormIcon } from '../../components/FormIcon';
 
-// ── Score helpers ────────────────────────────────────────────
+// ── Score helpers (encouraging purple palette) ──────────────
 
 function getScoreCategory(score: number) {
   if (score >= 80)
     return {
-      label: 'Advanced Readiness',
-      textColor: 'text-green-700',
-      bgColor: 'bg-green-50',
-      borderColor: 'border-green-200',
-      dotColor: 'bg-green-500',
-      description: "You're demonstrating strong environmental and circular practices.",
+      label: 'Advanced',
+      textColor: 'text-purple-700',
+      bgColor: 'bg-purple-50',
+      borderColor: 'border-purple-200',
+      barColor: 'bg-purple-600',
+      badgeBg: 'bg-purple-600',
+      description:
+        "You're demonstrating strong circular and sustainable practices. Keep leading the way!",
     };
   if (score >= 60)
     return {
-      label: 'Proactive but Developing',
-      textColor: 'text-yellow-700',
-      bgColor: 'bg-yellow-50',
-      borderColor: 'border-yellow-200',
-      dotColor: 'bg-yellow-400',
-      description: "You're on a promising path with commitment to environmental responsibility.",
+      label: 'Progressing Well',
+      textColor: 'text-violet-700',
+      bgColor: 'bg-violet-50',
+      borderColor: 'border-violet-200',
+      barColor: 'bg-violet-500',
+      badgeBg: 'bg-violet-500',
+      description:
+        "You're making meaningful progress. Your efforts are building a solid foundation.",
     };
   if (score >= 40)
     return {
-      label: 'Early Stage',
-      textColor: 'text-orange-700',
-      bgColor: 'bg-orange-50',
-      borderColor: 'border-orange-200',
-      dotColor: 'bg-orange-400',
-      description: "You've taken initial steps, but there's room to build a stronger foundation.",
+      label: 'Building Foundations',
+      textColor: 'text-indigo-600',
+      bgColor: 'bg-indigo-50',
+      borderColor: 'border-indigo-200',
+      barColor: 'bg-indigo-400',
+      badgeBg: 'bg-indigo-400',
+      description:
+        "You've taken important first steps on your sustainability journey. Every action counts.",
     };
   return {
-    label: 'Needs Improvement',
-    textColor: 'text-red-700',
-    bgColor: 'bg-red-50',
-    borderColor: 'border-red-200',
-    dotColor: 'bg-red-500',
-    description: 'Your organization has significant opportunities to integrate sustainability.',
+    label: 'Getting Started',
+    textColor: 'text-slate-600',
+    bgColor: 'bg-slate-50',
+    borderColor: 'border-slate-200',
+    barColor: 'bg-slate-400',
+    badgeBg: 'bg-slate-400',
+    description:
+      'This is the beginning of your journey. Use the feedback below as your roadmap for growth.',
   };
 }
 
-function getRecommendations(score: number): string[] {
-  if (score >= 80) {
-    return [
-      'Benchmark your practices with industry leaders',
-      'Share your success stories to inspire others',
-      'Explore advanced partnerships and certifications',
-      'Invest in circular innovation and traceability tools',
-    ];
-  }
-  if (score >= 60) {
-    return [
-      'Establish a dedicated environmental lead or taskforce',
-      'Expand training programs to all departments',
-      'Increase your share of renewable energy',
-      'Begin measuring and disclosing your carbon footprint',
-    ];
-  }
-  if (score >= 40) {
-    return [
-      'Appoint someone to oversee environmental issues',
-      'Introduce basic environmental training for staff',
-      'Start tracking energy consumption',
-      'Evaluate opportunities with certified local suppliers',
-    ];
-  }
-  return [
-    'Assign responsibility for environmental topics',
-    'Reach out to local support organizations',
-    'Identify quick wins for sustainability',
-    'Use this assessment as a roadmap for improvement',
-  ];
-}
+// ── Scoring (handles N/A options with null points) ──────────
 
 function calcSectionScores(form: Form, answer: Answer) {
   return (form.sections || []).map((section) => {
@@ -85,20 +63,30 @@ function calcSectionScores(form: Form, answer: Answer) {
     let maxPoints = 0;
 
     section.questions.forEach((q) => {
+      if (!isQuestionVisible(q, answer.responses)) return;
       const resp = answer.responses[q.key];
-      if (q.options?.choices) {
-        const maxC = q.options.choices.reduce((mx, c) => Math.max(mx, c.points || 0), 0);
-        maxPoints += maxC;
-        if (resp) {
-          if (Array.isArray(resp)) {
-            (resp as string[]).forEach((v) => {
-              const c = q.options?.choices?.find((ch) => ch.value === v);
-              points += c?.points || 0;
-            });
-          } else {
-            const c = q.options.choices.find((ch) => ch.value === resp);
-            points += c?.points || 0;
-          }
+      if (!q.options?.choices) return;
+
+      // If user selected an N/A option (points is null), skip this question
+      if (resp && !Array.isArray(resp)) {
+        const selected = q.options.choices.find((ch) => ch.value === resp);
+        if (selected && selected.points === null) return;
+      }
+
+      const validChoices = q.options.choices.filter((c) => c.points != null);
+      if (validChoices.length === 0) return;
+      const maxC = validChoices.reduce((mx, c) => Math.max(mx, c.points!, 0), 0);
+      maxPoints += maxC;
+
+      if (resp) {
+        if (Array.isArray(resp)) {
+          (resp as string[]).forEach((v) => {
+            const c = q.options?.choices?.find((ch) => ch.value === v);
+            if (c?.points != null) points += c.points;
+          });
+        } else {
+          const c = q.options.choices.find((ch) => ch.value === resp);
+          if (c?.points != null) points += c.points;
         }
       }
     });
@@ -108,7 +96,68 @@ function calcSectionScores(form: Form, answer: Answer) {
   });
 }
 
-// ── Score circle ─────────────────────────────────────────────
+// ── Per-question helpers ────────────────────────────────────
+
+function getQuestionFeedback(question: FormQuestion, response: unknown): string | null {
+  const feedback = question.options?.feedback;
+  if (!feedback || !response || typeof response !== 'string') return null;
+  return feedback[response] || null;
+}
+
+function getSelectedChoice(question: FormQuestion, response: unknown) {
+  if (!question.options?.choices || !response || typeof response !== 'string') return null;
+  const choice = question.options.choices.find((c) => c.value === response);
+  if (!choice) return null;
+  const maxPoints = question.options.choices
+    .filter((c) => c.points != null)
+    .reduce((mx, c) => Math.max(mx, c.points!, 0), 0);
+  return { label: choice.label, points: choice.points, maxPoints, isNA: choice.points === null };
+}
+
+// ── Priority actions ────────────────────────────────────────
+
+interface PriorityAction {
+  feedback: string;
+  questionText: string;
+  points: number;
+  maxPoints: number;
+  gap: number;
+  knowledgeLink?: string | null;
+}
+
+function getPriorityActions(form: Form, answer: Answer): PriorityAction[] {
+  const actions: PriorityAction[] = [];
+
+  for (const section of form.sections) {
+    for (const q of section.questions) {
+      if (!isQuestionVisible(q, answer.responses)) continue;
+      const resp = answer.responses[q.key];
+      if (!resp || typeof resp !== 'string') continue;
+
+      const feedback = getQuestionFeedback(q, resp);
+      if (!feedback) continue;
+
+      const selected = getSelectedChoice(q, resp);
+      if (!selected || selected.isNA || selected.maxPoints === 0) continue;
+      if (selected.points === selected.maxPoints) continue;
+
+      const gap = (selected.maxPoints - (selected.points || 0)) / selected.maxPoints;
+      actions.push({
+        feedback,
+        questionText: q.text,
+        points: selected.points || 0,
+        maxPoints: selected.maxPoints,
+        gap,
+        knowledgeLink: q.options?.knowledge_link,
+      });
+    }
+  }
+
+  actions.sort((a, b) => b.gap - a.gap);
+  return actions.slice(0, 4);
+}
+
+// ── Score circle ────────────────────────────────────────────
 
 function ScoreCircle({ score, textColor }: { score: number; textColor: string }) {
   const circumference = 2 * Math.PI * 70;
@@ -137,7 +186,7 @@ function ScoreCircle({ score, textColor }: { score: number; textColor: string })
   );
 }
 
-// ── Main page ────────────────────────────────────────────────
+// ── Main page ───────────────────────────────────────────────
 
 export function AssessmentResultsPage() {
   const { orgSlug, formId } = useParams({ strict: false }) as { orgSlug: string; formId: string };
@@ -151,10 +200,9 @@ export function AssessmentResultsPage() {
     queryFn: () => getForm(formId),
   });
 
-  // Fetch specific answer if answerId is provided, otherwise latest
   const answerQuery = useQuery({
     queryKey: answerId ? ['answers', answerId] : ['answers', 'latest', orgId, formId],
-    queryFn: () => answerId ? getAnswer(answerId) : getLatestAnswer(orgId!, formId),
+    queryFn: () => (answerId ? getAnswer(answerId) : getLatestAnswer(orgId!, formId)),
     enabled: answerId ? true : !!orgId,
     staleTime: 0,
   });
@@ -184,7 +232,9 @@ export function AssessmentResultsPage() {
     return (
       <div className="p-6 max-w-2xl mx-auto">
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 text-center">
-          <p className="text-amber-800 font-medium">No results available yet. Complete the assessment first.</p>
+          <p className="text-amber-800 font-medium">
+            No results available yet. Complete the assessment first.
+          </p>
           <Link
             to="/$orgSlug/assessments/$formId"
             params={{ orgSlug, formId }}
@@ -199,9 +249,9 @@ export function AssessmentResultsPage() {
 
   const score = Math.round(answer.normalized_score || 0);
   const category = getScoreCategory(score);
-  const recommendations = getRecommendations(score);
   const sectionScores = calcSectionScores(form, answer);
   const allAnswers = historyQuery.data ?? [];
+  const priorityActions = getPriorityActions(form, answer);
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
@@ -219,21 +269,90 @@ export function AssessmentResultsPage() {
         <div className="flex flex-col md:flex-row items-center gap-8">
           <ScoreCircle score={score} textColor={category.textColor} />
           <div className="flex-1 text-center md:text-left">
-            <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium text-white mb-2 ${category.dotColor}`}>
+            <span
+              className={`inline-block px-3 py-1 rounded-full text-xs font-medium text-white mb-2 ${category.badgeBg}`}
+            >
               {category.label}
             </span>
-            <h2 className="text-2xl font-bold font-display text-gray-900 mb-2">{form.title}</h2>
+            <h2 className="text-2xl font-bold font-display text-gray-900 mb-2 flex items-center gap-2">
+              <FormIcon iconName={form.icon_name} className="w-6 h-6 text-primary shrink-0" />
+              {form.title}
+            </h2>
             <p className="text-gray-600">{category.description}</p>
           </div>
         </div>
       </div>
 
+      {/* Priority actions */}
+      {priorityActions.length > 0 && (
+        <div className="bg-white border border-border rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <svg
+              className="w-5 h-5 text-primary"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z"
+              />
+            </svg>
+            Priority Actions
+          </h3>
+          <div className="space-y-4">
+            {priorityActions.map((action, i) => (
+              <div key={i} className="flex gap-4">
+                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-bold">
+                  {i + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-700">{action.feedback}</p>
+                  <div className="mt-1.5 flex items-center gap-3 flex-wrap">
+                    <span className="text-xs text-gray-400">
+                      {action.questionText.length > 80
+                        ? action.questionText.slice(0, 80) + '...'
+                        : action.questionText}
+                    </span>
+                    <span className="text-xs font-medium text-purple-500">
+                      {action.points}/{action.maxPoints} pts
+                    </span>
+                    {action.knowledgeLink && (
+                      <a
+                        href={action.knowledgeLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Learn more
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Section breakdown */}
       {sectionScores.length > 1 && (
         <div className="bg-white border border-border rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5" />
+            <svg
+              className="w-5 h-5 text-primary"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5"
+              />
             </svg>
             Score by Section
           </h3>
@@ -246,7 +365,7 @@ export function AssessmentResultsPage() {
                 </div>
                 <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all ${s.category.dotColor}`}
+                    className={`h-full rounded-full transition-all ${s.category.barColor}`}
                     style={{ width: `${s.score}%` }}
                   />
                 </div>
@@ -256,32 +375,120 @@ export function AssessmentResultsPage() {
         </div>
       )}
 
-      {/* Recommendations */}
-      <div className="bg-white border border-border rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <svg className="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-.189m-1.5.189a6.01 6.01 0 0 1-1.5-.189m3.75 7.478a12.06 12.06 0 0 1-4.5 0m3.75 2.383a14.406 14.406 0 0 1-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 1 0-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
+      {/* Answers detail by section */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <svg
+            className="w-5 h-5 text-primary"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
+            />
           </svg>
-          Recommendations
+          Your Answers
         </h3>
-        <ul className="space-y-3">
-          {recommendations.map((rec, i) => (
-            <li key={i} className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-green-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-              </svg>
-              <span className="text-gray-700">{rec}</span>
-            </li>
-          ))}
-        </ul>
+
+          {form.sections.map((section) => {
+            const answeredQuestions = section.questions.filter(
+              (q) =>
+                isQuestionVisible(q, answer.responses) &&
+                answer.responses[q.key] != null &&
+                answer.responses[q.key] !== '',
+            );
+            if (answeredQuestions.length === 0) return null;
+
+            return (
+              <div
+                key={section.id}
+                className="bg-white border border-border rounded-lg overflow-hidden"
+              >
+                <div className="px-6 py-4 bg-gray-50 border-b border-border">
+                  <h4 className="font-semibold text-gray-900">{section.title}</h4>
+                </div>
+                <div className="divide-y divide-gray-100">
+                  {answeredQuestions.map((q) => {
+                    const selected = getSelectedChoice(q, answer.responses[q.key]);
+                    const feedback = getQuestionFeedback(q, answer.responses[q.key]);
+                    const knowledgeLink = q.options?.knowledge_link;
+
+                    return (
+                      <div key={q.id} className="px-6 py-4">
+                        <p className="text-sm text-gray-700">{q.text}</p>
+
+                        {selected && (
+                          <div className="mt-2 flex items-center gap-2 flex-wrap">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-medium bg-purple-100 text-purple-700 px-2.5 py-1 rounded-full">
+                              {selected.label}
+                              {!selected.isNA && selected.maxPoints > 0 && (
+                                <span className="text-purple-400">
+                                  ({selected.points}/{selected.maxPoints})
+                                </span>
+                              )}
+                              {selected.isNA && <span className="text-purple-400">N/A</span>}
+                            </span>
+                          </div>
+                        )}
+
+                        {feedback && (
+                          <div className="mt-3 text-sm text-gray-600 bg-slate-50 rounded-lg p-3 border-l-2 border-purple-200">
+                            {feedback}
+                          </div>
+                        )}
+
+                        {knowledgeLink && (
+                          <a
+                            href={knowledgeLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-2 inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                          >
+                            <svg
+                              className="w-3.5 h-3.5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1.5}
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"
+                              />
+                            </svg>
+                            Learn more
+                          </a>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
       </div>
 
       {/* History */}
       {allAnswers.length > 1 && (
         <div className="bg-white border border-border rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
+            <svg
+              className="w-5 h-5 text-primary"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941"
+              />
             </svg>
             Assessment History
           </h3>
@@ -301,7 +508,7 @@ export function AssessmentResultsPage() {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full ${aCat.dotColor}`} />
+                    <div className={`w-3 h-3 rounded-full ${aCat.barColor}`} />
                     <span className="text-sm text-gray-700">
                       {new Date(a.created_at).toLocaleDateString('en-GB', {
                         day: 'numeric',

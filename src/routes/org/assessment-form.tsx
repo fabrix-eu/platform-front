@@ -6,6 +6,7 @@ import type { Form, FormQuestion, FormSection } from '../../lib/forms';
 import { getLatestAnswer, createAnswer, updateAnswer } from '../../lib/answers';
 import type { Answer } from '../../lib/answers';
 import type { User } from '../../lib/auth';
+import { FormIcon } from '../../components/FormIcon';
 
 // ── Question renderers ───────────────────────────────────────
 
@@ -475,6 +476,22 @@ function QuestionWizard({
         </div>
       </div>
 
+      {/* Form title + section info */}
+      <div className="text-center space-y-1">
+        <div className="flex items-center justify-center gap-2 text-gray-900">
+          <FormIcon iconName={form.icon_name} className="w-5 h-5 text-primary" />
+          <span className="text-sm font-medium">{form.title}</span>
+        </div>
+        {allSections.length > 1 && (
+          <>
+            <p className="text-sm text-gray-500">
+              Section {sectionIdx + 1} of {allSections.length}
+            </p>
+            <h2 className="text-lg font-semibold text-gray-900">{currentSection.title}</h2>
+          </>
+        )}
+      </div>
+
       {/* Overall progress */}
       <div className="space-y-1">
         <div className="flex justify-between text-sm">
@@ -488,16 +505,6 @@ function QuestionWizard({
           />
         </div>
       </div>
-
-      {/* Section info */}
-      {allSections.length > 1 && (
-        <div className="text-center space-y-1">
-          <p className="text-sm text-gray-500">
-            Section {sectionIdx + 1} of {allSections.length}
-          </p>
-          <h2 className="text-lg font-semibold text-gray-900">{currentSection.title}</h2>
-        </div>
-      )}
 
       {/* Question card */}
       <div className="bg-white border border-border rounded-xl shadow-sm p-8">
@@ -523,7 +530,14 @@ function QuestionWizard({
         </div>
 
         {/* Question text */}
-        <h3 className="text-xl font-medium text-gray-900 mb-8">{currentQuestion.text}</h3>
+        <h3 className="text-xl font-medium text-gray-900">{currentQuestion.text}</h3>
+        {currentQuestion.description && (
+          <p className="mt-2 text-sm text-gray-500">{currentQuestion.description}</p>
+        )}
+        {currentQuestion.hint && (
+          <p className="mt-1 text-xs text-gray-400 italic">{currentQuestion.hint}</p>
+        )}
+        <div className="mb-8" />
 
         {/* Input */}
         <div>

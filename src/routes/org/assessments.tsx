@@ -14,6 +14,7 @@ import {
 import { getFormsWithAnswers } from '../../lib/forms';
 import type { Form, FormWithAnswers } from '../../lib/forms';
 import type { User } from '../../lib/auth';
+import { FormIcon } from '../../components/FormIcon';
 
 // ── Score helpers ────────────────────────────────────────────
 
@@ -129,36 +130,6 @@ function ImpactRadar({ assessments }: { assessments: AssessmentData[] }) {
         </ResponsiveContainer>
       </div>
     </div>
-  );
-}
-
-// ── Form icon ────────────────────────────────────────────────
-
-const ICON_MAP: Record<string, string> = {
-  Leaf: 'M12 21C7.5 21 3 16.5 3 12S7.5 3 12 3s9 4.5 9 9-4.5 9-9 9Zm-1-6 5-5-1.4-1.4L11 12.2l-2.6-2.6L7 11l4 4Z',
-  Zap: 'M13 2 3 14h9l-1 10 10-12h-9l1-10Z',
-  Lightbulb: 'M9 21h6m-4-4h2a5 5 0 1 0-2 0Zm1-13v3m-4.2 1.8L8.5 9.5m7.2-1.2L14.5 9.5',
-  Package: 'M16.5 9.4 7.55 4.24M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z',
-  Share2: 'M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM18 22a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98',
-  Rocket: 'M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09ZM12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z',
-  PersonStanding: 'M12 6a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM10 9h4l-1 7h-2l-1-7Zm0 10 2 3m0 0 2-3',
-  UserPlus: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Zm6 1v6m3-3h-6',
-  TrendingUp: 'M22 7l-8.5 8.5-5-5L2 17',
-};
-
-function FormIcon({ iconName, className }: { iconName: string; className?: string }) {
-  const path = ICON_MAP[iconName];
-  if (!path) {
-    return (
-      <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75Z" />
-      </svg>
-    );
-  }
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d={path} />
-    </svg>
   );
 }
 

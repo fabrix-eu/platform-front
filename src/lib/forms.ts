@@ -5,7 +5,7 @@ import { api } from './api';
 export interface FormChoice {
   value: string;
   label: string;
-  points?: number;
+  points?: number | null;
 }
 
 export interface FormRow {
@@ -25,6 +25,8 @@ export interface FormQuestion {
   text: string;
   key: string;
   section_id: string;
+  description?: string | null;
+  hint?: string | null;
   field_type: 'text' | 'email' | 'rating' | 'select' | 'multiselect' | 'table';
   required?: boolean;
   options?: {
@@ -32,6 +34,9 @@ export interface FormQuestion {
     rows?: FormRow[];
     scale?: number[];
     points?: number;
+    feedback?: Record<string, string>;
+    knowledge_link?: string | null;
+    small_company_applicable?: boolean | null;
   };
   condition?: QuestionCondition;
 }
