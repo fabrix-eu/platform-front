@@ -95,7 +95,7 @@ export function CommunityOverviewPage() {
           emptyText="No events yet"
         >
           {events.map((event) => (
-            <EventCard key={event.id} event={event} />
+            <EventCard key={event.id} event={event} orgSlug={orgSlug} communitySlug={communitySlug} />
           ))}
         </SidebarSection>
 
@@ -164,13 +164,17 @@ function SidebarSection({
 
 // --- Event card ---
 
-function EventCard({ event }: { event: { title: string; happens_at: string; address: string; online: boolean } }) {
+function EventCard({ event, orgSlug, communitySlug }: { event: { id: string; title: string; happens_at: string; address: string; online: boolean }; orgSlug: string; communitySlug: string }) {
   const date = new Date(event.happens_at);
   const formattedDate = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
   const formattedTime = date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
   return (
-    <div className="px-4 py-3">
+    <Link
+      to="/$orgSlug/communities/$communitySlug/events/$eventId"
+      params={{ orgSlug, communitySlug, eventId: event.id }}
+      className="block px-4 py-3 hover:bg-gray-50 transition-colors"
+    >
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0 w-10 h-10 rounded-md bg-primary/10 text-primary flex flex-col items-center justify-center text-[10px] font-semibold leading-tight">
           <span>{date.toLocaleDateString('en-GB', { day: 'numeric' })}</span>
@@ -186,7 +190,7 @@ function EventCard({ event }: { event: { title: string; happens_at: string; addr
           </p>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 

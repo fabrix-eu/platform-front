@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getAllEvents } from '../../lib/community-events';
 import type { CommunityEvent } from '../../lib/community-events';
+import { getMe } from '../../lib/auth';
 import { LocationFilter } from '../../components/LocationFilter';
 import type { LocationFilterParams } from '../../components/LocationFilter';
 import { useFeatureInfo, FeatureIntro, FeatureInfoTrigger } from '../../components/FeatureIntro';
@@ -30,9 +31,9 @@ function DateBadge({ iso }: { iso: string }) {
   );
 }
 
-function EventCard({ event }: { event: CommunityEvent }) {
-  return (
-    <div className="flex items-start gap-4 bg-white border border-border rounded-lg p-4 hover:shadow-md transition-shadow">
+function EventCard({ event, orgSlug }: { event: CommunityEvent; orgSlug: string | null }) {
+  const content = (
+    <>
       {event.image_url ? (
         <img
           src={event.image_url}
@@ -74,6 +75,24 @@ function EventCard({ event }: { event: CommunityEvent }) {
           </p>
         )}
       </div>
+    </>
+  );
+
+  if (orgSlug && event.community?.slug) {
+    return (
+      <Link
+        to="/$orgSlug/communities/$communitySlug/events/$eventId"
+        params={{ orgSlug, communitySlug: event.community.slug, eventId: event.id }}
+        className="flex items-start gap-4 bg-white border border-border rounded-lg p-4 hover:shadow-md transition-shadow"
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="flex items-start gap-4 bg-white border border-border rounded-lg p-4">
+      {content}
     </div>
   );
 }
@@ -93,6 +112,9 @@ export function EventsListPage() {
     location_label?: string;
   };
   const [tab, setTab] = useState<Tab>('upcoming');
+
+  const meQuery = useQuery({ queryKey: ['me'], queryFn: getMe, retry: false });
+  const orgSlug = meQuery.data?.organizations?.[0]?.organization_slug ?? null;
 
   const locationParams: Record<string, string> = {};
   if (country) locationParams.by_country = country;
@@ -233,7 +255,7 @@ export function EventsListPage() {
       ) : (
         <div className="space-y-3">
           {displayed.map((event) => (
-            <EventCard key={event.id} event={event} />
+            <EventCard key={event.id} event={event} orgSlug={orgSlug} />
           ))}
         </div>
       )}
