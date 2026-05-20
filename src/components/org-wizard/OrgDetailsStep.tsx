@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import type { UseMutationResult } from '@tanstack/react-query';
 import {
-  GoogleAddressAutocomplete,
+  PhotonAddressAutocomplete,
   type AddressData,
-} from '../GoogleAddressAutocomplete';
+} from '../PhotonAddressAutocomplete';
 import { FormError, FieldError } from '../FieldError';
 import { KindSelect } from '../KindSelect';
 import { SpecialtySelector } from '../SpecialtySelector';
@@ -121,7 +121,7 @@ export function OrgDetailsStep({
         {mutation && <FieldError mutation={mutation} field="kind" />}
       </div>
 
-      <GoogleAddressAutocomplete
+      <PhotonAddressAutocomplete
         onSelect={(data) => {
           setAddressData(data);
           setShowAddressError(false);

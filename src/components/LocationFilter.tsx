@@ -1,8 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import {
-  loadGoogleMapsScript,
-  isGoogleMapsLoaded,
-} from '../lib/google-maps-loader';
+import { searchCity, type GeocodingSuggestion } from '../lib/geocoding';
 
 export interface LocationFilterParams {
   country?: string;
@@ -51,60 +48,24 @@ const EU_COUNTRIES: { code: string; name: string }[] = [
 
 const RADIUS_OPTIONS = [25, 50, 100, 200, 500];
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-interface CitySuggestion {
-  place_id: string;
-  description: string;
-}
-
 export function LocationFilter({ value, onChange }: LocationFilterProps) {
   const [cityQuery, setCityQuery] = useState(value.location_label ?? '');
-  const [suggestions, setSuggestions] = useState<CitySuggestion[]>([]);
-  const [mapLoaded, setMapLoaded] = useState(false);
+  const [suggestions, setSuggestions] = useState<GeocodingSuggestion[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const autocompleteRef = useRef<any>(null);
-  const placesRef = useRef<any>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const justSelectedRef = useRef(false);
 
-  useEffect(() => {
-    const load = async () => {
-      if (isGoogleMapsLoaded()) { setMapLoaded(true); return; }
-      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-      if (!apiKey) return;
-      try { await loadGoogleMapsScript(apiKey); setMapLoaded(true); } catch { /* noop */ }
-    };
-    load();
-  }, []);
-
-  useEffect(() => {
-    if (mapLoaded && !autocompleteRef.current) {
-      autocompleteRef.current = new window.google.maps.places.AutocompleteService();
-      const div = document.createElement('div');
-      placesRef.current = new window.google.maps.places.PlacesService(div);
-    }
-  }, [mapLoaded]);
-
+  // Debounced city search via Photon
   useEffect(() => {
     if (justSelectedRef.current) { justSelectedRef.current = false; return; }
-    if (!cityQuery || cityQuery.length < 2 || !autocompleteRef.current) {
+    if (!cityQuery || cityQuery.length < 2) {
       setSuggestions([]);
       return;
     }
     const t = setTimeout(() => {
-      autocompleteRef.current.getPlacePredictions(
-        { input: cityQuery, types: ['(cities)'] },
-        (preds: any, status: any) => {
-          if (status === window.google.maps.places.PlacesServiceStatus.OK && preds) {
-            setSuggestions(preds.map((p: any) => ({ place_id: p.place_id, description: p.description })));
-          } else {
-            setSuggestions([]);
-          }
-        },
-      );
+      searchCity(cityQuery).then(setSuggestions);
     }, 300);
     return () => clearTimeout(t);
   }, [cityQuery]);
@@ -123,37 +84,20 @@ export function LocationFilter({ value, onChange }: LocationFilterProps) {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const handleCitySelect = useCallback((placeId: string, description: string) => {
-    if (!placesRef.current) return;
-    placesRef.current.getDetails({ placeId, fields: ['geometry', 'address_components'] }, (place: any, status: any) => {
-      if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
-        const lat = place.geometry?.location?.lat();
-        const lng = place.geometry?.location?.lng();
-        if (lat === undefined || lng === undefined) return;
+  const handleCitySelect = useCallback((suggestion: GeocodingSuggestion) => {
+    const cityLabel = suggestion.city || suggestion.label.split(',')[0];
 
-        let countryCode = value.country;
-        if (place.address_components) {
-          for (const c of place.address_components) {
-            if (c.types.includes('country')) {
-              countryCode = c.short_name;
-              break;
-            }
-          }
-        }
-
-        justSelectedRef.current = true;
-        setCityQuery(description.split(',')[0]);
-        setSuggestions([]);
-        setShowDropdown(false);
-        onChange({
-          ...value,
-          lon: lng,
-          lat,
-          radius: value.radius || 100,
-          location_label: description.split(',')[0],
-          country: countryCode,
-        });
-      }
+    justSelectedRef.current = true;
+    setCityQuery(cityLabel);
+    setSuggestions([]);
+    setShowDropdown(false);
+    onChange({
+      ...value,
+      lon: suggestion.lon,
+      lat: suggestion.lat,
+      radius: value.radius || 100,
+      location_label: cityLabel,
+      country: suggestion.country_code?.toUpperCase() || value.country,
     });
   }, [onChange, value]);
 
@@ -208,16 +152,16 @@ export function LocationFilter({ value, onChange }: LocationFilterProps) {
           >
             {suggestions.map((s) => (
               <button
-                key={s.place_id}
+                key={s.id}
                 type="button"
                 className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
-                onClick={() => handleCitySelect(s.place_id, s.description)}
+                onClick={() => handleCitySelect(s)}
               >
                 <svg className="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
                 </svg>
-                <span className="truncate">{s.description}</span>
+                <span className="truncate">{s.label}</span>
               </button>
             ))}
           </div>

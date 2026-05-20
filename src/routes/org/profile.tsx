@@ -16,8 +16,8 @@ import type { Listing } from '../../lib/listings';
 import { getForm } from '../../lib/forms';
 import { getLatestAnswer, createAnswer, updateAnswer } from '../../lib/answers';
 import { uploadFile } from '../../lib/uploads';
-import { GoogleAddressAutocomplete } from '../../components/GoogleAddressAutocomplete';
-import type { AddressData } from '../../components/GoogleAddressAutocomplete';
+import { PhotonAddressAutocomplete } from '../../components/PhotonAddressAutocomplete';
+import type { AddressData } from '../../components/PhotonAddressAutocomplete';
 import { FieldError, FormError } from '../../components/FieldError';
 import { KindSelect } from '../../components/KindSelect';
 import { useFeatureInfo, FeatureIntro, FeatureInfoTrigger } from '../../components/FeatureIntro';
@@ -168,7 +168,7 @@ function InformationsSection({ orgSlug }: { orgSlug: string }) {
 
       {/* Address */}
       <div>
-        <GoogleAddressAutocomplete
+        <PhotonAddressAutocomplete
           onSelect={(data) => setAddressData(data)}
           initialLocation={addressData}
         />

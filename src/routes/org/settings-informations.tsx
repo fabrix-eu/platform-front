@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useParams } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getOrganization, updateOrganization } from '../../lib/organizations';
-import { GoogleAddressAutocomplete } from '../../components/GoogleAddressAutocomplete';
-import type { AddressData } from '../../components/GoogleAddressAutocomplete';
+import { PhotonAddressAutocomplete } from '../../components/PhotonAddressAutocomplete';
+import type { AddressData } from '../../components/PhotonAddressAutocomplete';
 import { FieldError, FormError } from '../../components/FieldError';
 import { KindSelect } from '../../components/KindSelect';
 
@@ -125,7 +125,7 @@ export function OrgSettingsInformationsPage() {
 
         {/* Address */}
         <div>
-          <GoogleAddressAutocomplete
+          <PhotonAddressAutocomplete
             onSelect={(data) => setAddressData(data)}
             initialLocation={addressData}
           />
