@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { updateOrganization, submitClaim, ORG_KINDS } from '../lib/organizations';
 import type { Organization } from '../lib/organizations';
 import { COVER_IMAGES } from '../lib/mockOrgData';
@@ -560,32 +559,7 @@ function ConnectButton({ org, myOrgs }: { org: Organization; myOrgs: MeOrganizat
   );
 }
 
-// ── Three-dots more menu (Radix DropdownMenu) ─────────────────
-
-function MoreMenu({ children }: { children: React.ReactNode }) {
-  return (
-    <DropdownMenu.Root modal={false}>
-      <DropdownMenu.Trigger asChild>
-        <button
-          className="border border-gray-300 rounded-lg p-2 text-gray-500 hover:bg-gray-50 transition-colors"
-          title="More options"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
-          </svg>
-        </button>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Content
-        align="end"
-        sideOffset={4}
-        className="min-w-48 bg-white border border-border rounded-lg shadow-lg z-50 py-1"
-        onCloseAutoFocus={(e) => e.preventDefault()}
-      >
-        {children}
-      </DropdownMenu.Content>
-    </DropdownMenu.Root>
-  );
-}
+// ── Three-dots more menu ─────────────────────────────────────
 
 // ── Main OrgProfile component ───────────────────────────────────
 
@@ -682,20 +656,11 @@ export function OrgProfile({
                   Manage profile
                 </Link>
               )}
-              {isLoggedIn && !isMember && (
-                <MoreMenu>
-                  {!org.claimed && (
-                    <div className="px-3 py-2">
-                      <ClaimButton orgId={org.id} />
-                    </div>
-                  )}
-                  {org.claimed && (
-                    <div className="px-3 py-2">
-                      <p className="text-xs text-gray-500 mb-2">Are you a member of this organization?</p>
-                      <JoinRequestButton orgId={org.id} />
-                    </div>
-                  )}
-                </MoreMenu>
+              {isLoggedIn && !isMember && !org.claimed && (
+                <ClaimButton orgId={org.id} />
+              )}
+              {isLoggedIn && !isMember && org.claimed && (
+                <JoinRequestButton orgId={org.id} />
               )}
             </div>
           </div>
