@@ -188,3 +188,7 @@ export async function getAllEvents(
 
   return res.json();
 }
+
+export async function getEvent(eventId: string): Promise<CommunityEvent> {
+  return api.get<CommunityEvent>(`/community_events/${eventId}`);
+}
