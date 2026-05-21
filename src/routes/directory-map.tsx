@@ -10,6 +10,7 @@ import { OrganizationsMap } from '../components/OrganizationsMap';
 const ALL_KINDS = Object.entries(ORG_KINDS);
 const ALL_KIND_KEYS = Object.keys(ORG_KINDS);
 const PER_PAGE = 20;
+const EUROPE_BOUNDS: [[number, number], [number, number]] = [[-11, 34], [45, 58]];
 
 export function DirectoryMapPage() {
   const navigate = useNavigate();
@@ -329,6 +330,7 @@ export function DirectoryMapPage() {
             organizations={mapQuery.data.organizations}
             selectedKinds={selectedKinds.length > 0 ? selectedKinds : ALL_KIND_KEYS}
             height="100%"
+            maxBounds={EUROPE_BOUNDS}
           />
         )}
       </div>

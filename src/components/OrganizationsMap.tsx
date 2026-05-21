@@ -23,6 +23,8 @@ interface OrganizationsMapProps {
   center?: [number, number];
   /** Community territory radius in km. When provided with center, draws a blue circle. */
   radiusKm?: number;
+  /** Restrict panning/zoom to these bounds [[swLon, swLat], [neLon, neLat]]. */
+  maxBounds?: [[number, number], [number, number]];
 }
 
 function getKindColor(org: { kind: string | null }): string {
@@ -56,7 +58,7 @@ function circlePolygon(center: [number, number], radiusKm: number, steps = 64) {
   };
 }
 
-export function OrganizationsMap({ organizations, height = '500px', selectedKinds, linkBuilder, relations, highlightOrgId, center, radiusKm }: OrganizationsMapProps) {
+export function OrganizationsMap({ organizations, height = '500px', selectedKinds, linkBuilder, relations, highlightOrgId, center, radiusKm, maxBounds }: OrganizationsMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
@@ -90,6 +92,7 @@ export function OrganizationsMap({ organizations, height = '500px', selectedKind
         style: MAP_STYLE,
         center: center || getDefaultCenter(),
         zoom: center ? 10 : 5,
+        ...(maxBounds ? { maxBounds } : {}),
       });
 
       mapRef.current = map;
