@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getMe } from '../../lib/auth';
-import { getCommunity } from '../../lib/communities';
+import { getCommunity, updateCommunity } from '../../lib/communities';
+import { PhotonAddressAutocomplete, type AddressData } from '../../components/PhotonAddressAutocomplete';
 import {
   getCommunityAdmins,
   addCommunityAdmin,
@@ -197,6 +198,9 @@ export function CommunitySettingsPage() {
         </dl>
       </section>
 
+      {/* Territory */}
+      <TerritorySection communitySlug={communitySlug} />
+
       {/* Community admins */}
       <section className="bg-white border border-border rounded-lg p-5">
         <div className="flex items-center justify-between mb-4">
@@ -337,5 +341,148 @@ export function CommunitySettingsPage() {
         />
       )}
     </div>
+  );
+}
+
+// ── Territory section ──────────────────────────────────────────
+
+function TerritorySection({ communitySlug }: { communitySlug: string }) {
+  const queryClient = useQueryClient();
+
+  const communityQuery = useQuery({
+    queryKey: ['community', communitySlug],
+    queryFn: () => getCommunity(communitySlug),
+  });
+
+  const community = communityQuery.data;
+
+  const [centerAddress, setCenterAddress] = useState('');
+  const [centerLat, setCenterLat] = useState<number | null>(null);
+  const [centerLon, setCenterLon] = useState<number | null>(null);
+  const [radiusKm, setRadiusKm] = useState<number | ''>('');
+
+  // Sync form state when community data loads
+  useEffect(() => {
+    if (!community) return;
+    setCenterAddress(community.center_address ?? '');
+    setCenterLat(community.center_lat);
+    setCenterLon(community.center_lon);
+    setRadiusKm(community.radius_km ?? '');
+  }, [community]);
+
+  const mutation = useMutation({
+    mutationFn: (data: { center_address: string | null; center_lat: number | null; center_lon: number | null; radius_km: number | null }) =>
+      updateCommunity(communitySlug, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['community', communitySlug] });
+      queryClient.invalidateQueries({ queryKey: ['communities', communitySlug] });
+    },
+  });
+
+  const handleAddressSelect = (location: AddressData) => {
+    setCenterAddress(location.address);
+    setCenterLat(location.lat);
+    setCenterLon(location.lon);
+  };
+
+  const handleSave = () => {
+    mutation.mutate({
+      center_address: centerAddress || null,
+      center_lat: centerLat,
+      center_lon: centerLon,
+      radius_km: radiusKm === '' ? null : Number(radiusKm),
+    });
+  };
+
+  const handleClear = () => {
+    setCenterAddress('');
+    setCenterLat(null);
+    setCenterLon(null);
+    setRadiusKm('');
+    mutation.mutate({
+      center_address: null,
+      center_lat: null,
+      center_lon: null,
+      radius_km: null,
+    });
+  };
+
+  const hasCenter = centerLat != null && centerLon != null;
+  const isDirty =
+    centerAddress !== (community?.center_address ?? '') ||
+    centerLat !== community?.center_lat ||
+    centerLon !== community?.center_lon ||
+    (radiusKm === '' ? null : Number(radiusKm)) !== community?.radius_km;
+
+  if (communityQuery.isLoading) return null;
+
+  return (
+    <section className="bg-white border border-border rounded-lg p-5">
+      <h3 className="text-sm font-semibold text-gray-900 mb-1">Territory</h3>
+      <p className="text-xs text-gray-500 mb-4">
+        Set the community center and radius to focus the map on your area.
+      </p>
+
+      <div className="space-y-4">
+        <PhotonAddressAutocomplete
+          label="Center address"
+          placeholder="Search for a city or address..."
+          initialAddress={centerAddress}
+          initialLocation={
+            hasCenter
+              ? { address: centerAddress, lat: centerLat!, lon: centerLon!, country_code: '' }
+              : null
+          }
+          onSelect={handleAddressSelect}
+        />
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Radius (km)
+          </label>
+          <input
+            type="number"
+            min={1}
+            max={500}
+            value={radiusKm}
+            onChange={(e) => setRadiusKm(e.target.value === '' ? '' : Number(e.target.value))}
+            placeholder="e.g. 30"
+            className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </div>
+
+        {mutation.error && (
+          <p className="text-sm text-red-600">
+            {(mutation.error as Error).message || 'Failed to save'}
+          </p>
+        )}
+
+        {mutation.isSuccess && !isDirty && (
+          <p className="text-sm text-green-600">Saved</p>
+        )}
+
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={!isDirty || mutation.isPending}
+            className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
+          >
+            {mutation.isPending ? 'Saving...' : 'Save territory'}
+          </button>
+
+          {hasCenter && (
+            <button
+              type="button"
+              onClick={handleClear}
+              disabled={mutation.isPending}
+              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      </div>
+    </section>
   );
 }

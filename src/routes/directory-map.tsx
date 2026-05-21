@@ -120,7 +120,7 @@ export function DirectoryMapPage() {
 
   const updateSearch = (updates: Record<string, unknown>) => {
     navigate({
-      to: '/organizations',
+      to: '/global',
       search: { ...searchParams, ...updates },
     });
   };
@@ -162,7 +162,7 @@ export function DirectoryMapPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-56px)]">
+    <div className="flex h-full">
       {/* Left panel — list */}
       <div className="w-[420px] flex-shrink-0 border-r border-border bg-white flex flex-col overflow-hidden">
         <div className="p-4 space-y-3 border-b border-border">

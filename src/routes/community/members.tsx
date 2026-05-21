@@ -15,7 +15,7 @@ const ALL_KINDS = Object.entries(ORG_KINDS);
 
 // ── Add member modal ─────────────────────────────────────────
 
-function AddMemberModal({
+export function AddMemberModal({
   communitySlug,
   onClose,
   onAdded,

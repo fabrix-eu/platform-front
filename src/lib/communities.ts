@@ -56,3 +56,10 @@ export async function createCommunity(data: {
 }): Promise<Community> {
   return api.post<Community>('/communities', { community: data });
 }
+
+export async function updateCommunity(
+  id: string,
+  data: Partial<Pick<Community, 'name' | 'description' | 'center_address' | 'center_lat' | 'center_lon' | 'radius_km'>>,
+): Promise<Community> {
+  return api.patch<Community>(`/communities/${id}`, { community: data });
+}

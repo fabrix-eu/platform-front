@@ -14,6 +14,7 @@ import { OrganizationShowPage } from '../routes/organizations/show';
 import { OrganizationNewPage } from '../routes/organizations/new';
 import { OrganizationEditPage } from '../routes/organizations/edit';
 import { ExplorerLayout } from '../routes/explorer/layout';
+import { GlobalLayout } from '../routes/global/layout';
 import { OrgLayout } from '../routes/org/layout';
 import { OrgDashboardPage } from '../routes/org/dashboard';
 import { OrgProfilePage } from '../routes/org/profile';
@@ -64,6 +65,7 @@ import { AdminCommunitiesPage } from '../routes/admin/communities';
 import { AdminFeedbacksPage } from '../routes/admin/feedbacks';
 import { AdminClaimsPage } from '../routes/admin/claims';
 import { EventsListPage } from '../routes/events/list';
+import { EventDetailPage } from '../routes/events/show';
 import { ChallengesListPage } from '../routes/challenges/list';
 import { ChallengeShowPage } from '../routes/challenges/show';
 import { NotificationsPage } from '../routes/notifications';
@@ -300,6 +302,31 @@ const explorerRoute = createRoute({
   component: ExplorerLayout,
 });
 
+// ── Shell A-Global: Global tabs layout ──────────────────────
+
+const globalRoute = createRoute({
+  getParentRoute: () => explorerRoute,
+  id: 'global',
+  component: GlobalLayout,
+});
+
+const globalOverviewRoute = createRoute({
+  getParentRoute: () => globalRoute,
+  path: '/global',
+  beforeLoad: requireAuth,
+  validateSearch: z.object({
+    search: z.string().optional(),
+    kinds: z.string().optional(),
+    claimed: z.string().optional(),
+    country: z.string().optional(),
+    lon: z.number().optional(),
+    lat: z.number().optional(),
+    radius: z.number().optional(),
+    location_label: z.string().optional(),
+  }),
+  component: DirectoryMapPage,
+});
+
 const indexRoute = createRoute({
   getParentRoute: () => explorerRoute,
   path: '/',
@@ -323,7 +350,7 @@ const indexRoute = createRoute({
 });
 
 const organizationsRoute = createRoute({
-  getParentRoute: () => explorerRoute,
+  getParentRoute: () => globalRoute,
   path: '/organizations',
   beforeLoad: requireAuth,
 });
@@ -341,7 +368,9 @@ const organizationsIndexRoute = createRoute({
     radius: z.number().optional(),
     location_label: z.string().optional(),
   }),
-  component: DirectoryMapPage,
+  beforeLoad: ({ search }) => {
+    throw redirect({ to: '/global', search });
+  },
 });
 
 const organizationNewRoute = createRoute({
@@ -452,7 +481,7 @@ const dataAthensRoute = createRoute({
 // ── Marketplace (under Explorer) ─────────────────────────────
 
 const marketplaceRoute = createRoute({
-  getParentRoute: () => explorerRoute,
+  getParentRoute: () => globalRoute,
   path: '/marketplace',
 });
 
@@ -509,7 +538,7 @@ const valueChainRoute = createRoute({
 });
 
 const eventsRoute = createRoute({
-  getParentRoute: () => explorerRoute,
+  getParentRoute: () => globalRoute,
   path: '/events',
   validateSearch: z.object({
     page: z.number().optional(),
@@ -524,8 +553,15 @@ const eventsRoute = createRoute({
   component: EventsListPage,
 });
 
+const eventDetailRoute = createRoute({
+  getParentRoute: () => globalRoute,
+  path: '/events/$eventId',
+  beforeLoad: requireAuth,
+  component: EventDetailPage,
+});
+
 const challengesRoute = createRoute({
-  getParentRoute: () => explorerRoute,
+  getParentRoute: () => globalRoute,
   path: '/challenges',
   beforeLoad: requireAuth,
 });
@@ -689,6 +725,10 @@ const communityRoute = createRoute({
 const communityIndexRoute = createRoute({
   getParentRoute: () => communityRoute,
   path: '/',
+  validateSearch: z.object({
+    search: z.string().optional(),
+    kinds: z.string().optional(),
+  }),
   component: CommunityOverviewPage,
 });
 
@@ -876,12 +916,6 @@ const routeTree = rootRoute.addChildren([
   ]),
   explorerRoute.addChildren([
     indexRoute,
-    organizationsRoute.addChildren([
-      organizationsIndexRoute,
-      organizationNewRoute,
-      organizationShowRoute,
-      organizationEditRoute,
-    ]),
     mapRoute,
     directoryRoute,
     communitiesRoute.addChildren([
@@ -891,23 +925,33 @@ const routeTree = rootRoute.addChildren([
     ]),
     messagesRoute,
     notificationsRoute,
-    marketplaceRoute.addChildren([
-      marketplaceIndexRoute,
-      marketplaceNewRoute,
-      marketplaceShowRoute,
-      marketplaceEditRoute,
-    ]),
     valueChainRoute,
-    eventsRoute,
-    challengesRoute.addChildren([
-      challengesIndexRoute,
-      challengeDetailRoute,
-    ]),
     dataRoute.addChildren([
       dataIndexRoute,
       dataRotterdamRoute,
       dataRotterdamChartsRoute,
       dataAthensRoute,
+    ]),
+    globalRoute.addChildren([
+      globalOverviewRoute,
+      organizationsRoute.addChildren([
+        organizationsIndexRoute,
+        organizationNewRoute,
+        organizationShowRoute,
+        organizationEditRoute,
+      ]),
+      marketplaceRoute.addChildren([
+        marketplaceIndexRoute,
+        marketplaceNewRoute,
+        marketplaceShowRoute,
+        marketplaceEditRoute,
+      ]),
+      eventsRoute,
+      eventDetailRoute,
+      challengesRoute.addChildren([
+        challengesIndexRoute,
+        challengeDetailRoute,
+      ]),
     ]),
   ]),
   orgRoute.addChildren([

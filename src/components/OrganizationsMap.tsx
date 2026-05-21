@@ -19,19 +19,51 @@ interface OrganizationsMapProps {
   linkBuilder?: (org: { id: string; slug: string }) => string;
   relations?: MapRelationLine[];
   highlightOrgId?: string;
+  /** Community center [lon, lat]. When provided, map centers here instead of auto-fitting to orgs. */
+  center?: [number, number];
+  /** Community territory radius in km. When provided with center, draws a blue circle. */
+  radiusKm?: number;
 }
 
 function getKindColor(org: { kind: string | null }): string {
   return ORG_KINDS[org.kind ?? '']?.hex ?? '#6B7280';
 }
 
-export function OrganizationsMap({ organizations, height = '500px', selectedKinds, linkBuilder, relations, highlightOrgId }: OrganizationsMapProps) {
+/** Generate a GeoJSON polygon approximating a circle on a sphere. */
+function circlePolygon(center: [number, number], radiusKm: number, steps = 64) {
+  const [lonDeg, latDeg] = center;
+  const lat = latDeg * (Math.PI / 180);
+  const lon = lonDeg * (Math.PI / 180);
+  const d = radiusKm / 6371; // angular distance (Earth radius ≈ 6371 km)
+
+  const coords: [number, number][] = [];
+  for (let i = 0; i <= steps; i++) {
+    const bearing = (i / steps) * 2 * Math.PI;
+    const pLat = Math.asin(
+      Math.sin(lat) * Math.cos(d) + Math.cos(lat) * Math.sin(d) * Math.cos(bearing),
+    );
+    const pLon = lon + Math.atan2(
+      Math.sin(bearing) * Math.sin(d) * Math.cos(lat),
+      Math.cos(d) - Math.sin(lat) * Math.sin(pLat),
+    );
+    coords.push([pLon * (180 / Math.PI), pLat * (180 / Math.PI)]);
+  }
+
+  return {
+    type: 'Feature' as const,
+    geometry: { type: 'Polygon' as const, coordinates: [coords] },
+    properties: {},
+  };
+}
+
+export function OrganizationsMap({ organizations, height = '500px', selectedKinds, linkBuilder, relations, highlightOrgId, center, radiusKm }: OrganizationsMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const popupRef = useRef<any>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapError, setMapError] = useState(false);
 
   // Filter orgs with valid coords + matching selected kinds
   const validOrgs = organizations.filter(
@@ -52,16 +84,20 @@ export function OrganizationsMap({ organizations, height = '500px', selectedKind
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
-    const map = new maplibregl.Map({
-      container: mapContainerRef.current,
-      style: MAP_STYLE,
-      center: getDefaultCenter(),
-      zoom: 5,
-    });
+    try {
+      const map = new maplibregl.Map({
+        container: mapContainerRef.current,
+        style: MAP_STYLE,
+        center: center || getDefaultCenter(),
+        zoom: center ? 10 : 5,
+      });
 
-    mapRef.current = map;
-    map.addControl(new maplibregl.NavigationControl(), 'top-right');
-    map.on('load', () => setMapLoaded(true));
+      mapRef.current = map;
+      map.addControl(new maplibregl.NavigationControl(), 'top-right');
+      map.on('load', () => setMapLoaded(true));
+    } catch {
+      setMapError(true);
+    }
 
     return () => {
       popupRef.current?.remove();
@@ -78,7 +114,7 @@ export function OrganizationsMap({ organizations, height = '500px', selectedKind
     const map = mapRef.current;
 
     const update = () => {
-      // Clean up relation lines
+      // Clean up existing layers
       const style = map.getStyle();
       if (style?.layers) {
         for (const layer of style.layers) {
@@ -90,10 +126,45 @@ export function OrganizationsMap({ organizations, height = '500px', selectedKind
           if (sourceId.startsWith('relation-')) map.removeSource(sourceId);
         }
       }
+      if (map.getLayer('territory-fill')) map.removeLayer('territory-fill');
+      if (map.getLayer('territory-border')) map.removeLayer('territory-border');
+      if (map.getSource('territory')) map.removeSource('territory');
       if (map.getLayer('organizations-circles')) map.removeLayer('organizations-circles');
       if (map.getSource('organizations')) map.removeSource('organizations');
 
-      if (validOrgs.length === 0) return;
+      // Draw territory circle
+      if (center && radiusKm) {
+        const circle = circlePolygon(center, radiusKm);
+        map.addSource('territory', {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: [circle] },
+        });
+        map.addLayer({
+          id: 'territory-fill',
+          type: 'fill',
+          source: 'territory',
+          paint: { 'fill-color': '#3B82F6', 'fill-opacity': 0.08 },
+        });
+        map.addLayer({
+          id: 'territory-border',
+          type: 'line',
+          source: 'territory',
+          paint: { 'line-color': '#3B82F6', 'line-width': 2, 'line-opacity': 0.4 },
+        });
+      }
+
+      if (validOrgs.length === 0) {
+        // Still fit to territory if no orgs
+        if (center && radiusKm) {
+          const circle = circlePolygon(center, radiusKm);
+          const bounds = new maplibregl.LngLatBounds();
+          for (const coord of circle.geometry.coordinates[0]) {
+            bounds.extend(coord as [number, number]);
+          }
+          map.fitBounds(bounds, { padding: 30, maxZoom: 14, duration: 1000 });
+        }
+        return;
+      }
 
       // Draw relation lines first (under markers)
       if (relations?.length) {
@@ -182,17 +253,38 @@ export function OrganizationsMap({ organizations, height = '500px', selectedKind
       map.on('mouseenter', 'organizations-circles', () => { map.getCanvas().style.cursor = 'pointer'; });
       map.on('mouseleave', 'organizations-circles', () => { map.getCanvas().style.cursor = ''; });
 
-      // Fit bounds
-      const bounds = new maplibregl.LngLatBounds();
-      validOrgs.forEach((o) => bounds.extend([o.lon!, o.lat!]));
-      if (!bounds.isEmpty()) {
-        map.fitBounds(bounds, { padding: 50, maxZoom: 14, duration: 1000 });
+      // Fit bounds — territory circle takes priority over org positions
+      if (center && radiusKm) {
+        const circle = circlePolygon(center, radiusKm);
+        const bounds = new maplibregl.LngLatBounds();
+        for (const coord of circle.geometry.coordinates[0]) {
+          bounds.extend(coord as [number, number]);
+        }
+        map.fitBounds(bounds, { padding: 30, maxZoom: 14, duration: 1000 });
+      } else {
+        const bounds = new maplibregl.LngLatBounds();
+        validOrgs.forEach((o) => bounds.extend([o.lon!, o.lat!]));
+        if (!bounds.isEmpty()) {
+          map.fitBounds(bounds, { padding: 50, maxZoom: 14, duration: 1000 });
+        }
       }
     };
 
     const timer = setTimeout(update, 100);
     return () => clearTimeout(timer);
-  }, [validOrgs, mapLoaded, relations, highlightOrgId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [validOrgs, mapLoaded, relations, highlightOrgId, center?.[0], center?.[1], radiusKm]);
+
+  if (mapError) {
+    return (
+      <div
+        style={{ width: '100%', height, borderRadius: '8px' }}
+        className="bg-gray-100 flex items-center justify-center text-sm text-gray-400"
+      >
+        Map unavailable
+      </div>
+    );
+  }
 
   return (
     <div

@@ -272,11 +272,10 @@ function CommunitiesNav({
   );
 }
 
-const exploreItems = [
-  { key: 'directory-map', label: 'Directory Map', href: '/organizations' },
-  { key: 'marketplace', label: 'Marketplace', href: '/marketplace', badge: 'new' },
-  { key: 'events', label: 'Events', href: '/events' },
-  { key: 'challenges', label: 'Challenges', href: '/challenges' },
+const GLOBAL_PREFIXES = ['/global', '/organizations', '/events', '/challenges', '/marketplace'];
+
+const exploreItems: { key: string; label: string; href: string; activePrefixes?: string[] }[] = [
+  { key: 'global', label: 'Global', href: '/global', activePrefixes: GLOBAL_PREFIXES },
   { key: 'communities', label: 'Communities', href: '/communities' },
 ];
 
@@ -284,7 +283,9 @@ function ExploreNav({ pathname }: { pathname: string }) {
   return (
     <ul className="space-y-0.5">
       {exploreItems.map((item) => {
-        const isActive = pathname.startsWith(item.href);
+        const isActive = item.activePrefixes
+          ? item.activePrefixes.some((p) => pathname.startsWith(p))
+          : pathname.startsWith(item.href);
         return (
           <li key={item.key}>
             <Link
@@ -296,11 +297,6 @@ function ExploreNav({ pathname }: { pathname: string }) {
               }`}
             >
               {item.label}
-              {'badge' in item && (
-                <span className="ml-1.5 px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none rounded-full bg-primary/10 text-primary">
-                  {String(item.badge)}
-                </span>
-              )}
             </Link>
           </li>
         );
