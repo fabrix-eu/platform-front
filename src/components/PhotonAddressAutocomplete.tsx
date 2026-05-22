@@ -97,7 +97,9 @@ export function PhotonAddressAutocomplete({
     return () => clearTimeout(timeout);
   }, [address]);
 
-  // Click outside
+  // Close dropdown on click outside.
+  // Use 'click' (not 'mousedown') so button onClick handlers fire first.
+  // Also prevent input blur when interacting with the dropdown.
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (
@@ -109,8 +111,12 @@ export function PhotonAddressAutocomplete({
         setSuggestions([]);
       }
     };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, []);
+  const handleDropdownMouseDown = useCallback((e: React.MouseEvent) => {
+    // Prevent input blur when clicking inside the dropdown
+    e.preventDefault();
   }, []);
 
   const [mapError, setMapError] = useState(false);
@@ -267,6 +273,7 @@ export function PhotonAddressAutocomplete({
         {suggestions.length > 0 && (
           <div
             ref={dropdownRef}
+            onMouseDown={handleDropdownMouseDown}
             className="absolute top-full left-0 right-0 z-50 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1"
           >
             {suggestions.map((s, i) => (

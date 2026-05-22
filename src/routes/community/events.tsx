@@ -29,11 +29,11 @@ function DateBadge({ iso }: { iso: string }) {
   );
 }
 
-function EventCard({ event }: { event: CommunityEvent }) {
+function EventCard({ event, orgSlug, communitySlug }: { event: CommunityEvent; orgSlug: string; communitySlug: string }) {
   return (
     <Link
-      to="/events/$eventId"
-      params={{ eventId: event.id }}
+      to="/$orgSlug/communities/$communitySlug/events/$eventId"
+      params={{ orgSlug, communitySlug, eventId: event.id }}
       className="flex items-start gap-4 bg-white border border-border rounded-lg p-4 hover:shadow-md transition-shadow"
     >
       {event.image_url ? (
@@ -172,7 +172,7 @@ export function CommunityEventsListPage() {
       ) : (
         <div className="space-y-3">
           {displayed.map((event) => (
-            <EventCard key={event.id} event={event} />
+            <EventCard key={event.id} event={event} orgSlug={orgSlug} communitySlug={communitySlug} />
           ))}
         </div>
       )}
