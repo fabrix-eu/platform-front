@@ -3,16 +3,6 @@ import { Link, useParams, useSearch, useNavigate } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getOrganization, updateOrganization } from '../../lib/organizations';
 import { getOrganizationPhotos, createOrganizationPhoto, deleteOrganizationPhoto } from '../../lib/organization-photos';
-import {
-  useListings,
-  useDeleteListing,
-  getListings,
-  listingKeys,
-  LISTING_TYPES,
-  LISTING_CATEGORIES,
-  LISTING_SUBCATEGORIES,
-} from '../../lib/listings';
-import type { Listing } from '../../lib/listings';
 import { getForm } from '../../lib/forms';
 import { getLatestAnswer, createAnswer, updateAnswer } from '../../lib/answers';
 import { uploadFile } from '../../lib/uploads';
@@ -23,34 +13,19 @@ import { KindSelect } from '../../components/KindSelect';
 import { useFeatureInfo, FeatureIntro, FeatureInfoTrigger } from '../../components/FeatureIntro';
 import { NaceCodeSelector } from '../../components/NaceCodeSelector';
 import { FacilityTypeSelector } from '../../components/FacilityTypeSelector';
-import {
-  getAllChallenges,
-  createGlobalChallenge,
-  updateGlobalChallenge,
-  deleteGlobalChallenge,
-  getGlobalApplications,
-  acceptGlobalApplication,
-  rejectGlobalApplication,
-  selectGlobalWinner,
-} from '../../lib/community-challenges';
-import type { Challenge, ChallengeApplication } from '../../lib/community-challenges';
-import { challengeStateBadge, challengeAppStatusBadge } from '../../components/ChallengeShared';
+import { SpecialtySelector } from '../../components/SpecialtySelector';
 
 // ─── Section nav ──────────────────────────────────────────────────────────────
 
-type SectionId = 'informations' | 'data' | 'sustainability' | 'needs' | 'photos' | 'services' | 'materials' | 'products' | 'capacities' | 'challenges';
+type SectionId = 'informations' | 'specialties' | 'data' | 'sustainability' | 'needs' | 'photos';
 
 const SECTIONS: { id: SectionId; label: string }[] = [
   { id: 'informations', label: 'Information' },
+  { id: 'specialties', label: 'Specialties' },
   { id: 'data', label: 'Data' },
   // { id: 'sustainability', label: 'Sustainability & Community' },
   { id: 'needs', label: 'Needs & Opportunities' },
   { id: 'photos', label: 'Photos' },
-  { id: 'services', label: 'Services' },
-  { id: 'materials', label: 'Materials' },
-  { id: 'capacities', label: 'Capacities' },
-  { id: 'products', label: 'Products' },
-  { id: 'challenges', label: 'Challenges' },
 ];
 
 // ─── Informations section ─────────────────────────────────────────────────────
@@ -279,6 +254,73 @@ function InformationsSection({ orgSlug }: { orgSlug: string }) {
         </button>
       </div>
     </form>
+  );
+}
+
+// ─── Specialties section ─────────────────────────────────────────────────────
+
+function SpecialtiesSection({ orgSlug }: { orgSlug: string }) {
+  const queryClient = useQueryClient();
+
+  const orgQuery = useQuery({
+    queryKey: ['organizations', orgSlug],
+    queryFn: () => getOrganization(orgSlug),
+  });
+
+  const org = orgQuery.data;
+  const [specialties, setSpecialties] = useState<string[]>([]);
+  const [initialized, setInitialized] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  // Sync local state when org loads
+  if (org && !initialized) {
+    setSpecialties(org.specialties ?? []);
+    setInitialized(true);
+  }
+
+  const isDirty = initialized && JSON.stringify(specialties) !== JSON.stringify(org?.specialties ?? []);
+
+  const handleSave = async () => {
+    if (!org) return;
+    setSaving(true);
+    setSuccess(false);
+    try {
+      await updateOrganization(org.id, { specialties });
+      queryClient.invalidateQueries({ queryKey: ['organizations', orgSlug] });
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 2000);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!org) return <div className="text-gray-500">Loading...</div>;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="font-display font-semibold text-gray-900">Specialties</h3>
+          <p className="text-sm text-gray-500 mt-0.5">
+            Select the value chain categories that describe your activities.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {success && <span className="text-sm text-green-600">Saved</span>}
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={!isDirty || saving}
+            className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {saving ? 'Saving...' : 'Save'}
+          </button>
+        </div>
+      </div>
+
+      <SpecialtySelector value={specialties} onChange={setSpecialties} />
+    </div>
   );
 }
 
@@ -856,486 +898,6 @@ function PhotosSection({ orgSlug }: { orgSlug: string }) {
   );
 }
 
-// ─── Listings section ─────────────────────────────────────────────────────────
-
-function ListingMiniCard({ listing, onDelete, fromUrl }: { listing: Listing; onDelete: (id: string) => void; fromUrl: string }) {
-  const categoryConfig = LISTING_CATEGORIES[listing.category];
-  return (
-    <div className="flex items-start gap-4 p-4 bg-white border border-border rounded-lg group">
-      {listing.thumbnail_url ? (
-        <img src={listing.thumbnail_url} alt="" className="w-16 h-16 rounded-md object-cover shrink-0" />
-      ) : (
-        <div className="w-16 h-16 rounded-md bg-gray-50 flex items-center justify-center shrink-0">
-          <svg className="h-6 w-6 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
-          </svg>
-        </div>
-      )}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1 flex-wrap">
-          {categoryConfig && (
-            <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${categoryConfig.badgeColor}`}>
-              {categoryConfig.label}
-            </span>
-          )}
-          {listing.subcategory && LISTING_SUBCATEGORIES[listing.category]?.[listing.subcategory] && (
-            <span className="text-[10px] text-gray-500">
-              {LISTING_SUBCATEGORIES[listing.category][listing.subcategory].label}
-            </span>
-          )}
-          {listing.status === 'closed' && (
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-600">
-              Closed
-            </span>
-          )}
-        </div>
-        <h4 className="text-sm font-medium text-gray-900 truncate">{listing.title}</h4>
-        <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{listing.description}</p>
-      </div>
-      <div className="flex items-center gap-1.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Link
-          to="/marketplace/$id/edit"
-          params={{ id: listing.id }}
-          search={{ from: fromUrl }}
-          className="p-1.5 text-gray-400 hover:text-gray-700 rounded-md hover:bg-gray-100"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
-          </svg>
-        </Link>
-        <button
-          onClick={() => { if (confirm('Delete this listing?')) onDelete(listing.id); }}
-          className="p-1.5 text-gray-400 hover:text-red-600 rounded-md hover:bg-red-50"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-          </svg>
-        </button>
-      </div>
-    </div>
-  );
-}
-
-const LISTING_INFO: Record<string, { title: string; description: string }> = {
-  service: {
-    title: 'Highlight the services you provide',
-    description: 'List consulting, training, design, or other services your organization offers. This helps potential partners understand how you can work with them.',
-  },
-  material: {
-    title: 'List your available materials',
-    description: 'Share the raw fibers, fabrics, yarns, or recycled textiles you have available. This helps potential buyers find exactly what they need.',
-  },
-  product: {
-    title: 'Showcase your finished products',
-    description: 'Present the products you manufacture or sell. A visible catalog helps buyers discover your offerings and reach out.',
-  },
-  capacity: {
-    title: 'Share your production capacity',
-    description: 'Let others know about available machines, workspace, or workforce. This enables matchmaking with organizations looking for manufacturing partners.',
-  },
-};
-
-function ListingsSection({ orgSlug, listingType, sectionId }: { orgSlug: string; listingType: string; sectionId: SectionId }) {
-  const queryClient = useQueryClient();
-  const listingInfo = useFeatureInfo(`profile-${sectionId}`);
-
-  const orgQuery = useQuery({
-    queryKey: ['organizations', orgSlug],
-    queryFn: () => getOrganization(orgSlug),
-  });
-
-  const orgId = orgQuery.data?.id;
-
-  const listingsQuery = useListings({
-    by_organization: orgId,
-    by_type: listingType,
-    per_page: 50,
-  });
-
-  const deleteMutation = useDeleteListing();
-
-  const handleDelete = (id: string) => {
-    deleteMutation.mutate(id, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['listings'] });
-      },
-    });
-  };
-
-  const listings = listingsQuery.data?.data ?? [];
-  const typeConfig = LISTING_TYPES[listingType];
-  const infoContent = LISTING_INFO[listingType];
-
-  if (!orgId) return <div className="p-6 text-gray-500">Loading...</div>;
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <p className="text-sm text-gray-500">
-            {listingsQuery.isLoading ? 'Loading...' : `${listings.length} listing${listings.length !== 1 ? 's' : ''}`}
-          </p>
-          <FeatureInfoTrigger info={listingInfo} />
-        </div>
-        <Link
-          to="/marketplace/new"
-          search={{ type: listingType, from: `/${orgSlug}/profile?section=${sectionId}` }}
-          className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          Add {typeConfig?.label?.toLowerCase() ?? listingType}
-        </Link>
-      </div>
-
-      {infoContent && (
-        <FeatureIntro
-          info={listingInfo}
-          title={infoContent.title}
-          description={infoContent.description}
-        />
-      )}
-
-      {listings.length === 0 && !listingsQuery.isLoading ? (
-        <div className="py-12 text-center border-2 border-dashed border-gray-200 rounded-lg">
-          <svg className="mx-auto w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z" />
-          </svg>
-          <p className="text-sm text-gray-400 mt-2">No {typeConfig?.label?.toLowerCase() ?? listingType} listings yet.</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {listings.map((listing) => (
-            <ListingMiniCard key={listing.id} listing={listing} onDelete={handleDelete} fromUrl={`/${orgSlug}/profile?section=${sectionId}`} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Challenges section ──────────────────────────────────────────────────────
-
-function ChallengeForm({
-  orgId,
-  challenge,
-  onDone,
-  onCancel,
-}: {
-  orgId: string;
-  challenge?: Challenge;
-  onDone: () => void;
-  onCancel: () => void;
-}) {
-  const queryClient = useQueryClient();
-  const [title, setTitle] = useState(challenge?.title || '');
-  const [description, setDescription] = useState(challenge?.description || '');
-  const [numberOfWinners, setNumberOfWinners] = useState(challenge?.number_of_winners?.toString() || '1');
-  const [startOn, setStartOn] = useState(challenge?.start_on || '');
-  const [endOn, setEndOn] = useState(challenge?.end_on || '');
-  const [requiresAttachment, setRequiresAttachment] = useState(challenge?.requires_attachment || false);
-
-  const mutation = useMutation({
-    mutationFn: () => {
-      const data = {
-        title,
-        description,
-        number_of_winners: numberOfWinners ? parseInt(numberOfWinners, 10) : undefined,
-        start_on: startOn || undefined,
-        end_on: endOn || undefined,
-        requires_attachment: requiresAttachment,
-      };
-      if (challenge) {
-        return updateGlobalChallenge(challenge.id, data);
-      }
-      return createGlobalChallenge({ ...data, organization_id: orgId, state: 'draft' });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['challenges', 'by_organization'] });
-      onDone();
-    },
-  });
-
-  return (
-    <form onSubmit={(e) => { e.preventDefault(); mutation.mutate(); }} className="space-y-4 border border-border rounded-lg p-5 bg-gray-50/50">
-      <h3 className="text-sm font-semibold text-gray-900">{challenge ? 'Edit challenge' : 'New challenge'}</h3>
-      <FormError mutation={mutation} />
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Title <span className="text-red-500">*</span></label>
-        <input type="text" required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Challenge title"
-          className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-        <FieldError mutation={mutation} field="title" />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Description <span className="text-red-500">*</span></label>
-        <textarea required value={description} onChange={(e) => setDescription(e.target.value)} rows={3} placeholder="Describe the challenge..."
-          className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none" />
-        <FieldError mutation={mutation} field="description" />
-      </div>
-      <div className="grid grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Winners</label>
-          <input type="number" min="1" value={numberOfWinners} onChange={(e) => setNumberOfWinners(e.target.value)}
-            className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Start</label>
-          <input type="date" value={startOn} onChange={(e) => setStartOn(e.target.value)}
-            className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">End</label>
-          <input type="date" value={endOn} onChange={(e) => setEndOn(e.target.value)}
-            className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-        </div>
-      </div>
-      <label className="flex items-center gap-2 cursor-pointer">
-        <input type="checkbox" checked={requiresAttachment} onChange={(e) => setRequiresAttachment(e.target.checked)}
-          className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-ring" />
-        <span className="text-sm text-gray-700">Require attachment from applicants</span>
-      </label>
-      <div className="flex items-center gap-3 pt-1">
-        <button type="submit" disabled={mutation.isPending}
-          className="bg-primary text-primary-foreground rounded-lg px-5 py-2 text-sm font-medium hover:bg-primary/90 disabled:opacity-50">
-          {mutation.isPending ? 'Saving...' : challenge ? 'Save changes' : 'Create challenge'}
-        </button>
-        <button type="button" onClick={onCancel} className="text-sm text-gray-500 hover:text-gray-700">Cancel</button>
-      </div>
-    </form>
-  );
-}
-
-function ApplicationRow({ app, challengeId }: { app: ChallengeApplication; challengeId: string }) {
-  const queryClient = useQueryClient();
-  const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: ['challenge_apps', challengeId] });
-    queryClient.invalidateQueries({ queryKey: ['challenges', 'by_organization'] });
-  };
-  const acceptMut = useMutation({ mutationFn: () => acceptGlobalApplication(challengeId, app.id), onSuccess: invalidate });
-  const rejectMut = useMutation({ mutationFn: () => rejectGlobalApplication(challengeId, app.id), onSuccess: invalidate });
-  const winnerMut = useMutation({ mutationFn: () => selectGlobalWinner(challengeId, app.id), onSuccess: invalidate });
-  const busy = acceptMut.isPending || rejectMut.isPending || winnerMut.isPending;
-
-  return (
-    <div className="flex items-start gap-3 py-3 border-b border-gray-100 last:border-0">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-900">{app.organization?.name || 'Unknown'}</span>
-          {challengeAppStatusBadge(app.status)}
-        </div>
-        {app.note && <p className="text-xs text-gray-600 mt-1 line-clamp-2">{app.note}</p>}
-        {app.attachment_url && (
-          <a href={app.attachment_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline mt-0.5 inline-block">
-            View attachment
-          </a>
-        )}
-      </div>
-      <div className="flex items-center gap-1.5 shrink-0">
-        {app.status === 'pending' && (
-          <>
-            <button onClick={() => acceptMut.mutate()} disabled={busy}
-              className="px-2 py-1 text-xs font-medium bg-green-50 text-green-700 border border-green-200 rounded hover:bg-green-100 disabled:opacity-50">Accept</button>
-            <button onClick={() => rejectMut.mutate()} disabled={busy}
-              className="px-2 py-1 text-xs font-medium bg-red-50 text-red-600 border border-red-200 rounded hover:bg-red-100 disabled:opacity-50">Reject</button>
-          </>
-        )}
-        {app.status === 'accepted' && (
-          <button onClick={() => winnerMut.mutate()} disabled={busy}
-            className="px-2 py-1 text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200 rounded hover:bg-purple-100 disabled:opacity-50">Winner</button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function ChallengeCard({
-  challenge,
-  orgId,
-}: {
-  challenge: Challenge;
-  orgId: string;
-}) {
-  const queryClient = useQueryClient();
-  const [expanded, setExpanded] = useState(false);
-  const [editing, setEditing] = useState(false);
-
-  const appsQuery = useQuery({
-    queryKey: ['challenge_apps', challenge.id],
-    queryFn: () => getGlobalApplications(challenge.id, { per_page: 50 }),
-    enabled: expanded,
-  });
-
-  const deleteMut = useMutation({
-    mutationFn: () => deleteGlobalChallenge(challenge.id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['challenges', 'by_organization'] }),
-  });
-
-  const activateMut = useMutation({
-    mutationFn: () => updateGlobalChallenge(challenge.id, { state: 'active' }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['challenges', 'by_organization'] }),
-  });
-
-  const apps = appsQuery.data?.data ?? [];
-
-  if (editing) {
-    return (
-      <ChallengeForm
-        orgId={orgId}
-        challenge={challenge}
-        onDone={() => setEditing(false)}
-        onCancel={() => setEditing(false)}
-      />
-    );
-  }
-
-  return (
-    <div className="border border-border rounded-lg overflow-hidden">
-      <div className="flex items-start gap-4 p-4 group">
-        {challenge.image_url ? (
-          <img src={challenge.image_url} alt="" className="w-14 h-14 rounded-md object-cover shrink-0" />
-        ) : (
-          <div className="w-14 h-14 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-            <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 0 1-.982-3.172M9.497 14.25a7.454 7.454 0 0 0 .981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 0 0 7.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0 1 16.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.023 6.023 0 0 1-2.27.308 6.023 6.023 0 0 1-2.27-.308" />
-            </svg>
-          </div>
-        )}
-        <button type="button" onClick={() => setExpanded(!expanded)} className="flex-1 min-w-0 text-left">
-          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-            {challengeStateBadge(challenge.state)}
-            {challenge.applications_count > 0 && (
-              <span className="text-[10px] text-gray-500">
-                {challenge.applications_count} application{challenge.applications_count !== 1 ? 's' : ''}
-                {challenge.winners_count > 0 && ` · ${challenge.winners_count} winner${challenge.winners_count !== 1 ? 's' : ''}`}
-              </span>
-            )}
-          </div>
-          <h4 className="text-sm font-medium text-gray-900 truncate">{challenge.title}</h4>
-          <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{challenge.description}</p>
-        </button>
-        <div className="flex items-center gap-1.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-          {challenge.state === 'draft' && (
-            <button onClick={() => activateMut.mutate()} disabled={activateMut.isPending}
-              className="px-2 py-1 text-xs font-medium bg-green-50 text-green-700 border border-green-200 rounded hover:bg-green-100 disabled:opacity-50">
-              Activate
-            </button>
-          )}
-          <button onClick={() => setEditing(true)}
-            className="p-1.5 text-gray-400 hover:text-gray-700 rounded-md hover:bg-gray-100">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
-            </svg>
-          </button>
-          <button onClick={() => { if (confirm('Delete this challenge?')) deleteMut.mutate(); }}
-            className="p-1.5 text-gray-400 hover:text-red-600 rounded-md hover:bg-red-50">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {expanded && (
-        <div className="border-t border-border px-4 py-3 bg-gray-50/50">
-          <h4 className="text-xs font-semibold text-gray-700 mb-2">
-            Applications ({apps.length})
-          </h4>
-          {appsQuery.isLoading ? (
-            <p className="text-xs text-gray-400 py-2">Loading...</p>
-          ) : apps.length === 0 ? (
-            <p className="text-xs text-gray-400 py-2">No applications yet.</p>
-          ) : (
-            <div>
-              {apps.map((app) => (
-                <ApplicationRow key={app.id} app={app} challengeId={challenge.id} />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ChallengesSection({ orgSlug }: { orgSlug: string }) {
-  const queryClient = useQueryClient();
-  const [showForm, setShowForm] = useState(false);
-  const challengesInfo = useFeatureInfo('profile-challenges');
-
-  const orgQuery = useQuery({
-    queryKey: ['organizations', orgSlug],
-    queryFn: () => getOrganization(orgSlug),
-  });
-
-  const orgId = orgQuery.data?.id;
-
-  const challengesQuery = useQuery({
-    queryKey: ['challenges', 'by_organization', orgId],
-    queryFn: () => getAllChallenges({ by_organization: orgId!, per_page: 50 }),
-    enabled: !!orgId,
-  });
-
-  const challenges = challengesQuery.data?.data ?? [];
-
-  if (!orgId) return <div className="p-6 text-gray-500">Loading...</div>;
-
-  return (
-    <div className="space-y-4">
-      <FeatureIntro
-        info={challengesInfo}
-        title="What are challenges?"
-        description="Post a challenge to tell the community what you need: workspace, machinery, raw materials, expertise, services, and more. Challenges are also used for collaborative projects, funding opportunities, and calls for partners. Other organizations can apply, and you manage responses directly from here."
-      />
-
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <p className="text-sm text-gray-500">
-            {challengesQuery.isLoading ? 'Loading...' : `${challenges.length} challenge${challenges.length !== 1 ? 's' : ''}`}
-          </p>
-          <FeatureInfoTrigger info={challengesInfo} />
-        </div>
-        {!showForm && (
-          <button
-            type="button"
-            onClick={() => setShowForm(true)}
-            className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            Create challenge
-          </button>
-        )}
-      </div>
-
-      {showForm && (
-        <ChallengeForm
-          orgId={orgId}
-          onDone={() => { setShowForm(false); queryClient.invalidateQueries({ queryKey: ['challenges', 'by_organization'] }); }}
-          onCancel={() => setShowForm(false)}
-        />
-      )}
-
-      {challenges.length === 0 && !challengesQuery.isLoading && !showForm ? (
-        <div className="py-12 text-center border-2 border-dashed border-gray-200 rounded-lg">
-          <svg className="mx-auto w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 0 1-.982-3.172M9.497 14.25a7.454 7.454 0 0 0 .981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 0 0 7.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0 1 16.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.023 6.023 0 0 1-2.27.308 6.023 6.023 0 0 1-2.27-.308" />
-          </svg>
-          <p className="text-sm text-gray-400 mt-2">No challenges yet.</p>
-          <p className="text-xs text-gray-400 mt-1">Create a challenge to find partners and drive innovation.</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {challenges.map((challenge) => (
-            <ChallengeCard key={challenge.id} challenge={challenge} orgId={orgId} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export function OrgProfilePage() {
@@ -1358,44 +920,8 @@ export function OrgProfilePage() {
   });
 
   const org = orgQuery.data;
-  const orgId = org?.id;
 
-  // Listing counts per type (lightweight: per_page=1, only reading meta.total_count)
-  const countParams = (type: string) => ({ by_organization: orgId!, by_type: type, per_page: 1 });
-  const servicesCount = useQuery({
-    queryKey: listingKeys.list(countParams('service')),
-    queryFn: () => getListings(countParams('service')),
-    enabled: !!orgId,
-  });
-  const materialsCount = useQuery({
-    queryKey: listingKeys.list(countParams('material')),
-    queryFn: () => getListings(countParams('material')),
-    enabled: !!orgId,
-  });
-  const capacitiesCount = useQuery({
-    queryKey: listingKeys.list(countParams('capacity')),
-    queryFn: () => getListings(countParams('capacity')),
-    enabled: !!orgId,
-  });
-  const productsCount = useQuery({
-    queryKey: listingKeys.list(countParams('product')),
-    queryFn: () => getListings(countParams('product')),
-    enabled: !!orgId,
-  });
-
-  const challengesCount = useQuery({
-    queryKey: ['challenges', 'by_organization', orgId, 'count'],
-    queryFn: () => getAllChallenges({ by_organization: orgId!, per_page: 1 }),
-    enabled: !!orgId,
-  });
-
-  const sectionCounts: Partial<Record<SectionId, number>> = {
-    services: servicesCount.data?.meta.total_count,
-    materials: materialsCount.data?.meta.total_count,
-    capacities: capacitiesCount.data?.meta.total_count,
-    products: productsCount.data?.meta.total_count,
-    challenges: challengesCount.data?.meta.total_count,
-  };
+  const sectionCounts: Partial<Record<SectionId, number>> = {};
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
@@ -1465,11 +991,7 @@ export function OrgProfilePage() {
               />
             )}
             {activeSection === 'photos' && <PhotosSection orgSlug={orgSlug} />}
-            {activeSection === 'services' && <ListingsSection orgSlug={orgSlug} listingType="service" sectionId="services" />}
-            {activeSection === 'materials' && <ListingsSection orgSlug={orgSlug} listingType="material" sectionId="materials" />}
-            {activeSection === 'capacities' && <ListingsSection orgSlug={orgSlug} listingType="capacity" sectionId="capacities" />}
-            {activeSection === 'products' && <ListingsSection orgSlug={orgSlug} listingType="product" sectionId="products" />}
-            {activeSection === 'challenges' && <ChallengesSection orgSlug={orgSlug} />}
+            {activeSection === 'specialties' && <SpecialtiesSection orgSlug={orgSlug} />}
           </div>
         </div>
       </div>

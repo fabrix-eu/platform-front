@@ -49,7 +49,7 @@ export function ApplicationDetailPage() {
     <div className="max-w-3xl mx-auto p-6">
       {/* Back link */}
       <Link
-        to="/$orgSlug/opportunities"
+        to="/$orgSlug/challenges"
         params={{ orgSlug }}
         search={{ tab: 'applications' }}
         className="text-sm text-gray-500 hover:text-gray-700 inline-flex items-center gap-1 mb-4"

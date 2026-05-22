@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { ORG_KINDS } from '../lib/organizations';
 import type { Organization } from '../lib/organizations';
+import { LISTING_CATEGORIES, LISTING_SUBCATEGORIES } from '../lib/listings';
 
 export function OrgAvatar({
   org,
@@ -93,6 +94,26 @@ export function OrgCard({ org, linkTo }: { org: Organization; linkTo: string }) 
   );
 }
 
+function getSpecialtyLabel(key: string): string | null {
+  if (LISTING_CATEGORIES[key]) return LISTING_CATEGORIES[key].label;
+  for (const subcats of Object.values(LISTING_SUBCATEGORIES)) {
+    if (subcats[key]) return subcats[key].label;
+  }
+  return null;
+}
+
+export function SpecialtyBadge({ specialty }: { specialty: string }) {
+  const label = getSpecialtyLabel(specialty);
+  if (!label) return null;
+  const config = LISTING_CATEGORIES[specialty];
+  const badgeColor = config?.badgeColor ?? 'bg-gray-100 text-gray-600';
+  return (
+    <span className={`inline-flex items-center px-1.5 py-0 rounded-full text-[10px] font-medium ${badgeColor}`}>
+      {label}
+    </span>
+  );
+}
+
 export function OrgListRow({ org, linkTo }: { org: Organization; linkTo: string }) {
   return (
     <Link
@@ -117,6 +138,13 @@ export function OrgListRow({ org, linkTo }: { org: Organization; linkTo: string 
             </span>
           )}
         </div>
+        {org.specialties && org.specialties.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-1.5">
+            {org.specialties.map((s) => (
+              <SpecialtyBadge key={s} specialty={s} />
+            ))}
+          </div>
+        )}
       </div>
       <div className="flex items-center gap-3 shrink-0">
         {org.relations_count > 0 && (

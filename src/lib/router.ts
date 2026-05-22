@@ -73,7 +73,8 @@ import { SettingsPage } from '../routes/settings';
 import { NotificationPreferencesPage } from '../routes/notification-preferences';
 import { MessagesPage } from '../routes/messages';
 import { OrgMessagesPage } from '../routes/org/messages';
-import { OpportunitiesPage } from '../routes/org/opportunities';
+import { OrgListingsPage } from '../routes/org/listings';
+import { ChallengesPage } from '../routes/org/opportunities';
 import { ApplicationDetailPage } from '../routes/org/application-detail';
 import { DataLayout } from '../routes/data/layout';
 import { RotterdamPage } from '../routes/data/rotterdam';
@@ -622,7 +623,7 @@ const orgProfileRoute = createRoute({
   path: '/profile',
   component: OrgProfilePage,
   validateSearch: z.object({
-    section: z.enum(['informations', 'data', 'sustainability', 'needs', 'photos', 'services', 'materials', 'products', 'capacities', 'challenges']).optional(),
+    section: z.enum(['informations', 'specialties', 'data', 'sustainability', 'needs', 'photos']).optional(),
   }),
 });
 
@@ -661,23 +662,32 @@ const orgMessagesRoute = createRoute({
   component: OrgMessagesPage,
 });
 
-const orgOpportunitiesRoute = createRoute({
+const orgListingsRoute = createRoute({
   getParentRoute: () => orgRoute,
-  path: '/opportunities',
+  path: '/listings',
+  component: OrgListingsPage,
+  validateSearch: z.object({
+    type: z.enum(['service', 'material', 'capacity', 'product', 'distribution']).optional(),
+  }),
 });
 
-const orgOpportunitiesIndexRoute = createRoute({
-  getParentRoute: () => orgOpportunitiesRoute,
+const orgChallengesRoute = createRoute({
+  getParentRoute: () => orgRoute,
+  path: '/challenges',
+});
+
+const orgChallengesIndexRoute = createRoute({
+  getParentRoute: () => orgChallengesRoute,
   path: '/',
   validateSearch: z.object({
     tab: z.string().optional(),
     page: z.number().optional(),
   }),
-  component: OpportunitiesPage,
+  component: ChallengesPage,
 });
 
 const orgApplicationDetailRoute = createRoute({
-  getParentRoute: () => orgOpportunitiesRoute,
+  getParentRoute: () => orgChallengesRoute,
   path: '/$applicationId',
   component: ApplicationDetailPage,
 });
@@ -963,8 +973,9 @@ const routeTree = rootRoute.addChildren([
     orgAssessmentResultsRoute,
     orgAssessmentFormRoute,
     orgMessagesRoute,
-    orgOpportunitiesRoute.addChildren([
-      orgOpportunitiesIndexRoute,
+    orgListingsRoute,
+    orgChallengesRoute.addChildren([
+      orgChallengesIndexRoute,
       orgApplicationDetailRoute,
     ]),
     orgCommunitiesRoute,

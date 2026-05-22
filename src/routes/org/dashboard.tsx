@@ -6,14 +6,10 @@ import { getMe } from '../../lib/auth';
 
 const SECTION_LABELS: Record<string, string> = {
   informations: 'Information',
+  specialties: 'Specialties',
   data: 'Data',
   needs: 'Needs & Opportunities',
   photos: 'Photos',
-  services: 'Services',
-  materials: 'Materials',
-  capacities: 'Capacities',
-  products: 'Products',
-  challenges: 'Challenges',
 };
 
 function ProfileCompletion({ organization, orgSlug }: { organization: Organization; orgSlug: string }) {
