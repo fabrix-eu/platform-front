@@ -76,30 +76,51 @@ export function CommunitiesPage() {
               key={c.id}
               to="/communities/$id"
               params={{ id: c.slug || c.id }}
-              className="block bg-white rounded-lg border border-border hover:border-gray-300 hover:shadow-md transition-all group"
+              className="block bg-white rounded-xl border border-border hover:border-gray-300 hover:shadow-md transition-all group"
             >
-              <div className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-semibold flex-shrink-0">
+              <div className="p-5">
+                <div className="flex items-start gap-3">
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-sm font-bold flex-shrink-0">
                     {initials}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-display font-semibold text-sm text-gray-900 truncate group-hover:text-primary transition-colors">
-                      {c.name}
-                    </h3>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {c.organizations_count} {c.organizations_count === 1 ? 'organization' : 'organizations'}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-display font-semibold text-base text-gray-900 truncate group-hover:text-primary transition-colors">
+                        {c.name}
+                      </h3>
+                      {c.is_member && (
+                        <span className="text-[10px] font-medium bg-green-100 text-green-800 px-2 py-0.5 rounded-full flex-shrink-0">
+                          Member
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+                        </svg>
+                        {c.organizations_count} {c.organizations_count === 1 ? 'org' : 'orgs'}
+                      </span>
+                      {c.center_address && (
+                        <span className="flex items-center gap-1 truncate">
+                          <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                          </svg>
+                          <span className="truncate">{c.center_address}</span>
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  {c.is_member && (
-                    <span className="text-xs font-medium bg-green-100 text-green-800 px-2 py-0.5 rounded-full flex-shrink-0">
-                      Member
-                    </span>
-                  )}
                 </div>
                 {c.description && (
-                  <p className="text-xs text-gray-500 mt-2 line-clamp-2">{c.description}</p>
+                  <p className="text-xs text-gray-500 mt-3 line-clamp-2 leading-relaxed">{c.description}</p>
                 )}
+                <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
+                  <span className="text-xs text-primary font-medium group-hover:underline">
+                    View community &rarr;
+                  </span>
+                </div>
               </div>
             </Link>
           );
