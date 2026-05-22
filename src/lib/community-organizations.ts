@@ -33,13 +33,14 @@ interface CommunityOrganizationsResponse {
 
 export async function getCommunityOrganizations(
   communityId: string,
-  params: { page?: number; per_page?: number; search?: string; kinds?: string } = {},
+  params: { page?: number; per_page?: number; search?: string; kinds?: string; specialties?: string } = {},
 ): Promise<CommunityOrganizationsResponse> {
   const qp = new URLSearchParams();
   if (params.page) qp.set('page', String(params.page));
   if (params.per_page) qp.set('per_page', String(params.per_page));
   if (params.search) qp.set('search', params.search);
   if (params.kinds) qp.set('kinds', params.kinds);
+  if (params.specialties) qp.set('specialties', params.specialties);
 
   // The api.get unwraps { data } but we need both data and meta
   // So we fetch manually to preserve the full response shape

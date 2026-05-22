@@ -218,6 +218,39 @@ export const LISTING_SUBCATEGORIES: Record<string, Record<string, { label: strin
   },
 };
 
+/**
+ * Convert taxonomy filter (by_type / by_category / by_subcategory) to a comma-separated
+ * specialties string for the organizations API.
+ *
+ * - by_subcategory → just that subcategory
+ * - by_category (no sub) → the category + all its subcategories
+ * - by_type (no category) → all categories of that type + all their subcategories
+ */
+export function taxonomyToSpecialties(params: {
+  by_type?: string;
+  by_category?: string;
+  by_subcategory?: string;
+}): string | undefined {
+  const { by_type, by_category, by_subcategory } = params;
+  if (!by_type) return undefined;
+
+  if (by_subcategory) return by_subcategory;
+
+  if (by_category) {
+    const subKeys = Object.keys(LISTING_SUBCATEGORIES[by_category] ?? {});
+    return [by_category, ...subKeys].join(',');
+  }
+
+  // Type only → all categories + all subcategories of that type
+  const categories = CATEGORIES_BY_TYPE[by_type] ?? [];
+  const all: string[] = [];
+  for (const cat of categories) {
+    all.push(cat);
+    all.push(...Object.keys(LISTING_SUBCATEGORIES[cat] ?? {}));
+  }
+  return all.join(',');
+}
+
 /** Get category options for a given listing type */
 export function getCategoriesForType(type: string): { value: string; label: string; badgeColor: string }[] {
   const categoryKeys = CATEGORIES_BY_TYPE[type] ?? [];

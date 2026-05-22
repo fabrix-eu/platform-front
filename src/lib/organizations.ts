@@ -98,6 +98,7 @@ export async function getOrganizations(params: {
   per_page?: number;
   search?: string;
   kinds?: string;
+  specialties?: string;
   by_claimed?: string;
   by_country?: string;
   lon?: number;
@@ -109,6 +110,7 @@ export async function getOrganizations(params: {
   if (params.per_page) qs.set('per_page', String(params.per_page));
   if (params.search) qs.set('search', params.search);
   if (params.kinds) qs.set('kinds', params.kinds);
+  if (params.specialties) qs.set('specialties', params.specialties);
   if (params.by_claimed !== undefined) qs.set('by_claimed', params.by_claimed);
   if (params.by_country) qs.set('by_country', params.by_country);
   if (params.lon !== undefined && params.lat !== undefined) {
