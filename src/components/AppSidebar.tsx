@@ -2,6 +2,7 @@ import { Link, useParams, useLocation } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getMe, getActiveOrgSlug, isPersonalMode, type MeOrganization } from '../lib/auth';
 import { getMyApplications } from '../lib/community-challenges';
+import { getListings, listingKeys } from '../lib/listings';
 
 interface SidebarItem {
   key: string;
@@ -67,11 +68,21 @@ function OrgNav({
   userOrg?: MeOrganization;
   pathname: string;
 }) {
+  const orgId = userOrg?.organization_id;
+
   const pendingQuery = useQuery({
     queryKey: ['my_challenge_applications_pending_count'],
     queryFn: () => getMyApplications({ status: 'pending', per_page: 1 }),
   });
   const pendingCount = pendingQuery.data?.meta.total_count ?? 0;
+
+  const listingsCountParams = { by_organization: orgId!, per_page: 1 };
+  const listingsCountQuery = useQuery({
+    queryKey: listingKeys.list(listingsCountParams),
+    queryFn: () => getListings(listingsCountParams),
+    enabled: !!orgId,
+  });
+  const listingsCount = listingsCountQuery.data?.meta.total_count ?? 0;
 
   const navItems: SidebarItem[] = [
     { key: 'dashboard', label: 'Dashboard', href: `/${orgSlug}/dashboard` },
@@ -89,7 +100,7 @@ function OrgNav({
       badge: userOrg?.relations_count ?? null,
     },
     { key: 'messages', label: 'Messages', href: `/${orgSlug}/messages` },
-    { key: 'listings', label: 'Listings', href: `/${orgSlug}/listings` },
+    { key: 'listings', label: 'Listings', href: `/${orgSlug}/listings`, badge: listingsCount || null },
     {
       key: 'challenges',
       label: 'Challenges',
