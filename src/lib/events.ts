@@ -1,6 +1,6 @@
 import { api, BASE } from './api';
 
-export interface CommunityEvent {
+export interface Event {
   id: string;
   title: string;
   description: string;
@@ -18,11 +18,11 @@ export interface CommunityEvent {
     id: string;
     name: string;
     slug: string;
-  };
+  } | null;
 }
 
-interface CommunityEventsResponse {
-  data: CommunityEvent[];
+export interface EventsResponse {
+  data: Event[];
   meta: {
     current_page: number;
     total_pages: number;
@@ -30,29 +30,6 @@ interface CommunityEventsResponse {
     next_page: number | null;
     prev_page: number | null;
   };
-}
-
-export async function getCommunityEvents(
-  communityId: string,
-  params: { page?: number; per_page?: number } = {},
-): Promise<CommunityEventsResponse> {
-  const qp = new URLSearchParams();
-  if (params.page) qp.set('page', String(params.page));
-  if (params.per_page) qp.set('per_page', String(params.per_page));
-
-  const token = localStorage.getItem('access_token');
-  const res = await fetch(`${BASE}/communities/${communityId}/community_events?${qp}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
-
-  if (!res.ok) {
-    return { data: [], meta: { current_page: 1, total_pages: 1, total_count: 0, next_page: null, prev_page: null } };
-  }
-
-  return res.json();
 }
 
 export interface EventParticipant {
@@ -69,11 +46,36 @@ export interface EventParticipant {
   };
 }
 
+// ── Community-scoped events ──────────────────────────
+
+export async function getCommunityEvents(
+  communityId: string,
+  params: { page?: number; per_page?: number } = {},
+): Promise<EventsResponse> {
+  const qp = new URLSearchParams();
+  if (params.page) qp.set('page', String(params.page));
+  if (params.per_page) qp.set('per_page', String(params.per_page));
+
+  const token = localStorage.getItem('access_token');
+  const res = await fetch(`${BASE}/communities/${communityId}/events?${qp}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    return { data: [], meta: { current_page: 1, total_pages: 1, total_count: 0, next_page: null, prev_page: null } };
+  }
+
+  return res.json();
+}
+
 export async function getCommunityEvent(
   communityId: string,
   eventId: string,
-): Promise<CommunityEvent> {
-  return api.get<CommunityEvent>(`/communities/${communityId}/community_events/${eventId}`);
+): Promise<Event> {
+  return api.get<Event>(`/communities/${communityId}/events/${eventId}`);
 }
 
 export async function createCommunityEvent(
@@ -89,9 +91,9 @@ export async function createCommunityEvent(
     online_url?: string;
     image_url?: string;
   },
-): Promise<CommunityEvent> {
-  return api.post<CommunityEvent>(`/communities/${communityId}/community_events`, {
-    community_event: data,
+): Promise<Event> {
+  return api.post<Event>(`/communities/${communityId}/events`, {
+    event: data,
   });
 }
 
@@ -109,9 +111,9 @@ export async function updateCommunityEvent(
     online_url: string;
     image_url: string;
   }>,
-): Promise<CommunityEvent> {
-  return api.patch<CommunityEvent>(`/communities/${communityId}/community_events/${eventId}`, {
-    community_event: data,
+): Promise<Event> {
+  return api.patch<Event>(`/communities/${communityId}/events/${eventId}`, {
+    event: data,
   });
 }
 
@@ -119,14 +121,14 @@ export async function deleteCommunityEvent(
   communityId: string,
   eventId: string,
 ): Promise<void> {
-  return api.delete(`/communities/${communityId}/community_events/${eventId}`);
+  return api.delete(`/communities/${communityId}/events/${eventId}`);
 }
 
 export async function getEventParticipants(
   communityId: string,
   eventId: string,
 ): Promise<EventParticipant[]> {
-  return api.get<EventParticipant[]>(`/communities/${communityId}/community_events/${eventId}/participants`);
+  return api.get<EventParticipant[]>(`/communities/${communityId}/events/${eventId}/participants`);
 }
 
 export async function rsvpToEvent(
@@ -135,7 +137,7 @@ export async function rsvpToEvent(
   status: 'going' | 'maybe' | 'not_going' = 'going',
 ): Promise<EventParticipant> {
   return api.post<EventParticipant>(
-    `/communities/${communityId}/community_events/${eventId}/participants`,
+    `/communities/${communityId}/events/${eventId}/participants`,
     { status },
   );
 }
@@ -146,7 +148,7 @@ export async function cancelRsvp(
   participantId: string,
 ): Promise<void> {
   return api.delete(
-    `/communities/${communityId}/community_events/${eventId}/participants/${participantId}`,
+    `/communities/${communityId}/events/${eventId}/participants/${participantId}`,
   );
 }
 
@@ -164,7 +166,7 @@ export interface GlobalEventParams {
 
 export async function getAllEvents(
   params: GlobalEventParams = {},
-): Promise<CommunityEventsResponse> {
+): Promise<EventsResponse> {
   const qp = new URLSearchParams();
   if (params.page) qp.set('page', String(params.page));
   if (params.per_page) qp.set('per_page', String(params.per_page));
@@ -175,7 +177,7 @@ export async function getAllEvents(
   if (params['within_distance[radius]']) qp.set('within_distance[radius]', params['within_distance[radius]']);
 
   const token = localStorage.getItem('access_token');
-  const res = await fetch(`${BASE}/community_events?${qp}`, {
+  const res = await fetch(`${BASE}/events?${qp}`, {
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -189,6 +191,43 @@ export async function getAllEvents(
   return res.json();
 }
 
-export async function getEvent(eventId: string): Promise<CommunityEvent> {
-  return api.get<CommunityEvent>(`/community_events/${eventId}`);
+export async function getEvent(eventId: string): Promise<Event> {
+  return api.get<Event>(`/events/${eventId}`);
+}
+
+export async function createGlobalEvent(
+  data: {
+    title: string;
+    description?: string;
+    happens_at: string;
+    address?: string;
+    lon?: number;
+    lat?: number;
+    online: boolean;
+    online_url?: string;
+    image_url?: string;
+  },
+): Promise<Event> {
+  return api.post<Event>('/events', { event: data });
+}
+
+export async function updateGlobalEvent(
+  eventId: string,
+  data: Partial<{
+    title: string;
+    description: string;
+    happens_at: string;
+    address: string;
+    lon: number;
+    lat: number;
+    online: boolean;
+    online_url: string;
+    image_url: string;
+  }>,
+): Promise<Event> {
+  return api.patch<Event>(`/events/${eventId}`, { event: data });
+}
+
+export async function deleteGlobalEvent(eventId: string): Promise<void> {
+  return api.delete(`/events/${eventId}`);
 }

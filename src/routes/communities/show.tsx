@@ -3,7 +3,7 @@ import { Link, useParams } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getCommunity } from '../../lib/communities';
 import { getCommunityOrganizations } from '../../lib/community-organizations';
-import { getCommunityEvents } from '../../lib/community-events';
+import { getCommunityEvents } from '../../lib/events';
 import { getCommunityChallenge } from '../../lib/community-challenges';
 import { getMe } from '../../lib/auth';
 import { ORG_KINDS } from '../../lib/organizations';
@@ -13,7 +13,7 @@ import {
 } from '../../lib/community-join-requests';
 import { FieldError, FormError } from '../../components/FieldError';
 import type { CommunityOrganization } from '../../lib/community-organizations';
-import type { CommunityEvent } from '../../lib/community-events';
+import type { Event } from '../../lib/events';
 import type { Challenge } from '../../lib/community-challenges';
 
 function CommunityJoinRequestButton({ communityId }: { communityId: string }) {
@@ -191,7 +191,7 @@ function formatEventDate(iso: string): string {
   });
 }
 
-function EventPreviewCard({ event }: { event: CommunityEvent }) {
+function EventPreviewCard({ event }: { event: Event }) {
   const d = new Date(event.happens_at);
   const month = d.toLocaleDateString('en-GB', { month: 'short' }).toUpperCase();
   const day = d.getDate();

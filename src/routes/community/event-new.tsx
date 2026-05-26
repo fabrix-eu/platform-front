@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { Link, useParams, useNavigate } from '@tanstack/react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createCommunityEvent, updateCommunityEvent } from '../../lib/community-events';
+import { createCommunityEvent, updateCommunityEvent } from '../../lib/events';
 import { uploadFile } from '../../lib/uploads';
 import { FieldError, FormError } from '../../components/FieldError';
 
@@ -38,7 +38,7 @@ export function CommunityEventNewPage() {
       // 2. If a file was selected, upload then patch
       if (file) {
         setUploading(true);
-        const imageUrl = await uploadFile(file, 'CommunityEvent', event.id);
+        const imageUrl = await uploadFile(file, 'Event', event.id);
         await updateCommunityEvent(communitySlug, event.id, { image_url: imageUrl });
         setUploading(false);
       }

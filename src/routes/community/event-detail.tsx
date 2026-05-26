@@ -7,8 +7,8 @@ import {
   rsvpToEvent,
   cancelRsvp,
   deleteCommunityEvent,
-} from '../../lib/community-events';
-import type { EventParticipant } from '../../lib/community-events';
+} from '../../lib/events';
+import type { EventParticipant } from '../../lib/events';
 
 function formatFullDate(iso: string): string {
   const d = new Date(iso);

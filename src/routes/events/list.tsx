@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { getAllEvents } from '../../lib/community-events';
-import type { CommunityEvent } from '../../lib/community-events';
+import { getAllEvents } from '../../lib/events';
+import type { Event } from '../../lib/events';
 import { LocationFilter } from '../../components/LocationFilter';
 import type { LocationFilterParams } from '../../components/LocationFilter';
 import { useFeatureInfo, FeatureIntro, FeatureInfoTrigger } from '../../components/FeatureIntro';
@@ -30,7 +30,7 @@ function DateBadge({ iso }: { iso: string }) {
   );
 }
 
-function EventCard({ event }: { event: CommunityEvent }) {
+function EventCard({ event }: { event: Event }) {
   return (
     <Link
       to="/events/$eventId"

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useParams } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { getCommunityEvents } from '../../lib/community-events';
-import type { CommunityEvent } from '../../lib/community-events';
+import { getCommunityEvents } from '../../lib/events';
+import type { Event } from '../../lib/events';
 
 type Tab = 'upcoming' | 'past';
 
@@ -29,7 +29,7 @@ function DateBadge({ iso }: { iso: string }) {
   );
 }
 
-function EventCard({ event, orgSlug, communitySlug }: { event: CommunityEvent; orgSlug: string; communitySlug: string }) {
+function EventCard({ event, orgSlug, communitySlug }: { event: Event; orgSlug: string; communitySlug: string }) {
   return (
     <Link
       to="/$orgSlug/communities/$communitySlug/events/$eventId"

@@ -5,7 +5,7 @@ import {
   getCommunityEvent,
   updateCommunityEvent,
   deleteCommunityEvent,
-} from '../../lib/community-events';
+} from '../../lib/events';
 import { uploadFile } from '../../lib/uploads';
 import { FieldError, FormError } from '../../components/FieldError';
 
@@ -59,7 +59,7 @@ export function CommunityEventEditPage() {
       let imageUrl: string | undefined;
       if (file) {
         setUploading(true);
-        imageUrl = await uploadFile(file, 'CommunityEvent', eventId);
+        imageUrl = await uploadFile(file, 'Event', eventId);
         setUploading(false);
       }
 
