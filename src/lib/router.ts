@@ -65,6 +65,7 @@ import { AdminCommunitiesPage } from '../routes/admin/communities';
 import { AdminFeedbacksPage } from '../routes/admin/feedbacks';
 import { AdminClaimsPage } from '../routes/admin/claims';
 import { EventsListPage } from '../routes/events/list';
+import { EventNewPage } from '../routes/events/new';
 import { EventDetailPage } from '../routes/events/show';
 import { ChallengesListPage } from '../routes/challenges/list';
 import { ChallengeShowPage } from '../routes/challenges/show';
@@ -554,6 +555,13 @@ const eventsRoute = createRoute({
   component: EventsListPage,
 });
 
+const eventNewRoute = createRoute({
+  getParentRoute: () => globalRoute,
+  path: '/events/new',
+  beforeLoad: requireAuth,
+  component: EventNewPage,
+});
+
 const eventDetailRoute = createRoute({
   getParentRoute: () => globalRoute,
   path: '/events/$eventId',
@@ -957,6 +965,7 @@ const routeTree = rootRoute.addChildren([
         marketplaceEditRoute,
       ]),
       eventsRoute,
+      eventNewRoute,
       eventDetailRoute,
       challengesRoute.addChildren([
         challengesIndexRoute,

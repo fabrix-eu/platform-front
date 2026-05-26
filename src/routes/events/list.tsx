@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getAllEvents } from '../../lib/events';
+import { getMe } from '../../lib/auth';
 import type { Event } from '../../lib/events';
 import { LocationFilter } from '../../components/LocationFilter';
 import type { LocationFilterParams } from '../../components/LocationFilter';
@@ -86,6 +87,8 @@ type Tab = 'upcoming' | 'past';
 
 export function EventsListPage() {
   const eventsInfo = useFeatureInfo('events');
+  const meQuery = useQuery({ queryKey: ['me'], queryFn: getMe });
+  const canCreate = meQuery.data?.role === 'facilitator' || meQuery.data?.role === 'admin';
   const navigate = useNavigate();
   const { page, search, country, lon, lat, radius, location_label } = useSearch({ strict: false }) as {
     page?: number;
@@ -151,6 +154,14 @@ export function EventsListPage() {
           <h1 className="text-2xl font-bold">Events</h1>
           <FeatureInfoTrigger info={eventsInfo} />
         </div>
+        {canCreate && (
+          <Link
+            to="/events/new"
+            className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
+          >
+            Create event
+          </Link>
+        )}
       </div>
 
       <FeatureIntro
