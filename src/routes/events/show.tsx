@@ -6,6 +6,7 @@ import {
   getEventParticipants,
   rsvpToEvent,
   cancelRsvp,
+  deleteGlobalEvent,
 } from '../../lib/events';
 import type { EventParticipant } from '../../lib/events';
 
@@ -79,6 +80,10 @@ export function EventDetailPage() {
   const event = eventQuery.data;
   const communitySlug = event?.community?.slug;
 
+  const isCreator = !!(me.data?.id && event?.created_by_id && me.data.id === event.created_by_id);
+  const isAdmin = me.data?.role === 'admin';
+  const canEdit = isCreator || isAdmin;
+
   const participantsQuery = useQuery({
     queryKey: ['event_participants', communitySlug, eventId],
     queryFn: () => getEventParticipants(communitySlug!, eventId),
@@ -100,6 +105,20 @@ export function EventDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['event_participants', communitySlug, eventId] });
     },
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteGlobalEvent(eventId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['global_events'] });
+      navigate({ to: '/events' });
+    },
+  });
+
+  function handleDelete() {
+    if (window.confirm('Are you sure you want to delete this event? This cannot be undone.')) {
+      deleteMutation.mutate();
+    }
+  }
 
   const participants = participantsQuery.data ?? [];
   const myRsvp = participants.find((p) => p.user.id === me.data?.id);
@@ -249,7 +268,7 @@ export function EventDetailPage() {
 
       {/* Participants section */}
       {communitySlug && (
-        <div className="bg-white border border-border rounded-lg p-5">
+        <div className="bg-white border border-border rounded-lg p-5 mb-6">
           <div className="flex items-center gap-3 mb-4">
             <h3 className="text-sm font-semibold text-gray-900">Participants</h3>
             <span className="text-xs text-gray-500">
@@ -281,6 +300,29 @@ export function EventDetailPage() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Edit / Delete */}
+      {canEdit && (
+        <div className="bg-white border border-border rounded-lg p-5">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Manage event</h3>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/events/$eventId/edit"
+              params={{ eventId }}
+              className="px-4 py-2 text-sm font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              Edit event
+            </Link>
+            <button
+              onClick={handleDelete}
+              disabled={deleteMutation.isPending}
+              className="px-4 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50"
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete event'}
+            </button>
+          </div>
         </div>
       )}
     </div>

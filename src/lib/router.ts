@@ -66,6 +66,7 @@ import { AdminFeedbacksPage } from '../routes/admin/feedbacks';
 import { AdminClaimsPage } from '../routes/admin/claims';
 import { EventsListPage } from '../routes/events/list';
 import { EventNewPage } from '../routes/events/new';
+import { EventEditPage } from '../routes/events/edit';
 import { EventDetailPage } from '../routes/events/show';
 import { ChallengesListPage } from '../routes/challenges/list';
 import { ChallengeShowPage } from '../routes/challenges/show';
@@ -562,6 +563,13 @@ const eventNewRoute = createRoute({
   component: EventNewPage,
 });
 
+const eventEditRoute = createRoute({
+  getParentRoute: () => globalRoute,
+  path: '/events/$eventId/edit',
+  beforeLoad: requireAuth,
+  component: EventEditPage,
+});
+
 const eventDetailRoute = createRoute({
   getParentRoute: () => globalRoute,
   path: '/events/$eventId',
@@ -966,6 +974,7 @@ const routeTree = rootRoute.addChildren([
       ]),
       eventsRoute,
       eventNewRoute,
+      eventEditRoute,
       eventDetailRoute,
       challengesRoute.addChildren([
         challengesIndexRoute,
