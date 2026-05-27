@@ -25,6 +25,128 @@ interface Release {
 
 const RELEASES: Release[] = [
   {
+    date: 'May 26, 2026',
+    title: 'Global events',
+    items: [
+      {
+        tag: 'new',
+        text: 'Global events — facilitators and admins can now create, edit, and delete events outside of any community, visible to all users on the Events page.',
+      },
+      {
+        tag: 'improved',
+        text: 'Events renamed from "Community Events" to "Events" — events can now optionally belong to a community, or exist globally.',
+      },
+    ],
+  },
+  {
+    date: 'May 22, 2026',
+    title: 'Profile restructuring & community improvements',
+    items: [
+      {
+        tag: 'new',
+        text: 'Value chain filter on directory maps — filter organizations by position in the textile value chain.',
+      },
+      {
+        tag: 'new',
+        text: 'Listing count badge in the sidebar navigation.',
+      },
+      {
+        tag: 'improved',
+        text: 'Organization profile restructured — Listings and Challenges moved to dedicated sidebar pages for a cleaner layout.',
+      },
+      {
+        tag: 'improved',
+        text: 'Community show page enriched with better explorer cards and richer content.',
+      },
+      {
+        tag: 'improved',
+        text: 'Community resources (members, events, challenges) are now visible to non-members.',
+      },
+      {
+        tag: 'fixed',
+        text: 'Address autocomplete selection now works correctly, along with community event navigation links.',
+      },
+    ],
+  },
+  {
+    date: 'May 21, 2026',
+    title: 'Unified navigation & territory map',
+    items: [
+      {
+        tag: 'new',
+        text: 'Unified Global/Community navigation with a tabbed layout — seamlessly switch between global directory, events, challenges, and marketplace.',
+      },
+      {
+        tag: 'new',
+        text: 'Global event detail page — view full event details including date, location, description, and community attribution.',
+      },
+      {
+        tag: 'improved',
+        text: 'Global map now constrained to Europe bounds for a more focused view.',
+      },
+    ],
+  },
+  {
+    date: 'May 20, 2026',
+    title: 'Profile actions & address search',
+    items: [
+      {
+        tag: 'new',
+        text: 'Claim and Join buttons shown directly on organization profiles — no more hidden menu, actions are immediately visible.',
+      },
+      {
+        tag: 'improved',
+        text: 'Address search replaced from Google Maps to Photon (OpenStreetMap) — faster, free, and no API key required.',
+      },
+    ],
+  },
+  {
+    date: 'May 13, 2026',
+    title: 'Bug fixes',
+    items: [
+      {
+        tag: 'fixed',
+        text: 'Event cards are now clickable in both the global events list and the community overview sidebar.',
+      },
+      {
+        tag: 'fixed',
+        text: 'Conflict between community join requests and invitations resolved.',
+      },
+    ],
+  },
+  {
+    date: 'May 12, 2026',
+    title: 'Impact Compass improvements',
+    items: [
+      {
+        tag: 'improved',
+        text: 'Assessment results page redesigned with feedback messages, priority actions, and icons for a more actionable view.',
+      },
+      {
+        tag: 'improved',
+        text: 'Assessment scoring updated from latest research data, with N/A answer handling fixed and score recalculation.',
+      },
+    ],
+  },
+  {
+    date: 'May 7, 2026',
+    title: 'Value chain & specialties',
+    items: [
+      {
+        tag: 'new',
+        text: 'Value chain page — interactive visualization of organizations across the textile value chain, from raw materials to end-of-life.',
+      },
+      {
+        tag: 'new',
+        text: 'Organization specialties — tag your organization with specific capabilities and processes within the textile ecosystem.',
+      },
+      {
+        tag: 'new',
+        text: 'Expanded taxonomy — broader set of organization types and categories to better represent the circular textile industry.',
+      },
+    ],
+  },
+  {
     date: 'April 30, 2026',
     title: 'Challenge applications & unified detail view',
     items: [
