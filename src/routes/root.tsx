@@ -22,6 +22,7 @@ export function RootLayout() {
 
   const { pathname } = useLocation();
   const isAdmin = pathname.startsWith('/admin');
+  const isDocs = pathname === '/docs';
 
   useRefreshOnNavigate();
 
@@ -65,7 +66,7 @@ export function RootLayout() {
         </div>
       </header>
       <main className="flex min-h-[calc(100vh-56px)]">
-        {authed && !isAdmin && <AppSidebar />}
+        {authed && !isAdmin && !isDocs && <AppSidebar />}
         <div className="flex-1 min-w-0">
           <Outlet />
         </div>

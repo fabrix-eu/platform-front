@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from '@tanstack/react-router';
 
 const S3_BASE = 'https://mantel-dev.s3.nl-ams.scw.cloud/docs';
 
@@ -836,32 +837,55 @@ export function DocsPage() {
   return (
     <div className="flex min-h-[calc(100vh-56px)]">
       {/* Sidebar */}
-      <aside className="w-56 border-r border-border bg-white flex-shrink-0 overflow-y-auto">
-        <nav className="p-3 space-y-4">
-          {NAV.map((group) => (
-            <div key={group.title}>
-              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-2 mb-1">
-                {group.title}
-              </p>
-              <ul className="space-y-0.5">
-                {group.items.map((item) => (
-                  <li key={item.key}>
-                    <button
-                      onClick={() => setActive(item.key)}
-                      className={`w-full text-left px-2 py-1.5 text-sm rounded-md transition-colors ${
-                        active === item.key
-                          ? 'bg-gray-100 text-gray-900 font-medium'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+      <aside className="w-64 border-r border-border bg-white flex-shrink-0 flex flex-col min-h-[calc(100vh-56px)]">
+        <div className="p-4 border-b border-border">
+          <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+            <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+            </svg>
+            Documentation
+          </h2>
+        </div>
+
+        <nav className="p-2 flex-1 overflow-y-auto">
+          <div className="space-y-4">
+            {NAV.map((group) => (
+              <div key={group.title}>
+                <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-3 mb-1">
+                  {group.title}
+                </p>
+                <ul className="space-y-0.5">
+                  {group.items.map((item) => (
+                    <li key={item.key}>
+                      <button
+                        onClick={() => setActive(item.key)}
+                        className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${
+                          active === item.key
+                            ? 'bg-gray-100 text-gray-900 font-medium'
+                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </nav>
+
+        <div className="p-2 border-t border-border bg-white sticky bottom-0">
+          <Link
+            to="/"
+            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-500 hover:text-gray-900 rounded-md hover:bg-gray-50 transition-colors"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+            </svg>
+            Back to app
+          </Link>
+        </div>
       </aside>
 
       {/* Content */}
