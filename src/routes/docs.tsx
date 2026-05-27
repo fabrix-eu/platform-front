@@ -1,26 +1,18 @@
 import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
 
-const S3_BASE = 'https://mantel-dev.s3.nl-ams.scw.cloud/docs';
+// ─── Types & Navigation ─────────────────────────────────────────────────
 
 type Section =
-  | 'getting-started'
   | 'home'
-  | 'directory'
-  | 'map'
-  | 'org-dashboard'
-  | 'org-profile'
-  | 'org-relations'
-  | 'org-assessments'
-  | 'org-settings'
-  | 'community-overview'
-  | 'community-members'
-  | 'community-events'
-  | 'community-challenges'
-  | 'community-matchmaking'
-  | 'notifications'
-  | 'personal-messages'
-  | 'org-messages';
+  | 'impact-compass'
+  | 'community-ecosystem'
+  | 'facilitator-tools'
+  | 'getting-started'
+  | 'directory-map'
+  | 'organizations'
+  | 'communities'
+  | 'messaging';
 
 interface NavGroup {
   title: string;
@@ -29,43 +21,30 @@ interface NavGroup {
 
 const NAV: NavGroup[] = [
   {
-    title: 'Getting started',
-    items: [{ key: 'getting-started', label: 'Welcome' }],
+    title: 'Fabrix',
+    items: [{ key: 'home', label: 'Home' }],
   },
   {
-    title: 'Explore',
+    title: 'Platform',
     items: [
-      { key: 'home', label: 'Home' },
-      { key: 'directory', label: 'Directory' },
-      { key: 'map', label: 'Interactive Map' },
-      { key: 'notifications', label: 'Notifications' },
-      { key: 'personal-messages', label: 'Personal Messages' },
+      { key: 'impact-compass', label: 'Impact Compass' },
+      { key: 'community-ecosystem', label: 'Community & Ecosystem' },
+      { key: 'facilitator-tools', label: 'Facilitator Tools' },
     ],
   },
   {
-    title: 'Organization',
+    title: 'Guide',
     items: [
-      { key: 'org-dashboard', label: 'Dashboard' },
-      { key: 'org-profile', label: 'Profile' },
-      { key: 'org-relations', label: 'Relations' },
-      { key: 'org-assessments', label: 'Impact Compass' },
-      { key: 'org-settings', label: 'Settings & Members' },
-      { key: 'org-messages', label: 'Messages' },
-    ],
-  },
-  {
-    title: 'Communities',
-    items: [
-      { key: 'community-overview', label: 'Overview' },
-      { key: 'community-members', label: 'Members' },
-      { key: 'community-events', label: 'Events' },
-      { key: 'community-challenges', label: 'Challenges' },
-      { key: 'community-matchmaking', label: 'Matchmaking' },
+      { key: 'getting-started', label: 'Getting started' },
+      { key: 'directory-map', label: 'Directory & Map' },
+      { key: 'organizations', label: 'Organizations' },
+      { key: 'communities', label: 'Communities' },
+      { key: 'messaging', label: 'Messaging' },
     ],
   },
 ];
 
-// ─── Content ──────────────────────────────────────────────────────────────
+// ─── Shared components ───────────────────────────────────────────────────
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return <h2 className="text-xl font-bold text-gray-900 mb-4">{children}</h2>;
@@ -83,13 +62,7 @@ function Tip({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Feature({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function Feature({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-5">
       <h3 className="text-sm font-semibold text-gray-800 mb-1.5">{title}</h3>
@@ -98,740 +71,877 @@ function Feature({
   );
 }
 
-function Screenshot({ src, alt }: { src: string; alt: string }) {
+function CTA({ to, children, variant = 'primary' }: { to: string; children: React.ReactNode; variant?: 'primary' | 'secondary' }) {
   return (
-    <div className="my-5 rounded-lg overflow-hidden border border-gray-200 shadow-sm">
-      <img
-        src={`${S3_BASE}/${src}`}
-        alt={alt}
-        className="w-full"
-        loading="lazy"
-      />
+    <Link
+      to={to}
+      className={`inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg transition-colors ${
+        variant === 'primary'
+          ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+          : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+      }`}
+    >
+      {children}
+    </Link>
+  );
+}
+
+// ─── Icons (inline SVG) ─────────────────────────────────────────────────
+
+function CompassIcon({ className = 'w-6 h-6' }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="m10.5 6 6.207-1.553A2.25 2.25 0 0 1 19.5 6.66v9.345a2.25 2.25 0 0 1-1.49 2.118l-.702.234a2.25 2.25 0 0 1-1.558-.043L12 16.5l-4.25 1.766a2.25 2.25 0 0 1-1.558.043l-.702-.234A2.25 2.25 0 0 1 4 15.916V6.572a2.25 2.25 0 0 1 2.793-2.185L10.5 6Z" />
+    </svg>
+  );
+}
+
+function NetworkIcon({ className = 'w-6 h-6' }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
+    </svg>
+  );
+}
+
+function WrenchIcon({ className = 'w-6 h-6' }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.048.58.024 1.194-.14 1.743Z" />
+    </svg>
+  );
+}
+
+function ArrowRightIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+    </svg>
+  );
+}
+
+function CheckCircleIcon() {
+  return (
+    <svg className="w-5 h-5 text-primary shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+    </svg>
+  );
+}
+
+// ─── Marketing: Home ────────────────────────────────────────────────────
+
+function HomeContent() {
+  return (
+    <div className="-mx-8 -mt-8">
+      {/* Hero */}
+      <div className="bg-gradient-to-br from-primary/5 via-white to-primary/5 px-8 pt-12 pb-10 border-b border-border">
+        <p className="text-xs font-semibold text-primary uppercase tracking-widest mb-3">
+          Circular Textile Platform
+        </p>
+        <h1 className="text-3xl font-display font-bold text-gray-900 leading-tight mb-4">
+          Build a sustainable textile<br />future, together.
+        </h1>
+        <p className="text-base text-gray-600 leading-relaxed max-w-lg mb-6">
+          Fabrix connects organizations, facilitators, and researchers across Europe
+          to accelerate the transition to a circular textile economy.
+        </p>
+        <div className="flex items-center gap-3">
+          <CTA to="/register">Join the platform <ArrowRightIcon /></CTA>
+          <CTA to="/login" variant="secondary">Sign in</CTA>
+        </div>
+      </div>
+
+      {/* Three pillars */}
+      <div className="px-8 py-10">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-6">
+          Three pillars
+        </p>
+        <div className="grid gap-4">
+          <PillarCard
+            icon={<CompassIcon className="w-5 h-5" />}
+            color="bg-emerald-50 text-emerald-600 border-emerald-200"
+            title="Impact Compass"
+            description="Measure, improve, and certify your sustainability practices across 7 dimensions. Earn a label for your products."
+          />
+          <PillarCard
+            icon={<NetworkIcon className="w-5 h-5" />}
+            color="bg-blue-50 text-blue-600 border-blue-200"
+            title="Community & Ecosystem"
+            description="Find partners, materials, services, and equipment across the full circular textile value chain."
+          />
+          <PillarCard
+            icon={<WrenchIcon className="w-5 h-5" />}
+            color="bg-amber-50 text-amber-600 border-amber-200"
+            title="Facilitator Tools"
+            description="Track member needs, match organizations, manage communities, and accelerate the circular transition."
+          />
+        </div>
+      </div>
+
+      {/* For organizations */}
+      <div className="px-8 py-10 border-t border-border">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">For organizations</span>
+        </div>
+        <h2 className="text-xl font-display font-bold text-gray-900 mt-3 mb-2">
+          Grow your circular business
+        </h2>
+        <p className="text-sm text-gray-500 mb-6 max-w-md">
+          Whether you design, produce, collect, sort, or recycle — Fabrix gives you
+          the tools and connections to thrive in the circular textile ecosystem.
+        </p>
+        <div className="space-y-3">
+          <BenefitRow text="Assess your sustainability maturity across eco-design, manufacturing, supply chain, social impact, and more" />
+          <BenefitRow text="Discover and connect with complementary partners through the interactive map and marketplace" />
+          <BenefitRow text="List your materials, services, capacities, and products on the marketplace" />
+          <BenefitRow text="Join communities to access events, challenges, matchmaking, and facilitator support" />
+          <BenefitRow text="Earn the Impact Compass label to showcase your commitment on your products" />
+        </div>
+      </div>
+
+      {/* For facilitators */}
+      <div className="px-8 py-10 border-t border-border">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">For facilitators</span>
+        </div>
+        <h2 className="text-xl font-display font-bold text-gray-900 mt-3 mb-2">
+          Empower your territory
+        </h2>
+        <p className="text-sm text-gray-500 mb-6 max-w-md">
+          As a community manager, you are the catalyst of the circular transition.
+          Fabrix gives you a CRM built for textile ecosystems.
+        </p>
+        <div className="space-y-3">
+          <BenefitRow text="Track every organization in your territory — needs, performance, opportunities" />
+          <BenefitRow text="Oversee Impact Compass assessments and identify priority actions for each member" />
+          <BenefitRow text="Auto-generate matchmaking between organizations based on proximity, capabilities, and roles" />
+          <BenefitRow text="Organize events, challenges, and discussions to activate your community" />
+          <BenefitRow text="Manage shared spaces, subsidies, and incubation programs" />
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="px-8 py-10 border-t border-border bg-gray-50/50">
+        <div className="grid grid-cols-3 gap-6 text-center">
+          <div>
+            <p className="text-2xl font-display font-bold text-primary">7</p>
+            <p className="text-xs text-gray-500 mt-1">Assessment<br />dimensions</p>
+          </div>
+          <div>
+            <p className="text-2xl font-display font-bold text-primary">150+</p>
+            <p className="text-xs text-gray-500 mt-1">Marketplace<br />categories</p>
+          </div>
+          <div>
+            <p className="text-2xl font-display font-bold text-primary">12</p>
+            <p className="text-xs text-gray-500 mt-1">Organization<br />types</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Final CTA */}
+      <div className="px-8 py-10 border-t border-border text-center">
+        <h2 className="text-lg font-display font-bold text-gray-900 mb-2">
+          Ready to join the circular textile ecosystem?
+        </h2>
+        <p className="text-sm text-gray-500 mb-5">
+          Create your account in 2 minutes. Free for organizations and facilitators.
+        </p>
+        <CTA to="/register">Create your account <ArrowRightIcon /></CTA>
+      </div>
     </div>
   );
 }
 
-function ComingSoon() {
+function PillarCard({
+  icon,
+  color,
+  title,
+  description,
+}: {
+  icon: React.ReactNode;
+  color: string;
+  title: string;
+  description: string;
+}) {
   return (
-    <div className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium px-2 py-0.5 rounded-full">
-      Coming soon
+    <div className="flex items-start gap-3 p-4 rounded-lg border border-border bg-white hover:shadow-sm transition-shadow">
+      <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 border ${color}`}>
+        {icon}
+      </div>
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+        <p className="text-sm text-gray-500 mt-0.5 leading-relaxed">{description}</p>
+      </div>
     </div>
   );
 }
+
+function BenefitRow({ text }: { text: string }) {
+  return (
+    <div className="flex items-start gap-2.5">
+      <CheckCircleIcon />
+      <p className="text-sm text-gray-600 leading-relaxed">{text}</p>
+    </div>
+  );
+}
+
+// ─── Marketing: Impact Compass ──────────────────────────────────────────
+
+function ImpactCompassContent() {
+  return (
+    <div className="-mx-8 -mt-8">
+      {/* Hero */}
+      <div className="bg-gradient-to-br from-emerald-50/80 via-white to-emerald-50/50 px-8 pt-10 pb-8 border-b border-border">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center border border-emerald-200">
+            <CompassIcon className="w-4.5 h-4.5" />
+          </div>
+          <span className="text-xs font-semibold text-emerald-600 uppercase tracking-widest">Impact Compass</span>
+        </div>
+        <h1 className="text-2xl font-display font-bold text-gray-900 leading-tight mb-3">
+          Measure your impact.<br />Earn your label.
+        </h1>
+        <p className="text-sm text-gray-600 leading-relaxed max-w-md">
+          The Impact Compass evaluates your organization across 7 dimensions of
+          circular economy, sustainability, and business innovation. Complete the
+          assessments, get actionable recommendations, and earn a label you can
+          display on your products.
+        </p>
+      </div>
+
+      {/* 7 dimensions */}
+      <div className="px-8 py-8">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-5">
+          7 dimensions
+        </p>
+        <div className="space-y-4">
+          <DimensionCard
+            number="1"
+            title="Ecodesign Decisions"
+            description="Design for recyclability, material selection, hazardous substance elimination, and product longevity."
+            color="bg-emerald-500"
+          />
+          <DimensionCard
+            number="2"
+            title="Environmental Management"
+            description="Carbon footprint, renewable energy, ISO 14001 certification, and environmental supplier criteria."
+            color="bg-teal-500"
+          />
+          <DimensionCard
+            number="3"
+            title="Manufacturing Efficiency"
+            description="Waste minimization, energy and water reduction, industrial symbiosis, and lean manufacturing."
+            color="bg-cyan-500"
+          />
+          <DimensionCard
+            number="4"
+            title="Supply Chain Management"
+            description="Human rights, transparency, traceability, local engagement, and ethical sourcing."
+            color="bg-blue-500"
+          />
+          <DimensionCard
+            number="5"
+            title="Distribution & Retail"
+            description="Logistics optimization, repair services, product-as-a-service, take-back schemes, and EPR compliance."
+            color="bg-indigo-500"
+          />
+          <DimensionCard
+            number="6"
+            title="Social Capital"
+            description="Internal trust, external partnerships, community relationships, and shared sustainability vision."
+            color="bg-violet-500"
+          />
+          <DimensionCard
+            number="7"
+            title="Innovation & Business Model"
+            description="Technology adoption, absorptive capability, business model novelty, and resilience after disruption."
+            color="bg-purple-500"
+          />
+        </div>
+      </div>
+
+      {/* How it works */}
+      <div className="px-8 py-8 border-t border-border">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-5">
+          How it works
+        </p>
+        <div className="space-y-5">
+          <StepItem step="1" title="Complete the assessments" description="Answer questions at your own pace. Your progress is saved automatically — pause and come back anytime." />
+          <StepItem step="2" title="Get your scores and recommendations" description="See your score (0–100%) for each dimension, with priority actions and feedback on every answer." />
+          <StepItem step="3" title="Earn the Impact Compass label" description="Reach the threshold and display the Impact Compass label on your products, website, and communications." />
+        </div>
+      </div>
+
+      {/* Scoring */}
+      <div className="px-8 py-8 border-t border-border bg-gray-50/50">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-5">
+          Scoring levels
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <ScoreLevel color="bg-emerald-500" range="80–100%" label="Advanced" description="Strong circular practices" />
+          <ScoreLevel color="bg-blue-500" range="60–79%" label="Progressing" description="Meaningful progress" />
+          <ScoreLevel color="bg-amber-500" range="40–59%" label="Building" description="Foundations in place" />
+          <ScoreLevel color="bg-gray-400" range="0–39%" label="Starting" description="Beginning the journey" />
+        </div>
+      </div>
+
+      {/* CTA */}
+      <div className="px-8 py-8 border-t border-border text-center">
+        <p className="text-sm text-gray-600 mb-4">
+          Start measuring your impact today.
+        </p>
+        <CTA to="/register">Create your account <ArrowRightIcon /></CTA>
+      </div>
+    </div>
+  );
+}
+
+function DimensionCard({
+  number,
+  title,
+  description,
+  color,
+}: {
+  number: string;
+  title: string;
+  description: string;
+  color: string;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className={`w-7 h-7 rounded-full ${color} text-white flex items-center justify-center text-xs font-bold shrink-0`}>
+        {number}
+      </div>
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+        <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{description}</p>
+      </div>
+    </div>
+  );
+}
+
+function StepItem({ step, title, description }: { step: string; title: string; description: string }) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">
+        {step}
+      </div>
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+        <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{description}</p>
+      </div>
+    </div>
+  );
+}
+
+function ScoreLevel({
+  color,
+  range,
+  label,
+  description,
+}: {
+  color: string;
+  range: string;
+  label: string;
+  description: string;
+}) {
+  return (
+    <div className="flex items-center gap-2.5 p-3 rounded-lg border border-border bg-white">
+      <div className={`w-3 h-3 rounded-full ${color} shrink-0`} />
+      <div>
+        <p className="text-xs font-semibold text-gray-900">
+          {range} <span className="text-gray-500 font-normal">— {label}</span>
+        </p>
+        <p className="text-[11px] text-gray-400">{description}</p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Marketing: Community & Ecosystem ───────────────────────────────────
+
+function CommunityEcosystemContent() {
+  return (
+    <div className="-mx-8 -mt-8">
+      {/* Hero */}
+      <div className="bg-gradient-to-br from-blue-50/80 via-white to-blue-50/50 px-8 pt-10 pb-8 border-b border-border">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center border border-blue-200">
+            <NetworkIcon className="w-4.5 h-4.5" />
+          </div>
+          <span className="text-xs font-semibold text-blue-600 uppercase tracking-widest">Community & Ecosystem</span>
+        </div>
+        <h1 className="text-2xl font-display font-bold text-gray-900 leading-tight mb-3">
+          Find your partners.<br />Build your network.
+        </h1>
+        <p className="text-sm text-gray-600 leading-relaxed max-w-md">
+          Fabrix maps the entire circular textile ecosystem — from raw materials to
+          end-of-life. Discover organizations, browse the marketplace, and join
+          communities to build meaningful partnerships.
+        </p>
+      </div>
+
+      {/* Value chain */}
+      <div className="px-8 py-8">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-5">
+          The circular value chain
+        </p>
+        <div className="space-y-2.5">
+          <ChainStage color="bg-emerald-500" label="Materials" description="Natural fibres, recycled fibres, yarns, fabrics, certified materials, waste streams" />
+          <ChainArrow />
+          <ChainStage color="bg-amber-500" label="Capacities" description="Equipment, facilities, shared spaces, workforce expertise, financing programs" />
+          <ChainArrow />
+          <ChainStage color="bg-blue-500" label="Services" description="Production, sorting, design, logistics, consulting, certification, end-of-life management" />
+          <ChainArrow />
+          <ChainStage color="bg-rose-500" label="Products" description="Apparel, home textiles, technical textiles, upcycled and zero-waste collections" />
+          <ChainArrow />
+          <ChainStage color="bg-violet-500" label="Distribution" description="Retail, wholesale, e-commerce, resale platforms, rental and subscription" />
+        </div>
+      </div>
+
+      {/* Marketplace */}
+      <div className="px-8 py-8 border-t border-border">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-5">
+          Marketplace
+        </p>
+        <p className="text-sm text-gray-600 leading-relaxed mb-5">
+          List and discover materials, services, capacities, and products from
+          organizations across Europe. Filter by category, location, and type.
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <MarketplaceStat number="40+" label="Material subcategories" />
+          <MarketplaceStat number="37" label="Service types" />
+          <MarketplaceStat number="24" label="Capacity categories" />
+          <MarketplaceStat number="10+" label="Product categories" />
+        </div>
+      </div>
+
+      {/* Community features */}
+      <div className="px-8 py-8 border-t border-border">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-5">
+          Community features
+        </p>
+        <div className="space-y-3">
+          <BenefitRow text="Join communities managed by local facilitators who support your territory" />
+          <BenefitRow text="Participate in events — workshops, conferences, networking sessions" />
+          <BenefitRow text="Apply to challenges — find partners for specific projects and win opportunities" />
+          <BenefitRow text="Get matched with complementary organizations through smart matchmaking" />
+          <BenefitRow text="Access discussion spaces to share knowledge and build relationships" />
+        </div>
+      </div>
+
+      {/* Discovery */}
+      <div className="px-8 py-8 border-t border-border bg-gray-50/50">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-5">
+          Discover organizations
+        </p>
+        <div className="space-y-3">
+          <BenefitRow text="Interactive map — see every organization in Europe, color-coded by type" />
+          <BenefitRow text="Directory with search, filters by type, claimed status, and location radius" />
+          <BenefitRow text="12 organization types: producers, recyclers, designers, collectors, brands, and more" />
+          <BenefitRow text="Organization profiles with relations, assessments, communities, and contact" />
+        </div>
+      </div>
+
+      {/* CTA */}
+      <div className="px-8 py-8 border-t border-border text-center">
+        <p className="text-sm text-gray-600 mb-4">
+          Your next partner is already on Fabrix.
+        </p>
+        <CTA to="/register">Join the ecosystem <ArrowRightIcon /></CTA>
+      </div>
+    </div>
+  );
+}
+
+function ChainStage({ color, label, description }: { color: string; label: string; description: string }) {
+  return (
+    <div className="flex items-start gap-3 p-3 rounded-lg border border-border bg-white">
+      <div className={`w-2.5 h-2.5 rounded-full ${color} shrink-0 mt-1`} />
+      <div>
+        <p className="text-sm font-semibold text-gray-900">{label}</p>
+        <p className="text-xs text-gray-500 leading-relaxed">{description}</p>
+      </div>
+    </div>
+  );
+}
+
+function ChainArrow() {
+  return (
+    <div className="flex justify-center">
+      <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3" />
+      </svg>
+    </div>
+  );
+}
+
+function MarketplaceStat({ number, label }: { number: string; label: string }) {
+  return (
+    <div className="p-3 rounded-lg border border-border bg-white text-center">
+      <p className="text-lg font-display font-bold text-primary">{number}</p>
+      <p className="text-[11px] text-gray-500 mt-0.5">{label}</p>
+    </div>
+  );
+}
+
+// ─── Marketing: Facilitator Tools ───────────────────────────────────────
+
+function FacilitatorToolsContent() {
+  return (
+    <div className="-mx-8 -mt-8">
+      {/* Hero */}
+      <div className="bg-gradient-to-br from-amber-50/80 via-white to-amber-50/50 px-8 pt-10 pb-8 border-b border-border">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center border border-amber-200">
+            <WrenchIcon className="w-4.5 h-4.5" />
+          </div>
+          <span className="text-xs font-semibold text-amber-600 uppercase tracking-widest">Facilitator Tools</span>
+        </div>
+        <h1 className="text-2xl font-display font-bold text-gray-900 leading-tight mb-3">
+          Your CRM for the<br />circular textile transition.
+        </h1>
+        <p className="text-sm text-gray-600 leading-relaxed max-w-md">
+          As a community manager, you need to see the big picture and act on the
+          details. Fabrix gives you everything to track, support, and connect
+          the organizations in your territory.
+        </p>
+      </div>
+
+      {/* Member tracking */}
+      <div className="px-8 py-8">
+        <ToolSection
+          title="Member tracking"
+          description="A complete view of every organization in your community."
+          features={[
+            'Member directory with search, filters by type, and card/list views',
+            'Detailed profiles with private facilitator notes',
+            'Organization data — employees, turnover, NACE codes, specialties',
+            'Needs & opportunities tracking to understand what members are looking for',
+          ]}
+        />
+      </div>
+
+      {/* Assessment oversight */}
+      <div className="px-8 py-8 border-t border-border">
+        <ToolSection
+          title="Assessment oversight"
+          description="Monitor every member's sustainability journey."
+          features={[
+            'See all 7 Impact Compass scores for each member at a glance',
+            'Track assessment status — not started, in progress, or completed',
+            'Read detailed answers and identify priority improvement areas',
+            'Compare members and spot patterns across your community',
+          ]}
+        />
+      </div>
+
+      {/* Matchmaking */}
+      <div className="px-8 py-8 border-t border-border">
+        <ToolSection
+          title="Smart matchmaking"
+          description="Auto-generate connections between organizations."
+          features={[
+            'Matching engine based on proximity, capabilities, and roles',
+            'Scored matches (0–100) with detailed breakdown',
+            'Relation types: input/output, services, R&D, energy, shareholder',
+            'Bulk regeneration of matches for your entire community',
+          ]}
+        />
+      </div>
+
+      {/* Community management */}
+      <div className="px-8 py-8 border-t border-border">
+        <ToolSection
+          title="Community management"
+          description="Activate your ecosystem with events, challenges, and spaces."
+          features={[
+            'Create and manage events — workshops, meetups, webinars',
+            'Launch challenges to drive innovation and connect members',
+            'Review challenge applications, accept, reject, and select winners',
+            'Manage discussion spaces for community conversations',
+            'Define your territory with geographic center and radius',
+          ]}
+        />
+      </div>
+
+      {/* Admin */}
+      <div className="px-8 py-8 border-t border-border bg-gray-50/50">
+        <ToolSection
+          title="Administration"
+          description="Manage access, invitations, and your facilitator team."
+          features={[
+            'Add and remove community members',
+            'Invite new admins and manage facilitator roles',
+            'Review join requests from organizations',
+            'Send and track organization invitations',
+          ]}
+        />
+      </div>
+
+      {/* CTA */}
+      <div className="px-8 py-8 border-t border-border text-center">
+        <p className="text-sm text-gray-600 mb-4">
+          Ready to manage your textile ecosystem?
+        </p>
+        <CTA to="/register-facilitator">Register as facilitator <ArrowRightIcon /></CTA>
+      </div>
+    </div>
+  );
+}
+
+function ToolSection({
+  title,
+  description,
+  features,
+}: {
+  title: string;
+  description: string;
+  features: string[];
+}) {
+  return (
+    <div>
+      <h3 className="text-base font-semibold text-gray-900 mb-1">{title}</h3>
+      <p className="text-sm text-gray-500 mb-4">{description}</p>
+      <div className="space-y-2.5">
+        {features.map((f, i) => (
+          <BenefitRow key={i} text={f} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Guide: Getting Started ─────────────────────────────────────────────
 
 function GettingStartedContent() {
   return (
     <div>
-      <SectionTitle>Welcome to Fabrix</SectionTitle>
+      <SectionTitle>Getting started</SectionTitle>
       <P>
-        Fabrix is a platform for promoting and optimizing circular textile in
-        Europe. It connects organizations, facilitators, and researchers to build
-        a more sustainable textile ecosystem.
+        Welcome to Fabrix! Here&apos;s how to get started on the platform.
       </P>
 
-      <Feature title="Who is Fabrix for?">
-        <ul className="list-disc list-inside space-y-1.5 mt-1">
-          <li>
-            <strong>Organizations</strong> (SMEs) — designers, producers,
-            collectors, recyclers. Find partners, access shared resources, and
-            improve your circularity practices.
-          </li>
-          <li>
-            <strong>Facilitators</strong> — city-level managers of the circular
-            textile ecosystem. Track organizations, advise, matchmake, and manage
-            shared spaces.
-          </li>
-          <li>
-            <strong>Researchers</strong> — use aggregated data to produce
-            insights for facilitators and policy makers.
-          </li>
-        </ul>
+      <Feature title="1. Create your account">
+        Register as an <strong>organization</strong> (SME, brand, recycler...),
+        a <strong>facilitator</strong> (community manager), or a <strong>basic user</strong>.
+        If your organization is already in the directory, you can claim it during registration.
       </Feature>
 
-      <Feature title="First steps">
-        <ol className="list-decimal list-inside space-y-1.5 mt-1">
-          <li>
-            <strong>Create an account</strong> and register your organization, or
-            claim an existing one from the directory.
-          </li>
-          <li>
-            <strong>Complete your profile</strong> — add your address, type of
-            activity, and description so others can find you.
-          </li>
-          <li>
-            <strong>Explore the directory and map</strong> — discover other
-            organizations in the circular textile space.
-          </li>
-          <li>
-            <strong>Join a community</strong> — participate in events,
-            challenges, and find partners through matchmaking.
-          </li>
-        </ol>
+      <Feature title="2. Complete your profile">
+        Add your address, activity type, description, and photos. A complete
+        profile helps other organizations and facilitators find and connect with you.
       </Feature>
 
-      <Feature title="Two ways to navigate">
-        <ul className="list-disc list-inside space-y-1.5 mt-1">
-          <li>
-            <strong>Explorer</strong> — browse the directory, map, and public
-            profiles. Available from the sidebar on the left.
-          </li>
-          <li>
-            <strong>Organization view</strong> — manage your own organization.
-            Switch between your organizations using the dropdown in the top-left
-            corner.
-          </li>
-        </ul>
-      </Feature>
-    </div>
-  );
-}
-
-function HomeContent() {
-  return (
-    <div>
-      <SectionTitle>Home</SectionTitle>
-      <P>
-        The home page adapts to whether you are signed in or not.
-      </P>
-
-      <Screenshot src="fabrix-home.png" alt="Fabrix home page" />
-
-      <Feature title="Not signed in">
-        You see a landing page inviting you to create an account or sign in.
-        This is the entry point for new users discovering Fabrix.
+      <Feature title="3. Explore the ecosystem">
+        Browse the directory and map to discover organizations in the circular
+        textile space. Use the marketplace to find materials, services, and partners.
       </Feature>
 
-      <Feature title="Signed in">
-        You see your communities, pending actions, and all the organizations
-        linked to your account displayed as cards. Each card shows the
-        organization name, type, number of relations, assessment progress, and
-        communities joined. Click on any card to jump straight into that
-        organization&apos;s dashboard.
+      <Feature title="4. Join a community">
+        Request to join a community managed by a local facilitator. Access events,
+        challenges, matchmaking, and discussion spaces.
       </Feature>
 
-      <Feature title="Pending actions">
-        The home page highlights any actions waiting for your attention — join
-        requests to review, pending invitations, and more.
+      <Feature title="5. Take the Impact Compass">
+        Complete the 7 sustainability assessments to understand your strengths,
+        get recommendations, and earn the Impact Compass label.
       </Feature>
 
       <Tip>
-        If you don&apos;t have any organization yet, you&apos;ll see a prompt to
-        add one — either by creating a new organization or claiming an existing
-        one from the directory.
+        Use the sidebar on the left to navigate between your organizations,
+        communities, and the global explorer.
       </Tip>
     </div>
   );
 }
 
-function DirectoryContent() {
+// ─── Guide: Directory & Map ─────────────────────────────────────────────
+
+function DirectoryMapContent() {
   return (
     <div>
-      <SectionTitle>Directory</SectionTitle>
+      <SectionTitle>Directory & Map</SectionTitle>
       <P>
-        The directory is the central place to discover all organizations
-        registered on Fabrix. It is accessible from the Explorer sidebar.
+        The directory and interactive map are the central discovery tools on Fabrix.
       </P>
 
-      <Screenshot src="fabrix-directory.png" alt="Organization directory" />
-
-      <Feature title="Search">
-        Use the search bar at the top to find organizations by name. Results
-        update as you type.
+      <Feature title="Directory">
+        Browse all organizations with search, pagination, and filters. Toggle between
+        list and card views. Filter by organization type, claimed status, country,
+        or location radius.
       </Feature>
 
-      <Feature title="List and card views">
-        Toggle between a compact list view and a visual card view using the
-        icons next to the search bar. Both views show the organization name,
-        type badge, address, and number of relations.
-      </Feature>
-
-      <Feature title="Pagination">
-        Results are paginated (20 per page). Use the Previous / Next buttons at
-        the bottom to browse through all organizations.
+      <Feature title="Interactive map">
+        See every organization in Europe on a color-coded map. Each organization type
+        has a distinct color. Click markers to view profiles. Use the legend to toggle
+        types on and off.
       </Feature>
 
       <Feature title="Organization profiles">
-        Click on any organization to view its public profile. From there you can
-        see their description, location, communities, related organizations, and
-        contact information.
+        Click any organization to see their public profile — description, location,
+        communities, relations, and contact information. Use the Message button to
+        start a conversation.
       </Feature>
 
-      <Feature title="Add an organization">
-        Click the &ldquo;New Organization&rdquo; button to start the creation
-        wizard. You can either create a brand new organization or claim an
-        existing unclaimed one.
-      </Feature>
-    </div>
-  );
-}
-
-function MapContent() {
-  return (
-    <div>
-      <SectionTitle>Interactive Map</SectionTitle>
-      <P>
-        The map gives you a geographic view of the entire Fabrix ecosystem. Every
-        organization with a location is displayed as a colored marker.
-      </P>
-
-      <Feature title="Color-coded markers">
-        Each organization type has a different color. Use the legend on the map
-        to identify which color corresponds to which type (producers, recyclers,
-        brands, etc.).
-      </Feature>
-
-      <Feature title="Filtering">
-        Use the legend to toggle organization types on and off. This helps you
-        focus on the types of organizations you are looking for.
-      </Feature>
-
-      <Feature title="Navigation">
-        Zoom in and out, pan the map, and click on markers to see organization
-        details.
+      <Feature title="Value chain view">
+        Visualize how organizations distribute across the circular value chain —
+        materials, capacities, services, products, and distribution.
       </Feature>
     </div>
   );
 }
 
-function NotificationsContent() {
+// ─── Guide: Organizations ───────────────────────────────────────────────
+
+function OrganizationsContent() {
   return (
     <div>
-      <SectionTitle>Notifications</SectionTitle>
+      <SectionTitle>Managing your organization</SectionTitle>
       <P>
-        Stay informed about activity related to your organizations and
-        communities.
+        Your organization is your home on Fabrix. Manage your profile, relations,
+        assessments, and team from the organization sidebar.
       </P>
 
-      <Screenshot src="fabrix-notifications.png" alt="Notifications page" />
-
-      <Feature title="Notification bell">
-        The bell icon in the top-right corner shows your unread count. Click it
-        to preview the latest notifications without leaving your current page.
+      <Feature title="Dashboard">
+        Overview of your activity — relations, completed assessments, and communities.
+        Your communities are listed in the sidebar for quick access.
       </Feature>
 
-      <Feature title="Full notifications page">
-        Browse all your notifications in one place. Mark individual notifications
-        as read, or use &ldquo;Mark all as read&rdquo; to clear everything.
+      <Feature title="Profile">
+        Multi-section management: Informations, Specialties, Data (employees, turnover),
+        Sustainability practices, Needs & Opportunities, and Photos. A complete profile
+        makes it easier for partners and facilitators to find you.
       </Feature>
 
-      <Feature title="Types of notifications">
-        <ul className="list-disc list-inside mt-1 space-y-1">
-          <li>Join requests for your organization or community</li>
-          <li>New community events and challenges</li>
-          <li>Application status updates on challenges</li>
-          <li>New members joining your community</li>
-        </ul>
-      </Feature>
-    </div>
-  );
-}
-
-function PersonalMessagesContent() {
-  return (
-    <div>
-      <SectionTitle>Personal Messages</SectionTitle>
-      <P>
-        Personal messages let you have private, one-on-one conversations with
-        other users on Fabrix — outside of any organization context.
-      </P>
-
-      <Feature title="Accessing your personal messages">
-        Click the envelope icon in the top navigation bar. A dropdown appears
-        with two tabs: <strong>Personal</strong> and <strong>Organization</strong>.
-        The Personal tab shows your direct user-to-user conversations. Click
-        &ldquo;See all personal messages&rdquo; to open the full messaging page,
-        or click any conversation to jump directly into it.
+      <Feature title="Relations">
+        View your supply chain connections on an interactive map and searchable list.
+        Relations represent partnerships — suppliers, clients, collaborators.
       </Feature>
 
-      <Feature title="Messages page">
-        The personal messages page is accessible from the Explorer sidebar under
-        &ldquo;Messages&rdquo;. It displays a conversation list on the left and
-        the selected conversation on the right.
-        <ul className="list-disc list-inside mt-1.5 space-y-1">
-          <li>
-            <strong>Conversation list</strong> — shows the name of the other
-            person, a preview of the last message, and a timestamp. Unread
-            conversations are highlighted with a dot.
-          </li>
-          <li>
-            <strong>Conversation view</strong> — displays the full message
-            history. Your messages appear on the right (purple), the other
-            person&apos;s on the left (gray).
-          </li>
-        </ul>
+      <Feature title="Impact Compass">
+        Take all 7 assessments, track your scores over time, and view detailed
+        recommendations. See the Impact Compass section for full details.
       </Feature>
 
-      <Feature title="Sending a message">
-        Type your message in the input area at the bottom of the conversation
-        and press <strong>Enter</strong> to send (or click the Send button).
-        Use <strong>Shift + Enter</strong> to insert a new line without sending.
+      <Feature title="Listings">
+        Manage your marketplace listings — materials, services, capacities, and
+        products you offer or need.
       </Feature>
 
-      <Feature title="Unread badge">
-        The envelope icon in the navigation bar shows a red badge with the total
-        number of unread conversations (personal + organization). Inside the
-        dropdown, each tab shows its own unread count so you can quickly see
-        where new messages are.
+      <Feature title="Settings & Members">
+        Manage team members, roles (Owner/Member), and invitations. Review join
+        requests and control who has access to your organization.
       </Feature>
 
       <Tip>
-        Personal messages are separate from organization messages. If you need
-        to contact an organization (not a specific person), use the organization
-        messaging feature instead.
+        Switch between your organizations at any time using the dropdown in the
+        top-left corner.
       </Tip>
     </div>
   );
 }
 
-function OrgMessagesContent() {
+// ─── Guide: Communities ─────────────────────────────────────────────────
+
+function CommunitiesContent() {
   return (
     <div>
-      <SectionTitle>Organization Messages</SectionTitle>
+      <SectionTitle>Communities</SectionTitle>
       <P>
-        Organization messages allow users to contact an organization directly.
-        All members of the organization can see and reply to these conversations
-        on behalf of the organization.
+        Communities are groups of organizations managed by facilitators, focused
+        on a geographic area or thematic topic in circular textile.
       </P>
 
-      <Feature title="How it works">
-        When someone contacts your organization, a conversation is created
-        between that user and your organization. Every member of the
-        organization has access to the conversation and can reply. Replies are
-        sent as the organization, not as the individual member.
+      <Feature title="Joining a community">
+        Browse public communities from the explorer. Request to join — facilitators
+        will review your application. Once accepted, access all community features
+        through your organization sidebar.
       </Feature>
 
-      <Feature title="Accessing organization messages">
-        There are two ways to access your organization&apos;s messages:
-        <ul className="list-disc list-inside mt-1.5 space-y-1">
-          <li>
-            Click the envelope icon in the navigation bar and select the
-            <strong> Organization</strong> tab. Click a conversation or
-            &ldquo;See all organization messages&rdquo;.
-          </li>
-          <li>
-            From your organization sidebar, click <strong>Messages</strong>.
-            This opens the full organization messaging page.
-          </li>
-        </ul>
+      <Feature title="Overview">
+        See a map of members, recent events, active challenges, and latest
+        discussions at a glance.
       </Feature>
 
-      <Feature title="Organization messages page">
-        The layout is the same as personal messages: a conversation list on the
-        left and the selected conversation on the right. The difference is that
-        only conversations involving your organization are shown, and your
-        replies are sent as the organization.
+      <Feature title="Members">
+        Browse community members with search and filters. Click a member to see
+        their full profile in the community context.
       </Feature>
 
-      <Feature title="Contacting an organization">
-        To start a conversation with an organization, visit their public profile
-        in the directory and click the <strong>Message</strong> button. This
-        opens a conversation in your personal messages inbox, addressed to
-        that organization.
+      <Feature title="Events">
+        View upcoming and past events. RSVP with Going, Maybe, or Not Going.
+        Community admins and event creators can manage events.
+      </Feature>
+
+      <Feature title="Challenges">
+        Challenges are calls for participation. Browse active challenges, submit
+        applications, and track outcomes. Any member can create a challenge.
+      </Feature>
+
+      <Feature title="Matchmaking">
+        Get matched with complementary organizations based on proximity,
+        capabilities, and roles. Facilitators can generate matches for the
+        entire community.
+      </Feature>
+    </div>
+  );
+}
+
+// ─── Guide: Messaging ───────────────────────────────────────────────────
+
+function MessagingContent() {
+  return (
+    <div>
+      <SectionTitle>Messaging</SectionTitle>
+      <P>
+        Fabrix has two types of messaging: personal (user-to-user) and
+        organizational (user-to-organization).
+      </P>
+
+      <Feature title="Personal messages">
+        Direct conversations between users. Access from the envelope icon in the
+        top navigation or the Messages link in the explorer sidebar.
+      </Feature>
+
+      <Feature title="Organization messages">
+        Contact an organization from their profile using the Message button. All
+        organization members can see and reply to these conversations. Access from
+        the Messages link in the organization sidebar.
       </Feature>
 
       <Feature title="Notifications">
-        When a new message is received in an organization conversation, all
-        members of the organization are notified. Click the notification to
-        jump directly to the conversation.
+        Stay informed with the notification bell — join requests, new events,
+        challenge updates, and new community members. Mark as read individually
+        or all at once.
       </Feature>
 
       <Tip>
-        Organization messages are ideal for business inquiries, partnership
-        requests, or any communication that should be visible to the whole team
-        — not just one person.
+        Personal messages are for direct conversations. Organization messages are
+        for business inquiries visible to the whole team.
       </Tip>
     </div>
   );
 }
 
-function OrgDashboardContent() {
-  return (
-    <div>
-      <SectionTitle>Dashboard</SectionTitle>
-      <P>
-        The dashboard is your organization&apos;s home page. It gives you a
-        quick overview of your activity on Fabrix.
-      </P>
-
-      <Screenshot src="fabrix-dashboard.png" alt="Organization dashboard" />
-
-      <Feature title="Overview cards">
-        Three cards summarize your organization&apos;s engagement:
-        <ul className="list-disc list-inside mt-1.5 space-y-1">
-          <li>
-            <strong>Relations</strong> — how many organizations you are connected
-            to in your supply chain network.
-          </li>
-          <li>
-            <strong>Assessments</strong> — how many sustainability assessments
-            you have completed out of the total available.
-          </li>
-          <li>
-            <strong>Communities</strong> — how many communities your organization
-            is part of.
-          </li>
-        </ul>
-      </Feature>
-
-      <Feature title="Community shortcuts">
-        Your communities are listed in the sidebar for quick access. Click any
-        community to jump directly into it.
-      </Feature>
-
-      <Tip>
-        Use the dropdown in the top-left corner to switch between your
-        organizations at any time.
-      </Tip>
-    </div>
-  );
-}
-
-function OrgProfileContent() {
-  return (
-    <div>
-      <SectionTitle>Profile</SectionTitle>
-      <P>
-        Your organization&apos;s profile is what other users see when they
-        discover you in the directory or on the map.
-      </P>
-
-      <Screenshot src="fabrix-profile.png" alt="Organization profile editing" />
-
-      <Feature title="Multi-section management">
-        The profile is organized into sections:
-        <ul className="list-disc list-inside mt-1 space-y-1">
-          <li><strong>Informations</strong> — name, type, address, description, contact</li>
-          <li><strong>Data</strong> — number of employees, annual turnover</li>
-          <li><strong>Photos</strong> — image gallery with upload to cloud storage</li>
-          <li><strong>Products</strong> — your product catalog</li>
-          <li><strong>Services & Skills</strong> — what you offer</li>
-        </ul>
-      </Feature>
-
-      <Feature title="Address verification">
-        Your address is verified with Google Maps autocomplete. The selected
-        location determines your position on the interactive map.
-      </Feature>
-
-      <Feature title="Public profile">
-        Click &ldquo;View public profile&rdquo; to see how other users see your
-        organization — with cover image, description, communities, and related
-        organizations.
-      </Feature>
-
-      <Tip>
-        A complete profile makes it easier for other organizations and
-        facilitators to find and connect with you.
-      </Tip>
-    </div>
-  );
-}
-
-function OrgRelationsContent() {
-  return (
-    <div>
-      <SectionTitle>Relations</SectionTitle>
-      <P>
-        Relations represent your supply chain connections — the organizations you
-        work with as partners, suppliers, or clients.
-      </P>
-
-      <Feature title="Interactive map">
-        Your relations are displayed on a map centered on your organization&apos;s
-        location. See where your partners are located at a glance.
-      </Feature>
-
-      <Feature title="Searchable list">
-        Below the map, browse all your relations in a searchable, paginated list.
-        See each partner&apos;s name, type, and location.
-      </Feature>
-
-      <Feature title="For facilitators">
-        Track connections between organizations in your territory. Monitor how
-        the local supply chain network is growing and identify gaps.
-      </Feature>
-    </div>
-  );
-}
-
-function OrgAssessmentsContent() {
-  return (
-    <div>
-      <SectionTitle>Impact Compass</SectionTitle>
-      <P>
-        The Impact Compass is Fabrix&apos;s assessment system. It helps you
-        evaluate and improve your circularity, eco-design, and social
-        responsibility practices.
-      </P>
-
-      <Screenshot src="fabrix-assessments.png" alt="Impact Compass assessments" />
-
-      <Feature title="Assessment overview">
-        See all available assessment forms at a glance, with a radar chart
-        showing your overall scores across all dimensions. Completed assessments
-        display score cards with your results.
-      </Feature>
-
-      <Feature title="Assessment wizard">
-        Answer questions one at a time in a guided wizard. Your progress is
-        saved automatically so you can pause and come back later. Some questions
-        have conditional follow-ups based on your answers.
-      </Feature>
-
-      <Feature title="Results and history">
-        After completing an assessment, view a detailed breakdown with score
-        circles, section-by-section analysis, and recommendations. You can also
-        see your history of past submissions to track your progress over time.
-      </Feature>
-
-      <Tip>
-        Completing all assessments gives you a comprehensive view of your
-        circularity practices and helps facilitators understand how to support you.
-      </Tip>
-    </div>
-  );
-}
-
-function OrgSettingsContent() {
-  return (
-    <div>
-      <SectionTitle>Settings & Members</SectionTitle>
-      <P>
-        Manage who has access to your organization on Fabrix.
-      </P>
-
-      <Screenshot src="fabrix-settings.png" alt="Organization settings and members" />
-
-      <Feature title="Members">
-        View all members of your organization with their name, email, and role.
-        There are two roles:
-        <ul className="list-disc list-inside mt-1.5 space-y-1">
-          <li>
-            <strong>Owner</strong> — full access. Can manage members, edit the
-            profile, and change settings.
-          </li>
-          <li>
-            <strong>Member</strong> — can view and participate, but cannot manage
-            other members.
-          </li>
-        </ul>
-      </Feature>
-
-      <Feature title="Join requests">
-        When someone requests to join your organization, you can review and
-        accept or decline from this page.
-      </Feature>
-
-      <Feature title="Invite people">
-        Owners can invite new members by email. Choose the role (Member or Owner)
-        when sending the invitation. Pending invitations are displayed and can be
-        cancelled before they are accepted.
-      </Feature>
-
-      <Feature title="Change roles">
-        Owners can promote a member to owner, or change an owner to member. The
-        platform will prevent you from removing the last owner.
-      </Feature>
-    </div>
-  );
-}
-
-function CommunityOverviewContent() {
-  return (
-    <div>
-      <SectionTitle>Community Overview</SectionTitle>
-      <P>
-        A community is a group of organizations, managed by facilitators, who
-        share a common goal — usually around a geographic area or a thematic
-        focus in circular textile.
-      </P>
-
-      <Screenshot src="fabrix-communities.png" alt="Communities explorer" />
-
-      <Feature title="What communities offer">
-        <ul className="list-disc list-inside mt-1 space-y-1">
-          <li>A shared space to discover and connect with other members</li>
-          <li>An interactive map of all community members</li>
-          <li>Events organized by facilitators (workshops, meetups, webinars)</li>
-          <li>Challenges to find partners and drive innovation</li>
-          <li>Discussion spaces for community conversations</li>
-          <li>Matchmaking to connect with the right organizations</li>
-        </ul>
-      </Feature>
-
-      <Feature title="Community overview page">
-        When you enter a community, you see an overview with a map of all
-        members, recent events, active challenges, and the latest discussions —
-        everything at a glance.
-      </Feature>
-
-      <Feature title="Accessing a community">
-        Communities are always accessed through your organization. Use the
-        &ldquo;Communities&rdquo; section in your organization sidebar to see
-        which communities you belong to, then click to enter.
-      </Feature>
-
-      <Feature title="Browse and join">
-        Explore public communities from the Communities page in the Explorer.
-        Request to join a community — admins will review your request.
-      </Feature>
-    </div>
-  );
-}
-
-function CommunityMembersContent() {
-  return (
-    <div>
-      <SectionTitle>Community Members</SectionTitle>
-      <P>
-        Browse all organizations that are part of this community.
-      </P>
-
-      <Screenshot src="fabrix-community-members.png" alt="Community members directory" />
-
-      <Feature title="Member directory">
-        Search and browse all community members. Toggle between list and card
-        views, and use pagination to navigate through large communities.
-      </Feature>
-
-      <Feature title="Member detail">
-        Click on any member to view their full profile within the community
-        context — cover image, description, communities, and related
-        organizations.
-      </Feature>
-
-      <Feature title="For facilitators">
-        Community admins see a sticky sidebar on member detail pages with
-        editable notes, member info, and management actions. Add organizations
-        to the community via a search modal, or remove members from their
-        detail page.
-      </Feature>
-    </div>
-  );
-}
-
-function CommunityEventsContent() {
-  return (
-    <div>
-      <SectionTitle>Events</SectionTitle>
-      <P>
-        Community events bring members together — workshops, meetups, webinars,
-        and more.
-      </P>
-
-      <Screenshot src="fabrix-community-events.png" alt="Community events" />
-
-      <Feature title="Event list">
-        Browse upcoming and past events. Each event card shows the title, date,
-        time, and location (or &ldquo;Online&rdquo; for virtual events).
-      </Feature>
-
-      <Feature title="RSVP">
-        Respond to events with Going, Maybe, or Not Going. See the list of
-        participants who have RSVP&apos;d.
-      </Feature>
-
-      <Feature title="Event management">
-        Community admins can create, edit, and delete events. Set the title,
-        description, date, location, and optionally upload an image.
-      </Feature>
-    </div>
-  );
-}
-
-function CommunityChallengesContent() {
-  return (
-    <div>
-      <SectionTitle>Challenges</SectionTitle>
-      <P>
-        Challenges are calls for participation where any community member can
-        post a challenge, review applications, and select winners.
-      </P>
-
-      <Screenshot src="fabrix-community-challenges.png" alt="Community challenges" />
-
-      <Feature title="Browse challenges">
-        See all active and completed challenges in your community. Each
-        challenge card shows the title, status, end date, and number of
-        applications received.
-      </Feature>
-
-      <Feature title="Create a challenge">
-        Any community member can create a challenge. Set the title, description,
-        number of winners, dates, and optionally upload an image. Challenges
-        start as a draft and can be activated when ready.
-      </Feature>
-
-      <Feature title="Apply to challenges">
-        Browse active challenges and submit your application with a note
-        explaining why your organization is a good fit. Optionally attach a
-        file if the challenge requires it.
-      </Feature>
-
-      <Feature title="Review applications">
-        Challenge owners and community admins can review applications — accept,
-        reject, or select winners. When all winner spots are filled, the
-        challenge is automatically completed.
-      </Feature>
-
-      <Tip>
-        Challenges are a great way to find partners for specific needs. Whether
-        you&apos;re looking for a recycling partner, a design collaborator, or a
-        supply chain connection — post a challenge and let the community respond.
-      </Tip>
-    </div>
-  );
-}
-
-function CommunityMatchmakingContent() {
-  return (
-    <div>
-      <SectionTitle>Matchmaking</SectionTitle>
-      <P>
-        Matchmaking helps you find the right partners based on your profile,
-        capabilities, and needs.
-      </P>
-
-      <Feature title="For organizations">
-        Get matched with organizations that complement your activity. Whether you
-        are looking for a supplier, a recycler, or a design partner — Fabrix
-        helps you find the right fit.
-      </Feature>
-
-      <Feature title="For facilitators">
-        Facilitate connections between organizations in your community. Help them
-        find matches they might not have discovered on their own.
-      </Feature>
-
-      <ComingSoon />
-    </div>
-  );
-}
+// ─── Content map ────────────────────────────────────────────────────────
 
 const CONTENT: Record<Section, () => React.ReactNode> = {
-  'getting-started': GettingStartedContent,
   home: HomeContent,
-  directory: DirectoryContent,
-  map: MapContent,
-  notifications: NotificationsContent,
-  'personal-messages': PersonalMessagesContent,
-  'org-messages': OrgMessagesContent,
-  'org-dashboard': OrgDashboardContent,
-  'org-profile': OrgProfileContent,
-  'org-relations': OrgRelationsContent,
-  'org-assessments': OrgAssessmentsContent,
-  'org-settings': OrgSettingsContent,
-  'community-overview': CommunityOverviewContent,
-  'community-members': CommunityMembersContent,
-  'community-events': CommunityEventsContent,
-  'community-challenges': CommunityChallengesContent,
-  'community-matchmaking': CommunityMatchmakingContent,
+  'impact-compass': ImpactCompassContent,
+  'community-ecosystem': CommunityEcosystemContent,
+  'facilitator-tools': FacilitatorToolsContent,
+  'getting-started': GettingStartedContent,
+  'directory-map': DirectoryMapContent,
+  organizations: OrganizationsContent,
+  communities: CommunitiesContent,
+  messaging: MessagingContent,
 };
 
-// ─── Page ─────────────────────────────────────────────────────────────────
+// ─── Page ───────────────────────────────────────────────────────────────
 
 export function DocsPage() {
-  const [active, setActive] = useState<Section>('getting-started');
+  const [active, setActive] = useState<Section>('home');
   const Content = CONTENT[active];
 
   return (
