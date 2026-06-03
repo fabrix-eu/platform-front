@@ -61,10 +61,10 @@ export function RootLayout() {
           )}
         </div>
       </header>
-      <main className="flex min-h-[calc(100vh-56px)]">
+      <main className="flex h-[calc(100vh-56px)]">
         {showNav && <AppRail />}
         {showNav && <ContextualSidebar />}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 h-full overflow-auto flex flex-col">
           <Outlet />
         </div>
       </main>

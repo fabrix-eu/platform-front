@@ -51,10 +51,13 @@ function NavItems({ items, pathname }: { items: SidebarItem[]; pathname: string 
   );
 }
 
-function SectionLabel({ label }: { label: string }) {
+function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
-    <div className="px-3 mb-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-      {label}
+    <div className="px-3 mb-3 pb-3 border-b border-border">
+      <h2 className="text-sm font-display font-bold text-gray-900 truncate">{title}</h2>
+      {subtitle && (
+        <p className="text-[10px] text-gray-400 mt-0.5 truncate">{subtitle}</p>
+      )}
     </div>
   );
 }
@@ -69,7 +72,7 @@ function PersonalSidebar({ pathname }: { pathname: string }) {
 
   return (
     <>
-      <SectionLabel label="Personal" />
+      <SectionTitle title="Personal" />
       <NavItems items={items} pathname={pathname} />
     </>
   );
@@ -129,7 +132,7 @@ function OrgSidebar({
 
   return (
     <>
-      <SectionLabel label={userOrg?.organization_name ?? 'Organization'} />
+      <SectionTitle title={userOrg?.organization_name ?? 'Organization'} subtitle="Organization" />
       <NavItems items={items} pathname={pathname} />
     </>
   );
@@ -172,7 +175,7 @@ function CommunitySidebar({
 
   return (
     <>
-      <SectionLabel label={communityName} />
+      <SectionTitle title={communityName} subtitle="Community" />
       <NavItems items={items} pathname={pathname} />
       {adminItems.length > 0 && (
         <div className="mt-3 pt-3 border-t border-border">
@@ -195,7 +198,7 @@ function ExploreSidebar({ pathname }: { pathname: string }) {
 
   return (
     <>
-      <SectionLabel label="Explore" />
+      <SectionTitle title="Explore" />
       <NavItems items={items} pathname={pathname} />
     </>
   );

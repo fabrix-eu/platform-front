@@ -192,6 +192,19 @@ export function OrgSwitcher() {
               })}
             </div>
             <div className="border-t border-border mt-1 pt-1">
+              {currentOrg && (
+                <Link
+                  to="/$orgSlug/dashboard"
+                  params={{ orgSlug: currentOrg.organization_slug }}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
+                  </svg>
+                  Manage organization
+                </Link>
+              )}
               <Link
                 to="/organizations/new"
                 onClick={() => setOpen(false)}

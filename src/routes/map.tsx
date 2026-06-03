@@ -15,7 +15,7 @@ export function MapPage() {
   });
 
   return (
-    <div className="relative" style={{ height: 'calc(100vh - 57px)' }}>
+    <div className="relative flex-1 min-h-0">
       {query.isLoading && (
         <div className="flex items-center justify-center h-full text-muted-foreground">
           Loading map...

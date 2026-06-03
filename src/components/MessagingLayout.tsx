@@ -87,7 +87,7 @@ export function MessagingLayout({ orgId, replyAsOrgId, selectedId, newConversati
   }
 
   return (
-    <div className="flex h-[calc(100vh-56px)]">
+    <div className="flex flex-1 min-h-0">
       {/* Sidebar */}
       <div className="w-80 border-r border-border bg-white flex flex-col flex-shrink-0">
         <div className="px-4 py-3 border-b border-border">
