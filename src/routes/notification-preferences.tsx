@@ -36,7 +36,7 @@ export function NotificationPreferencesPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-10 px-4">
+    <div className="max-w-3xl mx-auto py-10 px-4">
       <div className="flex items-center gap-4 mb-8">
         <Link to="/settings" className="text-gray-400 hover:text-gray-600">
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">

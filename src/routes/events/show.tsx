@@ -136,7 +136,7 @@ export function EventDetailPage() {
 
   if (eventQuery.isLoading) {
     return (
-      <div className="max-w-3xl mx-auto p-6">
+      <div className="max-w-4xl mx-auto p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-4 bg-gray-200 rounded w-20" />
           <div className="h-48 bg-gray-200 rounded-xl" />
@@ -149,7 +149,7 @@ export function EventDetailPage() {
 
   if (eventQuery.error || !event) {
     return (
-      <div className="max-w-3xl mx-auto p-6">
+      <div className="max-w-4xl mx-auto p-6">
         <p className="text-red-600">Event not found</p>
         <button
           onClick={() => navigate({ to: '/events' })}
@@ -162,7 +162,7 @@ export function EventDetailPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-6 pb-12">
+    <div className="max-w-4xl mx-auto p-6 pb-12">
       {/* Back link */}
       <Link
         to="/events"

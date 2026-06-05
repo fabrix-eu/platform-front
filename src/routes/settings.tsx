@@ -16,7 +16,7 @@ export function SettingsPage() {
   if (!user) return null;
 
   return (
-    <div className="max-w-2xl mx-auto py-10 px-4">
+    <div className="max-w-3xl mx-auto py-10 px-4">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
         <Link

@@ -57,7 +57,7 @@ export function CommunityMarketplaceDetailPage() {
 
   if (listingQuery.isLoading) {
     return (
-      <div className="max-w-3xl mx-auto p-6">
+      <div className="max-w-4xl mx-auto p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-6 bg-gray-200 rounded w-1/3" />
           <div className="aspect-[16/10] bg-gray-200 rounded-lg" />
@@ -69,7 +69,7 @@ export function CommunityMarketplaceDetailPage() {
 
   if (!listing) {
     return (
-      <div className="max-w-3xl mx-auto p-6 text-center space-y-3">
+      <div className="max-w-4xl mx-auto p-6 text-center space-y-3">
         <p className="text-destructive">Listing not found</p>
         <Link
           to="/$orgSlug/communities/$communitySlug/marketplace"
@@ -103,7 +103,7 @@ export function CommunityMarketplaceDetailPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-6 pb-12 space-y-6">
+    <div className="max-w-4xl mx-auto p-6 pb-12 space-y-6">
       <Link
         to="/$orgSlug/communities/$communitySlug/marketplace"
         params={{ orgSlug, communitySlug }}

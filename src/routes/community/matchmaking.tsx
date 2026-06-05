@@ -8,7 +8,7 @@ export function CommunityMatchmakingPage() {
   const info = useFeatureInfo('matchmaking');
 
   return (
-    <div className="p-6 max-w-3xl mx-auto space-y-4">
+    <div className="p-6 max-w-4xl mx-auto space-y-4">
       <div className="flex items-center gap-2">
         <h2 className="text-lg font-display font-bold text-gray-900">Matchmaking</h2>
         <FeatureInfoTrigger info={info} />
