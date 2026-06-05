@@ -89,6 +89,9 @@ import { MarketplaceEditPage } from '../routes/marketplace/edit';
 import { ValueChainPage } from '../routes/value-chain';
 import { CommunityMarketplacePage } from '../routes/community/marketplace';
 import { CommunityMarketplaceDetailPage } from '../routes/community/marketplace-detail';
+import { CommunitySpacesPage } from '../routes/community/spaces';
+import { CommunitySpaceDetailPage } from '../routes/community/space-detail';
+import { CommunitySpacePostPage } from '../routes/community/space-post';
 import { isAuthenticated, getMe, type User } from './auth';
 import { queryClient } from './queryClient';
 
@@ -866,6 +869,27 @@ const communityMarketplaceDetailRoute = createRoute({
   component: CommunityMarketplaceDetailPage,
 });
 
+const communitySpacesRoute = createRoute({
+  getParentRoute: () => communityRoute,
+  path: '/spaces',
+  component: CommunitySpacesPage,
+});
+
+const communitySpaceDetailRoute = createRoute({
+  getParentRoute: () => communityRoute,
+  path: '/spaces/$spaceId',
+  validateSearch: z.object({
+    page: z.number().optional(),
+  }),
+  component: CommunitySpaceDetailPage,
+});
+
+const communitySpacePostRoute = createRoute({
+  getParentRoute: () => communityRoute,
+  path: '/spaces/$spaceId/posts/$postId',
+  component: CommunitySpacePostPage,
+});
+
 // ── Admin ────────────────────────────────────────────────────
 
 const adminRoute = createRoute({
@@ -1019,6 +1043,9 @@ const routeTree = rootRoute.addChildren([
       communitySettingsRoute,
       communityMarketplaceRoute,
       communityMarketplaceDetailRoute,
+      communitySpacesRoute,
+      communitySpaceDetailRoute,
+      communitySpacePostRoute,
     ]),
   ]),
 ]);

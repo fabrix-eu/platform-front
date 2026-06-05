@@ -160,6 +160,7 @@ function CommunitySidebar({
   const items: SidebarItem[] = [
     { key: 'overview', label: 'Overview', href: basePath, exact: true },
     { key: 'members', label: 'Members', href: `${basePath}/members` },
+    { key: 'spaces', label: 'Spaces', href: `${basePath}/spaces` },
     { key: 'events', label: 'Events', href: `${basePath}/events` },
     { key: 'challenges', label: 'Challenges', href: `${basePath}/challenges` },
     { key: 'marketplace', label: 'Marketplace', href: `${basePath}/marketplace` },
