@@ -537,6 +537,7 @@ export function HomePage() {
             <ActivityFeed
               query={feedQuery}
               orgSlug={firstOrgSlug}
+              showCommunity
               emptyMessage="No recent activity from your communities"
             />
           </div>

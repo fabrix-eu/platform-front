@@ -33,6 +33,7 @@ export interface TrackableSpacePost {
   type: 'space_post';
   id: string;
   title: string;
+  body: string | null;
   space: { id: string; name: string; icon: string | null };
 }
 
@@ -46,7 +47,9 @@ export interface TrackableEvent {
   type: 'event';
   id: string;
   title: string;
+  description: string | null;
   starts_at: string;
+  location: string | null;
   image_url: string | null;
 }
 
@@ -54,6 +57,7 @@ export interface TrackableChallenge {
   type: 'challenge';
   id: string;
   title: string;
+  description: string | null;
   image_url: string | null;
 }
 
@@ -61,7 +65,9 @@ export interface TrackableListing {
   type: 'listing';
   id: string;
   title: string;
+  description: string | null;
   listing_type: string;
+  image_url: string | null;
 }
 
 export interface TrackableCommunitySpace {

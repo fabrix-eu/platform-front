@@ -114,6 +114,7 @@ function OrgActivityFeed({ orgId, orgSlug }: { orgId: string; orgSlug: string })
         <ActivityFeed
           query={feedQuery}
           orgSlug={orgSlug}
+          showCommunity
           emptyMessage="No recent activity"
         />
       </div>
