@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useSearch } from '@tanstack/react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ORG_KINDS, createOrganization, searchOrganizations } from '../../lib/organizations';
 import type { OrganizationBasic } from '../../lib/organizations';
+import { taxonomyToSpecialties } from '../../lib/listings';
+import { getCommunity } from '../../lib/communities';
 import {
   getCommunityOrganizations,
   addCommunityOrganization,
 } from '../../lib/community-organizations';
-import { OrgCard, OrgListRow } from '../../components/OrgShared';
+import { DirectoryMapLayout } from '../../components/DirectoryMapLayout';
 import { StepIndicator } from '../../components/org-wizard';
 import { OrgDetailsStep } from '../../components/org-wizard';
 import type { OrgData } from '../../components/org-wizard';
@@ -15,6 +17,7 @@ import { getInitials } from '../../lib/utils';
 import { FormError } from '../../components/FieldError';
 
 const ALL_KINDS = Object.entries(ORG_KINDS);
+const PER_PAGE = 20;
 
 // ── Add member wizard ────────────────────────────────────────
 
@@ -87,7 +90,6 @@ function SearchStep({
 
   return (
     <div className="space-y-4">
-      {/* Referral prompt — visible before searching */}
       {!hasSearched && !isSearching && (
         <div className="bg-primary/5 border border-primary/10 rounded-lg p-4 space-y-2">
           <div className="flex gap-3">
@@ -109,7 +111,6 @@ function SearchStep({
         </div>
       )}
 
-      {/* Search input */}
       <div className="relative">
         <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
@@ -308,7 +309,6 @@ export function AddMemberModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={onClose}>
       <div className="bg-white rounded-lg shadow-xl border border-border w-full max-w-lg mx-4 flex flex-col max-h-[calc(100vh-64px)]" onClick={(e) => e.stopPropagation()}>
-        {/* Header — fixed */}
         <div className="px-6 pt-5 pb-3 shrink-0 border-b border-border">
           <div className="text-center">
             <h3 className="text-lg font-bold text-gray-900">{STEP_TITLES[step]}</h3>
@@ -322,7 +322,6 @@ export function AddMemberModal({
           )}
         </div>
 
-        {/* Content — scrollable */}
         <div ref={contentRef} className="px-6 py-5 overflow-y-auto min-h-0 flex-1">
           {mutationError && (
             <div key={String(addMutation.failureCount + createAndAddMutation.failureCount)} ref={scrollToError} className="mb-4">
@@ -396,7 +395,6 @@ export function AddMemberModal({
           )}
         </div>
 
-        {/* Footer — fixed */}
         {step === 'search' && (
           <div className="px-6 py-3 border-t border-border flex justify-end shrink-0">
             <button onClick={onClose} className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 transition-colors">
@@ -409,59 +407,83 @@ export function AddMemberModal({
   );
 }
 
-// ── Main page ────────────────────────────────────────────────
+// ── Main page — Directory + Map ─────────────────────────────
 
 export function CommunityMembersPage() {
-  const { orgSlug, communitySlug } = useParams({ strict: false }) as { orgSlug: string; communitySlug: string };
+  const { orgSlug, communitySlug } = useParams({ strict: false }) as {
+    orgSlug: string;
+    communitySlug: string;
+  };
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const searchParams = useSearch({ strict: false }) as { search?: string; page?: number; kinds?: string };
-  const { search, page, kinds } = searchParams;
+  const searchParams = useSearch({ strict: false }) as {
+    search?: string;
+    kinds?: string;
+    by_type?: string;
+    by_category?: string;
+    by_subcategory?: string;
+  };
 
+  const { search, kinds, by_type, by_category, by_subcategory } = searchParams;
   const selectedKinds = kinds ? kinds.split(',') : [];
-  const [view, setView] = useState<'list' | 'cards'>('cards');
+  const specialties = taxonomyToSpecialties({ by_type, by_category, by_subcategory });
   const [showAddModal, setShowAddModal] = useState(false);
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const filterRef = useRef<HTMLDivElement>(null);
-  const filterBtnRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (
-        filtersOpen &&
-        filterRef.current && !filterRef.current.contains(e.target as Node) &&
-        filterBtnRef.current && !filterBtnRef.current.contains(e.target as Node)
-      ) {
-        setFiltersOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [filtersOpen]);
 
   const activeFilterCount = selectedKinds.length > 0 ? 1 : 0;
 
-  const query = useQuery({
-    queryKey: ['community_organizations', communitySlug, { page, search, kinds }],
-    queryFn: () => getCommunityOrganizations(communitySlug, { page: page || 1, per_page: 20, search, kinds }),
+  const basePath = `/${orgSlug}/communities/${communitySlug}`;
+
+  const communityQuery = useQuery({
+    queryKey: ['communities', communitySlug],
+    queryFn: () => getCommunity(communitySlug),
   });
 
-  const meta = query.data?.meta;
-  const members = query.data?.data ?? [];
+  const community = communityQuery.data;
+  const communityCenter: [number, number] | undefined =
+    community?.center_lat != null && community?.center_lon != null
+      ? [community.center_lon, community.center_lat]
+      : undefined;
+  const communityRadiusKm = community?.radius_km ?? undefined;
+
+  const {
+    data,
+    isLoading,
+    error,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['community_organizations', communitySlug, 'directory', { search, kinds, specialties }],
+    queryFn: ({ pageParam }) => getCommunityOrganizations(communitySlug, {
+      page: pageParam,
+      per_page: PER_PAGE,
+      search,
+      kinds,
+      specialties,
+    }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => lastPage.meta.next_page ?? undefined,
+  });
+
+  const members = data?.pages.flatMap((p) => p.data) ?? [];
+  const totalCount = data?.pages[0]?.meta.total_count ?? 0;
+
+  const mapQuery = useQuery({
+    queryKey: ['community_organizations', communitySlug, 'map'],
+    queryFn: () => getCommunityOrganizations(communitySlug, { per_page: 1000 }),
+  });
+
+  const mapOrgs = mapQuery.data?.data.map((co) => co.organization) ?? [];
+  const membershipByOrgId = new Map(
+    (mapQuery.data?.data ?? []).map((co) => [co.organization.id, co.id]),
+  );
 
   const updateSearch = (updates: Record<string, unknown>) => {
     navigate({
       to: '/$orgSlug/communities/$communitySlug/members',
       params: { orgSlug, communitySlug },
-      search: { ...searchParams, page: 1, ...updates },
+      search: { ...searchParams, ...updates },
     });
-  };
-
-  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const q = (fd.get('search') as string) || '';
-    updateSearch({ search: q || undefined });
   };
 
   const toggleKind = (kind: string) => {
@@ -471,86 +493,21 @@ export function CommunityMembersPage() {
     updateSearch({ kinds: next.length > 0 ? next.join(',') : undefined });
   };
 
-  const setPage = (p: number) => {
-    updateSearch({ page: p > 1 ? p : undefined });
+  const linkBuilder = (org: { id: string; slug: string }) => {
+    const membershipId = membershipByOrgId.get(org.id);
+    return membershipId
+      ? `${basePath}/members/${membershipId}`
+      : `/organizations/${org.slug || org.id}`;
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
-      <h2 className="text-lg font-display font-bold text-gray-900">Members</h2>
-
-      {/* Search + Filter + View toggle + Add */}
-      <div className="flex gap-2 items-center">
-        <form onSubmit={handleSearchSubmit} className="flex-1 relative">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-          </svg>
-          <input
-            name="search"
-            defaultValue={search || ''}
-            placeholder="Search members..."
-            className="w-full border border-border rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-        </form>
-
-        <div className="relative">
-          <button
-            ref={filterBtnRef}
-            type="button"
-            onClick={() => setFiltersOpen(!filtersOpen)}
-            className={`relative border rounded-lg px-3 py-2 text-sm transition-colors ${
-              filtersOpen || activeFilterCount > 0
-                ? 'border-primary bg-primary/5 text-primary'
-                : 'border-border text-muted-foreground hover:bg-muted/50'
-            }`}
-            title="Filters"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75M10.5 18a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 18H7.5m6-6h6.75M13.5 12a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 12h7.5" />
-            </svg>
-            {activeFilterCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-primary text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
-        </div>
-
-        <div className="flex border border-border rounded-lg overflow-hidden">
-          <button
-            type="button"
-            onClick={() => setView('list')}
-            className={`px-3 py-2 text-sm ${view === 'list' ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:bg-muted/50'}`}
-            title="List view"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            onClick={() => setView('cards')}
-            className={`px-3 py-2 text-sm border-l border-border ${view === 'cards' ? 'bg-secondary text-secondary-foreground' : 'text-muted-foreground hover:bg-muted/50'}`}
-            title="Cards view"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25a2.25 2.25 0 0 1-2.25-2.25v-2.25Z" />
-            </svg>
-          </button>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setShowAddModal(true)}
-          className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90 whitespace-nowrap"
-        >
-          Add member
-        </button>
-      </div>
-
-      {/* Filter panel */}
-      {filtersOpen && (
-        <div ref={filterRef} className="border border-border rounded-lg bg-white p-4 space-y-4 shadow-sm">
+    <DirectoryMapLayout
+      searchDefault={search}
+      searchPlaceholder="Search members..."
+      onSearchSubmit={(q) => updateSearch({ search: q || undefined })}
+      activeFilterCount={activeFilterCount}
+      filterContent={
+        <>
           <div>
             <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Organization type</label>
             <div className="flex flex-wrap gap-1.5">
@@ -582,81 +539,50 @@ export function CommunityMembersPage() {
               </button>
             </div>
           )}
-        </div>
-      )}
-
-      {/* Content */}
-      {query.isLoading && <p className="text-muted-foreground">Loading...</p>}
-      {query.error && <p className="text-destructive">Failed to load members</p>}
-
-      {query.data && (
-        <>
-          <p className="text-sm text-muted-foreground">{meta?.total_count ?? 0} members</p>
-
-          {view === 'list' && (
-            <div className="divide-y divide-border border border-border rounded-lg bg-card">
-              {members.map((m) => (
-                <OrgListRow
-                  key={m.id}
-                  org={m.organization}
-                  linkTo={`/${orgSlug}/communities/${communitySlug}/members/${m.id}`}
-                />
-              ))}
-              {members.length === 0 && (
-                <p className="px-4 py-8 text-center text-muted-foreground">No members found</p>
-              )}
-            </div>
-          )}
-
-          {view === 'cards' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {members.map((m) => (
-                <OrgCard
-                  key={m.id}
-                  org={m.organization}
-                  linkTo={`/${orgSlug}/communities/${communitySlug}/members/${m.id}`}
-                />
-              ))}
-              {members.length === 0 && (
-                <p className="text-center text-muted-foreground col-span-2">No members found</p>
-              )}
-            </div>
-          )}
-
-          {/* Pagination */}
-          {meta && meta.total_pages > 1 && (
-            <div className="flex items-center justify-center gap-4">
-              {meta.prev_page && (
-                <button
-                  onClick={() => setPage(meta.prev_page!)}
-                  className="text-sm text-muted-foreground hover:text-foreground"
-                >
-                  &larr; Previous
-                </button>
-              )}
-              <span className="text-sm text-muted-foreground">
-                Page {meta.current_page} of {meta.total_pages}
-              </span>
-              {meta.next_page && (
-                <button
-                  onClick={() => setPage(meta.next_page!)}
-                  className="text-sm text-muted-foreground hover:text-foreground"
-                >
-                  Next &rarr;
-                </button>
-              )}
-            </div>
-          )}
         </>
-      )}
-
+      }
+      by_type={by_type}
+      by_category={by_category}
+      by_subcategory={by_subcategory}
+      onTaxonomyFilter={(params) => updateSearch({ ...params })}
+      actionButton={
+        <button
+          type="button"
+          onClick={() => setShowAddModal(true)}
+          className="bg-primary text-primary-foreground rounded-lg px-3 py-1.5 text-xs font-medium hover:bg-primary/90 whitespace-nowrap"
+        >
+          + Add
+        </button>
+      }
+      items={members.map((m) => ({
+        key: m.id,
+        org: m.organization,
+        linkTo: `${basePath}/members/${m.id}`,
+      }))}
+      totalCount={totalCount}
+      resultLabel="members"
+      isLoading={isLoading}
+      error={error}
+      hasNextPage={hasNextPage ?? false}
+      isFetchingNextPage={isFetchingNextPage}
+      fetchNextPage={fetchNextPage}
+      mapOrganizations={mapOrgs}
+      mapLoading={mapQuery.isLoading}
+      selectedKinds={selectedKinds}
+      mapLinkBuilder={linkBuilder}
+      mapCenter={communityCenter}
+      mapRadiusKm={communityRadiusKm}
+    >
       {showAddModal && (
         <AddMemberModal
           communitySlug={communitySlug}
           onClose={() => setShowAddModal(false)}
-          onAdded={() => qc.invalidateQueries({ queryKey: ['community_organizations', communitySlug] })}
+          onAdded={() => {
+            qc.invalidateQueries({ queryKey: ['community_organizations', communitySlug] });
+            setShowAddModal(false);
+          }}
         />
       )}
-    </div>
+    </DirectoryMapLayout>
   );
 }

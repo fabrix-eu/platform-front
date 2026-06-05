@@ -1,8 +1,10 @@
 import { Link } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { getMe, isAuthenticated, type MeOrganization, type AccessibleCommunity } from '../lib/auth';
 import { ORG_KINDS } from '../lib/organizations';
 import { PendingActions } from '../components/PendingActions';
+import { getUserFeed } from '../lib/feed';
+import { ActivityFeed } from '../components/ActivityFeed';
 import {
   Building2,
   Users,
@@ -453,6 +455,14 @@ export function HomePage() {
   const firstOrgSlug = orgs[0]?.organization_slug;
   const isViewer = orgs.length === 0 && adminCommunities.length === 0;
 
+  const feedQuery = useInfiniteQuery({
+    queryKey: ['feed', 'user'],
+    queryFn: ({ pageParam }) => getUserFeed({ page: pageParam, per_page: 20 }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => lastPage.meta.next_page ?? undefined,
+    enabled: authed,
+  });
+
   return (
     <div className="max-w-3xl mx-auto p-6 mt-4">
       <div className="mb-6">
@@ -515,6 +525,20 @@ export function HomePage() {
               </svg>
               Add Organization
             </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Activity Feed */}
+      {!isViewer && (
+        <div className="mt-8">
+          <h2 className="text-lg font-display font-semibold text-gray-900 mb-3">Recent activity</h2>
+          <div className="bg-white rounded-lg border border-border">
+            <ActivityFeed
+              query={feedQuery}
+              orgSlug={firstOrgSlug}
+              emptyMessage="No recent activity from your communities"
+            />
           </div>
         </div>
       )}

@@ -1,8 +1,10 @@
 import { Link, useParams } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { getOrganization, ORG_KINDS } from '../../lib/organizations';
 import type { Organization } from '../../lib/organizations';
 import { getMe } from '../../lib/auth';
+import { getOrgFeed } from '../../lib/feed';
+import { ActivityFeed } from '../../components/ActivityFeed';
 
 const SECTION_LABELS: Record<string, string> = {
   informations: 'Information',
@@ -97,6 +99,28 @@ function ProfileCompletion({ organization, orgSlug }: { organization: Organizati
   );
 }
 
+function OrgActivityFeed({ orgId, orgSlug }: { orgId: string; orgSlug: string }) {
+  const feedQuery = useInfiniteQuery({
+    queryKey: ['feed', 'org', orgId],
+    queryFn: ({ pageParam }) => getOrgFeed(orgId, { page: pageParam, per_page: 20 }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => lastPage.meta.next_page ?? undefined,
+  });
+
+  return (
+    <div>
+      <h2 className="text-sm font-semibold text-gray-900 mb-3">Recent activity</h2>
+      <div className="bg-white rounded-lg border border-border">
+        <ActivityFeed
+          query={feedQuery}
+          orgSlug={orgSlug}
+          emptyMessage="No recent activity"
+        />
+      </div>
+    </div>
+  );
+}
+
 export function OrgDashboardPage() {
   const { orgSlug } = useParams({ strict: false }) as { orgSlug: string };
 
@@ -169,6 +193,9 @@ export function OrgDashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Activity Feed */}
+      <OrgActivityFeed orgId={organization.id} orgSlug={orgSlug} />
     </div>
   );
 }
