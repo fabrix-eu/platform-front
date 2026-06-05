@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, Link } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getMe } from '../../lib/auth';
+import { useMarkRead } from '../../lib/useMarkRead';
 import { getSpaces, createSpace } from '../../lib/community-spaces';
 import type { CommunitySpace } from '../../lib/community-spaces';
 import { FormError, FieldError } from '../../components/FieldError';
@@ -160,6 +161,7 @@ export function CommunitySpacesPage() {
   const { orgSlug, communitySlug } = useParams({ strict: false }) as { orgSlug: string; communitySlug: string };
   const qc = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
+  useMarkRead(communitySlug, 'spaces');
 
   const meQuery = useQuery({ queryKey: ['me'], queryFn: getMe });
   const isAdmin = meQuery.data?.accessible_communities?.some(

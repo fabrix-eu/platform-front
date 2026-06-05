@@ -1,6 +1,7 @@
 import { Link, useParams, useNavigate, useSearch } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getMe } from '../../lib/auth';
+import { useMarkRead } from '../../lib/useMarkRead';
 import {
   getListings,
   LISTING_TYPES,
@@ -107,6 +108,8 @@ export function CommunityMarketplacePage() {
     by_category?: string;
     by_subcategory?: string;
   };
+
+  useMarkRead(communitySlug, 'marketplace');
 
   const me = useQuery({ queryKey: ['me'], queryFn: getMe });
 

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getCommunityEvents } from '../../lib/events';
+import { useMarkRead } from '../../lib/useMarkRead';
 import type { Event } from '../../lib/events';
 
 type Tab = 'upcoming' | 'past';
@@ -83,6 +84,7 @@ export function CommunityEventsListPage() {
   };
 
   const [tab, setTab] = useState<Tab>('upcoming');
+  useMarkRead(communitySlug, 'events');
 
   const eventsQuery = useQuery({
     queryKey: ['community_events', communitySlug],

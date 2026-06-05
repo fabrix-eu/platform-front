@@ -6,24 +6,29 @@ function RailIcon({
   active,
   href,
   title,
+  unread,
   children,
 }: {
   active: boolean;
   href: string;
   title: string;
+  unread?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <Link
       to={href}
       title={title}
-      className={`flex items-center justify-center h-11 w-11 rounded-lg transition-colors ${
+      className={`relative flex items-center justify-center h-11 w-11 rounded-lg transition-colors ${
         active
           ? 'bg-primary/10 text-primary'
           : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'
       }`}
     >
       {children}
+      {unread && !active && (
+        <span className="absolute top-0.5 right-0.5 h-2.5 w-2.5 rounded-full bg-primary border-2 border-white" />
+      )}
     </Link>
   );
 }
@@ -54,7 +59,7 @@ function CommunityIcon({ name, imageUrl }: { name: string; imageUrl: string | nu
 }
 
 export function AppRail() {
-  const { selection, user, currentOrg, communities } = useNavigationContext();
+  const { selection, user, currentOrg, communities, unreadBySlug } = useNavigationContext();
 
   if (!user) return null;
 
@@ -101,6 +106,7 @@ export function AppRail() {
       {!personalMode && orgSlug && communities.map((c) => {
         const isActive =
           selection.kind === 'community' && selection.communitySlug === c.community_slug;
+        const unread = (unreadBySlug.get(c.community_slug) ?? []).length > 0;
 
         return (
           <RailIcon
@@ -108,6 +114,7 @@ export function AppRail() {
             active={isActive}
             href={`/${orgSlug}/communities/${c.community_slug}`}
             title={c.community_name}
+            unread={unread}
           >
             <CommunityIcon name={c.community_name} imageUrl={c.community_image_url} />
           </RailIcon>

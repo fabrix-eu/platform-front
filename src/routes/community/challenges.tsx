@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { getMe } from '../../lib/auth';
+import { useMarkRead } from '../../lib/useMarkRead';
 import { getCommunityChallenge } from '../../lib/community-challenges';
 import type { Challenge } from '../../lib/community-challenges';
 
@@ -87,6 +88,7 @@ export function CommunityChallengesListPage() {
   };
 
   const [tab, setTab] = useState<Tab>('active');
+  useMarkRead(communitySlug, 'challenges');
 
   const me = useQuery({ queryKey: ['me'], queryFn: getMe });
   const isAdmin = me.data?.accessible_communities?.some(

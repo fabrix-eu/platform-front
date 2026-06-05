@@ -12,6 +12,7 @@ interface SidebarItem {
   exact?: boolean;
   badge?: string | number | null;
   badgeVariant?: 'default' | 'highlight';
+  unreadDot?: boolean;
 }
 
 function NavItems({ items, pathname }: { items: SidebarItem[]; pathname: string }) {
@@ -31,7 +32,12 @@ function NavItems({ items, pathname }: { items: SidebarItem[]; pathname: string 
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
             >
-              {item.label}
+              <span className="flex items-center gap-2">
+                {item.label}
+                {item.unreadDot && !isActive && (
+                  <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
+                )}
+              </span>
               {item.badge != null && (
                 <span
                   className={
@@ -154,16 +160,17 @@ function CommunitySidebar({
   );
   const isAdmin = community?.is_admin ?? false;
   const communityName = community?.name ?? communitySlug;
+  const unread = new Set(community?.unread_sections ?? []);
 
   const basePath = `/${orgSlug}/communities/${communitySlug}`;
 
   const items: SidebarItem[] = [
-    { key: 'overview', label: 'Overview', href: basePath, exact: true },
+    { key: 'overview', label: 'Overview', href: basePath, exact: true, unreadDot: unread.has('overview') },
     { key: 'members', label: 'Members', href: `${basePath}/members` },
-    { key: 'spaces', label: 'Spaces', href: `${basePath}/spaces` },
-    { key: 'events', label: 'Events', href: `${basePath}/events` },
-    { key: 'challenges', label: 'Challenges', href: `${basePath}/challenges` },
-    { key: 'marketplace', label: 'Marketplace', href: `${basePath}/marketplace` },
+    { key: 'spaces', label: 'Spaces', href: `${basePath}/spaces`, unreadDot: unread.has('spaces') },
+    { key: 'events', label: 'Events', href: `${basePath}/events`, unreadDot: unread.has('events') },
+    { key: 'challenges', label: 'Challenges', href: `${basePath}/challenges`, unreadDot: unread.has('challenges') },
+    { key: 'marketplace', label: 'Marketplace', href: `${basePath}/marketplace`, unreadDot: unread.has('marketplace') },
     { key: 'matchmaking', label: 'Matchmaking', href: `${basePath}/matchmaking` },
   ];
 

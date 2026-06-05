@@ -1,4 +1,4 @@
-import { BASE } from './api';
+import { api, BASE } from './api';
 
 export interface FeedOwner {
   id: string;
@@ -145,4 +145,10 @@ export function getOrgFeed(orgId: string, params: { page?: number; per_page?: nu
   if (params.page) qs.set('page', String(params.page));
   if (params.per_page) qs.set('per_page', String(params.per_page));
   return fetchFeed(`/feed?${qs.toString()}`);
+}
+
+export type CommunitySection = 'overview' | 'spaces' | 'events' | 'challenges' | 'marketplace';
+
+export function markSectionRead(communityId: string, section: CommunitySection): Promise<void> {
+  return api.post(`/communities/${communityId}/read`, { section });
 }

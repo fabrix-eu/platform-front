@@ -2,6 +2,7 @@ import { useParams } from '@tanstack/react-router';
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { getCommunity } from '../../lib/communities';
 import { getCommunityFeed } from '../../lib/feed';
+import { useMarkRead } from '../../lib/useMarkRead';
 import { ActivityFeed } from '../../components/ActivityFeed';
 
 const PER_PAGE = 20;
@@ -18,6 +19,8 @@ export function CommunityOverviewPage() {
   });
 
   const communityId = communityQuery.data?.id;
+
+  useMarkRead(communitySlug, 'overview');
 
   const feedQuery = useInfiniteQuery({
     queryKey: ['feed', 'community', communityId],

@@ -31,6 +31,7 @@ export interface AccessibleCommunity {
   slug: string;
   image_url: string | null;
   is_admin: boolean;
+  unread_sections: string[];
 }
 
 export interface User {

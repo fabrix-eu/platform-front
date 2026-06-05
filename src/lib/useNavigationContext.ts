@@ -1,6 +1,6 @@
 import { useParams, useLocation } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { getMe, getActiveOrgSlug, isPersonalMode, type User, type MeOrganization } from './auth';
+import { getMe, getActiveOrgSlug, isPersonalMode, type User, type MeOrganization, type AccessibleCommunity } from './auth';
 
 export type RailSelection =
   | { kind: 'personal' }
@@ -49,10 +49,17 @@ export function useNavigationContext() {
 
   const communities = currentOrg?.communities ?? [];
 
-  return { selection, user, currentOrg, communities } as {
+  const accessibleCommunities = user?.accessible_communities ?? [];
+  const unreadBySlug = new Map(
+    accessibleCommunities.map((c) => [c.slug, c.unread_sections ?? []]),
+  );
+
+  return { selection, user, currentOrg, communities, accessibleCommunities, unreadBySlug } as {
     selection: RailSelection;
     user: User | undefined;
     currentOrg: MeOrganization | undefined;
     communities: MeOrganization['communities'];
+    accessibleCommunities: AccessibleCommunity[];
+    unreadBySlug: Map<string, string[]>;
   };
 }
