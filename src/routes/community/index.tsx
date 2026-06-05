@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate, useSearch } from '@tanstack/react-router';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getMe } from '../../lib/auth';
 import { ORG_KINDS } from '../../lib/organizations';
 import { taxonomyToSpecialties } from '../../lib/listings';
 import { getCommunity } from '../../lib/communities';
@@ -33,11 +32,6 @@ export function CommunityOverviewPage() {
   const [showAddModal, setShowAddModal] = useState(false);
 
   const activeFilterCount = selectedKinds.length > 0 ? 1 : 0;
-
-  const meQuery = useQuery({ queryKey: ['me'], queryFn: getMe });
-  const isAdmin = meQuery.data?.accessible_communities?.some(
-    (c) => c.slug === communitySlug && c.is_admin,
-  ) ?? false;
 
   const basePath = `/${orgSlug}/communities/${communitySlug}`;
 
@@ -154,15 +148,13 @@ export function CommunityOverviewPage() {
       by_subcategory={by_subcategory}
       onTaxonomyFilter={(params) => updateSearch({ ...params })}
       actionButton={
-        isAdmin ? (
-          <button
-            type="button"
-            onClick={() => setShowAddModal(true)}
-            className="bg-primary text-primary-foreground rounded-lg px-3 py-1.5 text-xs font-medium hover:bg-primary/90 whitespace-nowrap"
-          >
-            + Add
-          </button>
-        ) : undefined
+        <button
+          type="button"
+          onClick={() => setShowAddModal(true)}
+          className="bg-primary text-primary-foreground rounded-lg px-3 py-1.5 text-xs font-medium hover:bg-primary/90 whitespace-nowrap"
+        >
+          + Add
+        </button>
       }
       items={members.map((m) => ({
         key: m.id,
