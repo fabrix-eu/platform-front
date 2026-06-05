@@ -30,6 +30,7 @@ interface OrgDetailsStepProps {
   submitLabel?: string;
   pendingLabel?: string;
   footer?: React.ReactNode;
+  onValidationError?: () => void;
 }
 
 export function OrgDetailsStep({
@@ -41,6 +42,7 @@ export function OrgDetailsStep({
   submitLabel = 'Continue',
   pendingLabel = 'Creating...',
   footer,
+  onValidationError,
 }: OrgDetailsStepProps) {
   const [name, setName] = useState(initialData.name);
   const [kind, setKind] = useState(initialData.kind);
@@ -67,6 +69,7 @@ export function OrgDetailsStep({
     e.preventDefault();
     if (!hasValidLocation) {
       setShowAddressError(true);
+      onValidationError?.();
       return;
     }
     onContinue({
@@ -91,6 +94,9 @@ export function OrgDetailsStep({
       )}
 
       {mutation && <FormError mutation={mutation} />}
+      {showAddressError && !hasValidLocation && !mutation?.error && (
+        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">Please correct the errors below.</p>
+      )}
 
       <div>
         <label
