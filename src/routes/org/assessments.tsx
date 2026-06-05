@@ -218,7 +218,7 @@ export function OrgAssessmentsPage() {
   const isLoading = query.isLoading;
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <div className="p-6 max-w-5xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-display font-bold text-gray-900">Impact Compass</h1>
         <p className="text-sm text-gray-500 mt-1">Assess your sustainability performance</p>

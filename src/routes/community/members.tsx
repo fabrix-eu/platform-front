@@ -476,7 +476,7 @@ export function CommunityMembersPage() {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <div className="p-6 max-w-5xl mx-auto space-y-6">
       <h2 className="text-lg font-display font-bold text-gray-900">Members</h2>
 
       {/* Search + Filter + View toggle + Add */}

@@ -924,7 +924,7 @@ export function OrgProfilePage() {
   const sectionCounts: Partial<Record<SectionId, number>> = {};
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <div className="p-6 max-w-5xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
