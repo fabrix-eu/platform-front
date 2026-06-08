@@ -22,7 +22,7 @@ export function ApplicationDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-5xl mx-auto p-6">
+      <div className="p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-6 bg-gray-200 rounded w-1/3" />
           <div className="h-4 bg-gray-200 rounded w-1/4" />
@@ -37,7 +37,7 @@ export function ApplicationDetailPage() {
 
   if (!application) {
     return (
-      <div className="max-w-5xl mx-auto p-6">
+      <div className="p-6">
         <p className="text-sm text-gray-500">Application not found.</p>
       </div>
     );
@@ -46,7 +46,7 @@ export function ApplicationDetailPage() {
   const challenge = application.challenge;
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
+    <div className="p-6">
       {/* Back link */}
       <Link
         to="/$orgSlug/challenges"

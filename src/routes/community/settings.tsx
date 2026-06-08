@@ -180,7 +180,7 @@ export function CommunitySettingsPage() {
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-8">
+    <div className="p-6 space-y-8">
       <h2 className="text-lg font-display font-bold text-gray-900">Settings</h2>
 
       {/* Community info (read-only for now) */}

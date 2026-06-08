@@ -105,7 +105,7 @@ export function CommunityEventsListPage() {
   const displayed = tab === 'upcoming' ? upcoming : past;
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-display font-bold text-gray-900">Events</h2>

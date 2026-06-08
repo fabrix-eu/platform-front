@@ -88,7 +88,7 @@ export function CommunityMemberAssessmentPage() {
 
   if (formQuery.isLoading || answerQuery.isLoading || membershipQuery.isLoading) {
     return (
-      <div className="max-w-5xl mx-auto p-6">
+      <div className="p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-6 bg-gray-200 rounded w-1/3" />
           <div className="h-48 bg-gray-200 rounded-lg" />
@@ -103,7 +103,7 @@ export function CommunityMemberAssessmentPage() {
 
   if (!form) {
     return (
-      <div className="max-w-5xl mx-auto p-6">
+      <div className="p-6">
         <p className="text-red-600">Assessment not found</p>
       </div>
     );
@@ -123,7 +123,7 @@ export function CommunityMemberAssessmentPage() {
   const responses = answer?.responses ?? {};
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
+    <div className="p-6 space-y-6">
       {backLink}
 
       {/* Header */}

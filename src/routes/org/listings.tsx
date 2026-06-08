@@ -141,7 +141,7 @@ export function OrgListingsPage() {
   const typeConfig = LISTING_TYPES[activeType];
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
+    <div className="p-6 space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-display font-bold text-gray-900">Listings</h1>

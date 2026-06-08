@@ -245,10 +245,10 @@ export function CommunitySpacePostPage() {
   });
 
   if (postQuery.isLoading) {
-    return <div className="p-6 max-w-5xl mx-auto"><p className="text-muted-foreground">Loading...</p></div>;
+    return <div className="p-6"><p className="text-muted-foreground">Loading...</p></div>;
   }
   if (postQuery.error || !post) {
-    return <div className="p-6 max-w-5xl mx-auto"><p className="text-destructive">Post not found</p></div>;
+    return <div className="p-6"><p className="text-destructive">Post not found</p></div>;
   }
 
   const startEditing = () => {
@@ -258,7 +258,7 @@ export function CommunitySpacePostPage() {
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-5">
+    <div className="p-6 space-y-5">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-500">
         <Link to="/$orgSlug/communities/$communitySlug/spaces" params={{ orgSlug, communitySlug }} className="hover:text-gray-700 transition-colors">

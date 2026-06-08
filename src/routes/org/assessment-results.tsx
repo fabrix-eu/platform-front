@@ -216,7 +216,7 @@ export function AssessmentResultsPage() {
 
   if (formQuery.isLoading || answerQuery.isLoading) {
     return (
-      <div className="p-6 max-w-5xl mx-auto">
+      <div className="p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-48 bg-gray-200 rounded-lg" />
           <div className="h-32 bg-gray-200 rounded-lg" />
@@ -230,7 +230,7 @@ export function AssessmentResultsPage() {
 
   if (!form || !answer) {
     return (
-      <div className="p-6 max-w-5xl mx-auto">
+      <div className="p-6">
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 text-center">
           <p className="text-amber-800 font-medium">
             No results available yet. Complete the assessment first.
@@ -254,7 +254,7 @@ export function AssessmentResultsPage() {
   const priorityActions = getPriorityActions(form, answer);
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
+    <div className="p-6 space-y-6">
       {/* Back */}
       <Link
         to="/$orgSlug/assessments"

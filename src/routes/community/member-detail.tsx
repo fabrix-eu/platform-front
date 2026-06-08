@@ -421,7 +421,7 @@ export function CommunityMemberDetailPage() {
 
   if (query.isLoading) {
     return (
-      <div className="max-w-5xl mx-auto p-6">
+      <div className="p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-48 bg-gray-200 rounded-xl" />
           <div className="h-8 bg-gray-200 rounded w-1/3" />
@@ -433,7 +433,7 @@ export function CommunityMemberDetailPage() {
 
   if (query.error) {
     return (
-      <div className="max-w-5xl mx-auto p-6">
+      <div className="p-6">
         <p className="text-red-600">Member not found</p>
         <Link
           to="/$orgSlug/communities/$communitySlug/members"
