@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 454 454">
+  <!-- Top-left purple arm -->
+  <polygon points="17.5,0 226.8,130.6 79.3,222.7 4.3,175.9 4.3,7.3" fill="#8373c1"/>
+  <!-- Top-right purple arm -->
+  <polygon points="436.1,0 226.8,130.6 374.2,222.7 449.2,175.9 449.2,7.2" fill="#8373c1"/>
+  <!-- Center diamond -->
+  <polygon points="226.8,130.6 374.2,222.7 226.8,314.7 79.3,222.7" fill="#5170b3"/>
+  <!-- Bottom-left cyan arm -->
+  <polygon points="4.3,453.5 226.8,314.7 79.3,222.7 12.3,264.4 4.3,279" fill="#86d7e5"/>
+  <!-- Bottom-right cyan arm -->
+  <polygon points="449.2,453.5 226.8,314.7 374.2,222.7 449.2,279" fill="#86d7e5"/>
+</svg>

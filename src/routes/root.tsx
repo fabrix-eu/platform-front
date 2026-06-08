@@ -4,8 +4,7 @@ import { getMe, logout } from '../lib/auth';
 import { OrgSwitcher } from '../components/OrgSwitcher';
 import { NotificationBell } from '../components/NotificationBell';
 import { MessageBell } from '../components/MessageBell';
-import { AppRail } from '../components/AppRail';
-import { ContextualSidebar } from '../components/ContextualSidebar';
+import { AppSidebar } from '../components/AppSidebar';
 import { useRefreshOnNavigate } from '../lib/notifications';
 
 export function RootLayout() {
@@ -62,8 +61,7 @@ export function RootLayout() {
         </div>
       </header>
       <main className="flex h-[calc(100vh-56px)]">
-        {showNav && <AppRail />}
-        {showNav && <ContextualSidebar />}
+        {showNav && <AppSidebar />}
         <div className="flex-1 min-w-0 h-full overflow-auto flex flex-col">
           <Outlet />
         </div>
