@@ -101,7 +101,7 @@ export function CommunityJoinRequestsPage() {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-8">
+    <div className="p-6 max-w-5xl mx-auto space-y-8">
       <div>
         <h2 className="text-lg font-display font-bold text-gray-900">Join Requests</h2>
         <p className="text-sm text-gray-500 mt-1">

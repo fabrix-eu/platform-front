@@ -148,7 +148,7 @@ export function OrgDashboardPage() {
   const kind = organization.kind ? ORG_KINDS[organization.kind] : null;
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <div className="p-6 max-w-5xl mx-auto space-y-6">
       {/* Header */}
       <div>
         <div className="flex items-center gap-3">

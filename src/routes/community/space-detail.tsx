@@ -274,14 +274,14 @@ export function CommunitySpaceDetailPage() {
   };
 
   if (spaceQuery.isLoading) {
-    return <div className="p-6 max-w-4xl mx-auto"><p className="text-muted-foreground">Loading...</p></div>;
+    return <div className="p-6 max-w-5xl mx-auto"><p className="text-muted-foreground">Loading...</p></div>;
   }
   if (spaceQuery.error) {
-    return <div className="p-6 max-w-4xl mx-auto"><p className="text-destructive">Space not found</p></div>;
+    return <div className="p-6 max-w-5xl mx-auto"><p className="text-destructive">Space not found</p></div>;
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-5">
+    <div className="p-6 max-w-5xl mx-auto space-y-5">
       {/* Header */}
       <div>
         <Link

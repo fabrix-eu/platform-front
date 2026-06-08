@@ -308,7 +308,7 @@ export function AddMemberModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={onClose}>
-      <div className="bg-white rounded-lg shadow-xl border border-border w-full max-w-lg mx-4 flex flex-col max-h-[calc(100vh-64px)]" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white rounded-lg shadow-xl border border-border w-full max-w-5xl mx-4 flex flex-col max-h-[calc(100vh-64px)]" onClick={(e) => e.stopPropagation()}>
         <div className="px-6 pt-5 pb-3 shrink-0 border-b border-border">
           <div className="text-center">
             <h3 className="text-lg font-bold text-gray-900">{STEP_TITLES[step]}</h3>

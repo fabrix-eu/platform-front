@@ -207,7 +207,7 @@ export function AssessmentFormPage() {
 
   if (formQuery.isLoading || answerQuery.isLoading) {
     return (
-      <div className="p-6 max-w-3xl mx-auto">
+      <div className="p-6 max-w-5xl mx-auto">
         <div className="animate-pulse space-y-4">
           <div className="h-4 bg-gray-200 rounded w-1/3" />
           <div className="h-64 bg-gray-200 rounded-lg" />
@@ -218,7 +218,7 @@ export function AssessmentFormPage() {
 
   if (formQuery.error || !formQuery.data) {
     return (
-      <div className="p-6 max-w-3xl mx-auto">
+      <div className="p-6 max-w-5xl mx-auto">
         <p className="text-red-600">Assessment not found.</p>
       </div>
     );
@@ -434,7 +434,7 @@ function QuestionWizard({
 
   if (!currentQuestion) {
     return (
-      <div className="p-6 max-w-3xl mx-auto text-center">
+      <div className="p-6 max-w-5xl mx-auto text-center">
         <p className="text-gray-500">No questions in this section.</p>
         <button
           onClick={goToNext}
@@ -447,7 +447,7 @@ function QuestionWizard({
   }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto space-y-6">
+    <div className="p-6 max-w-5xl mx-auto space-y-6">
       {/* Save status */}
       <div className="flex items-center justify-between">
         <button

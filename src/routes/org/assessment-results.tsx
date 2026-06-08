@@ -230,7 +230,7 @@ export function AssessmentResultsPage() {
 
   if (!form || !answer) {
     return (
-      <div className="p-6 max-w-3xl mx-auto">
+      <div className="p-6 max-w-5xl mx-auto">
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 text-center">
           <p className="text-amber-800 font-medium">
             No results available yet. Complete the assessment first.

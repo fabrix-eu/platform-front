@@ -106,7 +106,7 @@ export function ChallengeEditPage() {
 
   if (challengeQuery.isLoading) {
     return (
-      <div className="max-w-3xl mx-auto p-6">
+      <div className="max-w-5xl mx-auto p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-4 bg-gray-200 rounded w-20" />
           <div className="h-8 bg-gray-200 rounded w-1/3" />
@@ -120,7 +120,7 @@ export function ChallengeEditPage() {
 
   if (challengeQuery.error) {
     return (
-      <div className="max-w-3xl mx-auto p-6">
+      <div className="max-w-5xl mx-auto p-6">
         <p className="text-red-600">Challenge not found</p>
         <Link
           to="/$orgSlug/communities/$communitySlug/challenges"
@@ -136,7 +136,7 @@ export function ChallengeEditPage() {
   const isPending = updateMutation.isPending || uploading;
 
   return (
-    <div className="p-6 max-w-3xl mx-auto pb-12">
+    <div className="p-6 max-w-5xl mx-auto pb-12">
       <Link
         to="/$orgSlug/communities/$communitySlug/challenges"
         params={{ orgSlug, communitySlug }}
