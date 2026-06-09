@@ -46,7 +46,7 @@ export function ApplicationDetailPage() {
   const challenge = application.challenge;
 
   return (
-    <div className="p-6">
+    <div className="p-6 max-w-4xl mx-auto">
       {/* Back link */}
       <Link
         to="/$orgSlug/challenges"

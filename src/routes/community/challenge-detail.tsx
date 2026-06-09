@@ -114,6 +114,7 @@ export function ChallengeDetailPage() {
   );
 
   return (
+    <div className="max-w-4xl mx-auto">
     <ChallengeDetailView
       challenge={challenge}
       canManage={canManage}
@@ -145,5 +146,6 @@ export function ChallengeDetailPage() {
       editLink={editLink}
       draftVisibilityText="not visible to community members"
     />
+    </div>
   );
 }

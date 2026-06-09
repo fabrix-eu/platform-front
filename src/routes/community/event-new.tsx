@@ -67,7 +67,7 @@ export function CommunityEventNewPage() {
   const isPending = mutation.isPending || uploading;
 
   return (
-    <div className="p-6 pb-12">
+    <div className="p-6 pb-12 max-w-4xl mx-auto">
       {/* Back link */}
       <Link
         to="/$orgSlug/communities/$communitySlug/events"

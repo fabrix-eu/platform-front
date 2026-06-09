@@ -103,7 +103,7 @@ export function CommunityMarketplaceDetailPage() {
   }
 
   return (
-    <div className="p-6 pb-12 space-y-6">
+    <div className="p-6 pb-12 space-y-6 max-w-4xl mx-auto">
       <Link
         to="/$orgSlug/communities/$communitySlug/marketplace"
         params={{ orgSlug, communitySlug }}

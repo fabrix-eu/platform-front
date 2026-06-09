@@ -458,5 +458,5 @@ export function CommunityMemberDetailPage() {
     </Link>
   );
 
-  return <OrgProfile org={org} backLink={backLink} />;
+  return <div className="max-w-4xl mx-auto"><OrgProfile org={org} backLink={backLink} /></div>;
 }
