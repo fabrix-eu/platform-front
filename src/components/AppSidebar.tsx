@@ -71,7 +71,7 @@ const EXPLORE_GROUP: NavGroup = {
   ],
 };
 
-export function AppSidebar() {
+export function AppSidebar({ className = '' }: { className?: string }) {
   const { user, currentOrg, communities, unreadBySlug } = useNavigationContext();
   const meQuery = useQuery({ queryKey: ['me'], queryFn: getMe });
   const accessibleCommunities = meQuery.data?.accessible_communities ?? [];
@@ -106,7 +106,7 @@ export function AppSidebar() {
   items.push(EXPLORE_GROUP);
 
   return (
-    <aside className="w-56 border-r border-border bg-white flex-shrink-0 overflow-y-auto">
+    <aside className={`w-56 border-r border-border bg-white flex-shrink-0 overflow-y-auto flex flex-col ${className}`}>
       <nav className="p-2">
         <SidebarNav items={items} />
       </nav>
