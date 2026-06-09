@@ -169,7 +169,7 @@ export function CommunityEventDetailPage() {
   }
 
   return (
-    <div className="p-6 pb-12 max-w-4xl mx-auto">
+    <div className="p-6 pb-12">
       {/* Back link */}
       <Link
         to="/$orgSlug/communities/$communitySlug/events"

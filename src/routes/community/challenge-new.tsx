@@ -75,7 +75,7 @@ export function ChallengeNewPage() {
   const isPending = mutation.isPending || uploading;
 
   return (
-    <div className="p-6 pb-12 max-w-4xl mx-auto">
+    <div className="p-6 pb-12">
       <Link
         to="/$orgSlug/communities/$communitySlug/challenges"
         params={{ orgSlug, communitySlug }}

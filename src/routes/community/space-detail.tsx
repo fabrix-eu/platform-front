@@ -281,7 +281,7 @@ export function CommunitySpaceDetailPage() {
   }
 
   return (
-    <div className="p-6 space-y-5 max-w-4xl mx-auto">
+    <div className="p-6 space-y-5">
       {/* Header */}
       <div>
         <Link

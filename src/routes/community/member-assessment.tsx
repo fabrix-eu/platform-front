@@ -123,7 +123,7 @@ export function CommunityMemberAssessmentPage() {
   const responses = answer?.responses ?? {};
 
   return (
-    <div className="p-6 space-y-6 max-w-4xl mx-auto">
+    <div className="p-6 space-y-6">
       {backLink}
 
       {/* Header */}

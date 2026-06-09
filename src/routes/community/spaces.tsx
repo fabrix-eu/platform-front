@@ -176,7 +176,7 @@ export function CommunitySpacesPage() {
   const spaces = spacesQuery.data ?? [];
 
   return (
-    <div className="p-6 space-y-6 max-w-4xl mx-auto">
+    <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-display font-bold text-gray-900">Spaces</h2>
         {isAdmin && (
