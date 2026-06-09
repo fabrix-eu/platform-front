@@ -9,7 +9,6 @@ import { z } from 'zod';
 import { RootLayout } from '../routes/root';
 import { HomePage } from '../routes/home';
 import { LoginPage } from '../routes/login';
-import { OrganizationsListPage } from '../routes/organizations/list';
 import { OrganizationShowPage } from '../routes/organizations/show';
 import { OrganizationNewPage } from '../routes/organizations/new';
 import { OrganizationEditPage } from '../routes/organizations/edit';
@@ -40,7 +39,6 @@ import { ChallengeEditPage } from '../routes/community/challenge-edit';
 import { CommunityMatchmakingPage } from '../routes/community/matchmaking';
 import { CommunityJoinRequestsPage } from '../routes/community/join-requests';
 import { CommunitySettingsPage } from '../routes/community/settings';
-import { MapPage } from '../routes/map';
 import { DirectoryMapPage } from '../routes/directory-map';
 import { CommunitiesPage } from '../routes/communities';
 import { CommunityShowPage } from '../routes/communities/show';
@@ -400,19 +398,18 @@ const organizationEditRoute = createRoute({
   component: OrganizationEditPage,
 });
 
-const mapRoute = createRoute({
+const mapRedirectRoute = createRoute({
   getParentRoute: () => explorerRoute,
   path: '/map',
-  beforeLoad: requireAuth,
-  component: MapPage,
+  beforeLoad: () => {
+    throw redirect({ to: '/global' });
+  },
 });
 
-const directoryRoute = createRoute({
+const directoryRedirectRoute = createRoute({
   getParentRoute: () => explorerRoute,
   path: '/directory',
-  beforeLoad: requireAuth,
   validateSearch: z.object({
-    page: z.number().optional(),
     search: z.string().optional(),
     kinds: z.string().optional(),
     claimed: z.string().optional(),
@@ -422,7 +419,9 @@ const directoryRoute = createRoute({
     radius: z.number().optional(),
     location_label: z.string().optional(),
   }),
-  component: OrganizationsListPage,
+  beforeLoad: ({ search }) => {
+    throw redirect({ to: '/global', search });
+  },
 });
 
 const communitiesRoute = createRoute({
@@ -966,8 +965,8 @@ const routeTree = rootRoute.addChildren([
   ]),
   explorerRoute.addChildren([
     indexRoute,
-    mapRoute,
-    directoryRoute,
+    mapRedirectRoute,
+    directoryRedirectRoute,
     communitiesRoute.addChildren([
       communitiesIndexRoute,
       communityNewRoute,

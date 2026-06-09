@@ -31,7 +31,7 @@ export function CommunityOverviewPage() {
   });
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 max-w-4xl mx-auto">
       <div>
         <h2 className="text-lg font-display font-bold text-gray-900">Activity</h2>
         <p className="text-sm text-gray-500 mt-1">Recent activity in this community</p>

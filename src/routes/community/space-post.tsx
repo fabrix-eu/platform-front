@@ -258,7 +258,7 @@ export function CommunitySpacePostPage() {
   };
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="p-6 space-y-5 max-w-4xl mx-auto">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-500">
         <Link to="/$orgSlug/communities/$communitySlug/spaces" params={{ orgSlug, communitySlug }} className="hover:text-gray-700 transition-colors">

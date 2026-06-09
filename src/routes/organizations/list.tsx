@@ -68,8 +68,8 @@ export function OrganizationsListPage() {
 
   const updateSearch = (updates: Record<string, unknown>) => {
     navigate({
-      to: '/directory',
-      search: { ...searchParams, page: 1, ...updates },
+      to: '/global',
+      search: { ...searchParams, ...updates },
     });
   };
 
@@ -291,8 +291,8 @@ export function OrganizationsListPage() {
             <div className="flex items-center justify-center gap-4">
               {meta.prev_page && (
                 <Link
-                  to="/directory"
-                  search={{ ...searchParams, page: meta.prev_page }}
+                  to="/global"
+                  search={searchParams}
                   className="text-sm text-muted-foreground hover:text-foreground"
                 >
                   &larr; Previous
@@ -303,8 +303,8 @@ export function OrganizationsListPage() {
               </span>
               {meta.next_page && (
                 <Link
-                  to="/directory"
-                  search={{ ...searchParams, page: meta.next_page }}
+                  to="/global"
+                  search={searchParams}
                   className="text-sm text-muted-foreground hover:text-foreground"
                 >
                   Next &rarr;

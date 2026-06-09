@@ -63,8 +63,7 @@ function buildCommunityGroup(
 const EXPLORE_GROUP: NavGroup = {
   label: 'Explore',
   children: [
-    { to: '/directory', label: 'Directory' },
-    { to: '/map', label: 'Map' },
+    { to: '/global', label: 'Directory Map' },
     { to: '/events', label: 'Events' },
     { to: '/challenges', label: 'Challenges' },
     { to: '/marketplace', label: 'Marketplace' },
