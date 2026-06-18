@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { Building2, Users, Globe, User } from 'lucide-react';
 import { getMe, isPersonalMode, type MeOrganization } from '../lib/auth';
 import { useNavigationContext } from '../lib/useNavigationContext';
 import { SidebarNav, type NavItem, type NavGroup } from './SidebarNav';
@@ -6,6 +7,7 @@ import { SidebarNav, type NavItem, type NavGroup } from './SidebarNav';
 function buildOrgGroup(orgSlug: string, userOrg?: MeOrganization): NavGroup {
   return {
     label: userOrg?.organization_name ?? 'Organization',
+    icon: <Building2 className="h-4 w-4" />,
     children: [
       { to: `/${orgSlug}/dashboard`, label: 'Dashboard' },
       { to: `/${orgSlug}/profile`, label: 'Profile' },
@@ -55,6 +57,7 @@ function buildCommunityGroup(
 
   return {
     label: community.community_name,
+    icon: <Users className="h-4 w-4" />,
     children,
     unreadDot: unreadSections.length > 0,
   };
@@ -62,6 +65,7 @@ function buildCommunityGroup(
 
 const EXPLORE_GROUP: NavGroup = {
   label: 'Explore',
+  icon: <Globe className="h-4 w-4" />,
   children: [
     { to: '/global', label: 'Directory Map' },
     { to: '/events', label: 'Events' },
@@ -84,12 +88,16 @@ export function AppSidebar({ className = '' }: { className?: string }) {
   const items: NavItem[] = [];
 
   if (personalMode) {
-    items.push(
-      { to: '/', label: 'Home', exact: true },
-      { to: '/messages', label: 'Messages' },
-      { to: '/notifications', label: 'Notifications' },
-      { to: '/settings', label: 'Settings' },
-    );
+    items.push({
+      label: user.name,
+      icon: <User className="h-4 w-4" />,
+      children: [
+        { to: '/', label: 'Home', exact: true },
+        { to: '/messages', label: 'Messages' },
+        { to: '/notifications', label: 'Notifications' },
+        { to: '/settings', label: 'Settings' },
+      ],
+    });
   }
 
   if (orgSlug) {

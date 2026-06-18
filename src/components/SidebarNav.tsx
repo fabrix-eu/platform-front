@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation } from '@tanstack/react-router';
 
 export interface NavLeaf {
@@ -57,28 +57,36 @@ function LeafLink({ item, pathname }: { item: NavLeaf; pathname: string }) {
   );
 }
 
-function Group({ group, pathname }: { group: NavGroup; pathname: string }) {
+function Group({
+  group,
+  pathname,
+  expanded,
+  onToggle,
+}: {
+  group: NavGroup;
+  pathname: string;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
   const hasActiveChild = group.children.some((c) => isActive(pathname, c.to, c.exact));
-  const [open, setOpen] = useState<boolean | null>(null);
-  const expanded = open ?? hasActiveChild;
   const hasUnread = group.unreadDot || group.children.some((c) => c.unreadDot);
 
   return (
     <div>
       <button
         type="button"
-        onClick={() => setOpen(!expanded)}
+        onClick={onToggle}
         className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
       >
         {group.icon && <span className="shrink-0">{group.icon}</span>}
-        <span className="flex-1 text-left flex items-center gap-2">
-          {group.label}
+        <span className="flex-1 min-w-0 text-left flex items-center gap-2">
+          <span className="truncate">{group.label}</span>
           {hasUnread && !hasActiveChild && (
             <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
           )}
         </span>
         <svg
-          className={`h-4 w-4 text-gray-400 transition-transform ${expanded ? 'rotate-90' : ''}`}
+          className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${expanded ? 'rotate-90' : ''}`}
           fill="none"
           viewBox="0 0 24 24"
           strokeWidth={1.5}
@@ -102,12 +110,44 @@ function Group({ group, pathname }: { group: NavGroup; pathname: string }) {
 
 export function SidebarNav({ items }: { items: NavItem[] }) {
   const { pathname } = useLocation();
+
+  // The group that holds the current route — the one that should be open on load.
+  const routeActiveKey =
+    items.find(
+      (it): it is NavGroup =>
+        isGroup(it) && it.children.some((c) => isActive(pathname, c.to, c.exact)),
+    )?.label ?? null;
+
+  // Headers expand independently — several can be open while browsing.
+  const [openKeys, setOpenKeys] = useState<Set<string>>(() =>
+    routeActiveKey ? new Set([routeActiveKey]) : new Set(),
+  );
+
+  // Selecting a subitem (any navigation) collapses everything but the active group.
+  useEffect(() => {
+    setOpenKeys(routeActiveKey ? new Set([routeActiveKey]) : new Set());
+  }, [pathname, routeActiveKey]);
+
+  const toggle = (label: string) => {
+    setOpenKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
+      return next;
+    });
+  };
+
   return (
     <ul className="space-y-0.5">
       {items.map((item) => (
         <li key={isGroup(item) ? item.label : item.to}>
           {isGroup(item) ? (
-            <Group group={item} pathname={pathname} />
+            <Group
+              group={item}
+              pathname={pathname}
+              expanded={openKeys.has(item.label)}
+              onToggle={() => toggle(item.label)}
+            />
           ) : (
             <LeafLink item={item} pathname={pathname} />
           )}
