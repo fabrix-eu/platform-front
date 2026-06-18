@@ -114,7 +114,7 @@ export function AppSidebar({ className = '' }: { className?: string }) {
   items.push(EXPLORE_GROUP);
 
   return (
-    <aside className={`w-56 border-r border-border bg-white flex-shrink-0 overflow-y-auto flex flex-col ${className}`}>
+    <aside className={`w-64 border-r border-border bg-white flex-shrink-0 overflow-y-auto flex flex-col ${className}`}>
       <nav className="p-2">
         <SidebarNav items={items} />
       </nav>
