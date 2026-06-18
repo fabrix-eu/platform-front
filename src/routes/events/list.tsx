@@ -6,7 +6,14 @@ import { getMe } from '../../lib/auth';
 import type { Event } from '../../lib/events';
 import { LocationFilter } from '../../components/LocationFilter';
 import type { LocationFilterParams } from '../../components/LocationFilter';
-import { useFeatureInfo, FeatureIntro, FeatureInfoTrigger } from '../../components/FeatureIntro';
+import {
+  ExploreListLayout,
+  SearchBar,
+  EmptyState,
+  ListSkeleton,
+  Pagination,
+  PAGINATION_LINK_CLASS,
+} from '../../components/ExploreList';
 
 function formatEventDate(iso: string): string {
   const d = new Date(iso);
@@ -86,7 +93,6 @@ function EventCard({ event }: { event: Event }) {
 type Tab = 'upcoming' | 'past';
 
 export function EventsListPage() {
-  const eventsInfo = useFeatureInfo('events');
   const meQuery = useQuery({ queryKey: ['me'], queryFn: getMe });
   const canCreate = meQuery.data?.role === 'facilitator' || meQuery.data?.role === 'admin';
   const navigate = useNavigate();
@@ -116,10 +122,7 @@ export function EventsListPage() {
 
   const locSearch = { country, lon, lat, radius, location_label };
 
-  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const q = (fd.get('search') as string) || '';
+  const handleSearch = (q: string) => {
     navigate({ to: '/events', search: { search: q || undefined, page: 1, ...locSearch } });
   };
 
@@ -148,44 +151,23 @@ export function EventsListPage() {
   const displayed = tab === 'upcoming' ? upcoming : past;
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold">Events</h1>
-          <FeatureInfoTrigger info={eventsInfo} />
-        </div>
-        {canCreate && (
+    <ExploreListLayout
+      featureKey="events"
+      title="Events"
+      description="Discover events organized by communities across the circular textile ecosystem. Workshops, conferences, networking sessions and more — find opportunities to connect and learn."
+      action={
+        canCreate ? (
           <Link
             to="/events/new"
             className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
           >
             Create event
           </Link>
-        )}
-      </div>
-
-      <FeatureIntro
-        info={eventsInfo}
-        title="Events"
-        description="Discover events organized by communities across the circular textile ecosystem. Workshops, conferences, networking sessions and more — find opportunities to connect and learn."
-      />
-
-      {/* Search + Location */}
-      <div className="space-y-3 mb-6">
-        <form onSubmit={handleSearchSubmit} className="flex gap-2">
-          <input
-            name="search"
-            defaultValue={search || ''}
-            placeholder="Search events..."
-            className="flex-1 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-          <button
-            type="submit"
-            className="bg-secondary text-secondary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-secondary/80"
-          >
-            Search
-          </button>
-        </form>
+        ) : undefined
+      }
+    >
+      <div className="space-y-3">
+        <SearchBar defaultValue={search || ''} placeholder="Search events..." onSearch={handleSearch} />
         <LocationFilter
           value={{ country, lon, lat, radius, location_label }}
           onChange={handleLocationFilter}
@@ -193,7 +175,7 @@ export function EventsListPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-border mb-6">
+      <div className="flex gap-1 border-b border-border">
         <button
           onClick={() => setTab('upcoming')}
           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
@@ -218,33 +200,21 @@ export function EventsListPage() {
 
       {/* Content */}
       {query.isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="animate-pulse bg-white border border-border rounded-lg p-4 flex gap-4">
-              <div className="w-16 h-16 bg-gray-200 rounded-lg" />
-              <div className="flex-1 space-y-2 py-1">
-                <div className="h-4 bg-gray-200 rounded w-2/3" />
-                <div className="h-3 bg-gray-200 rounded w-1/2" />
-              </div>
-            </div>
-          ))}
-        </div>
+        <ListSkeleton />
       ) : displayed.length === 0 ? (
-        <div className="bg-white rounded-lg border border-border p-8 text-center space-y-3">
-          <div className="flex justify-center text-gray-400">
+        <EmptyState
+          icon={
             <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
             </svg>
-          </div>
-          <h3 className="font-display font-semibold text-gray-900">
-            {tab === 'upcoming' ? 'No upcoming events' : 'No past events'}
-          </h3>
-          <p className="text-sm text-gray-500 max-w-md mx-auto">
-            {tab === 'upcoming'
+          }
+          title={tab === 'upcoming' ? 'No upcoming events' : 'No past events'}
+          message={
+            tab === 'upcoming'
               ? 'There are no upcoming events across the platform yet.'
-              : 'There are no past events to show.'}
-          </p>
-        </div>
+              : 'There are no past events to show.'
+          }
+        />
       ) : (
         <div className="space-y-3">
           {displayed.map((event) => (
@@ -253,32 +223,14 @@ export function EventsListPage() {
         </div>
       )}
 
-      {/* Pagination */}
-      {query.data?.meta && query.data.meta.total_pages > 1 && (
-        <div className="flex items-center justify-center gap-4 mt-6">
-          {query.data.meta.prev_page && (
-            <Link
-              to="/events"
-              search={{ search, page: query.data.meta.prev_page, ...locSearch }}
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
-              &larr; Previous
-            </Link>
-          )}
-          <span className="text-sm text-muted-foreground">
-            Page {query.data.meta.current_page} of {query.data.meta.total_pages}
-          </span>
-          {query.data.meta.next_page && (
-            <Link
-              to="/events"
-              search={{ search, page: query.data.meta.next_page, ...locSearch }}
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
-              Next &rarr;
-            </Link>
-          )}
-        </div>
-      )}
-    </div>
+      <Pagination
+        meta={query.data?.meta}
+        renderLink={(page, label) => (
+          <Link to="/events" search={{ search, page, ...locSearch }} className={PAGINATION_LINK_CLASS}>
+            {label}
+          </Link>
+        )}
+      />
+    </ExploreListLayout>
   );
 }

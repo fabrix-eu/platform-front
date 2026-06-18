@@ -11,7 +11,14 @@ import type { Listing } from '../../lib/listings';
 import { TaxonomyFilter } from '../../components/TaxonomyFilter';
 import { LocationFilter } from '../../components/LocationFilter';
 import type { LocationFilterParams } from '../../components/LocationFilter';
-import { useFeatureInfo, FeatureIntro, FeatureInfoTrigger } from '../../components/FeatureIntro';
+import {
+  ExploreListLayout,
+  SearchBar,
+  EmptyState,
+  GridSkeleton,
+  Pagination,
+  PAGINATION_LINK_CLASS,
+} from '../../components/ExploreList';
 
 function TypeBadge({ type }: { type: string }) {
   const config = LISTING_TYPES[type];
@@ -90,7 +97,6 @@ function ListingCard({ listing }: { listing: Listing }) {
 }
 
 export function MarketplaceListPage() {
-  const marketplaceInfo = useFeatureInfo('marketplace');
   const navigate = useNavigate();
   const { search, page, by_type, by_category, by_subcategory, country, lon, lat, radius, location_label } = useSearch({ strict: false }) as {
     search?: string;
@@ -132,10 +138,7 @@ export function MarketplaceListPage() {
 
   const locSearch = { country, lon, lat, radius, location_label };
 
-  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const q = (fd.get('search') as string) || '';
+  const handleSearch = (q: string) => {
     navigate({
       to: '/marketplace',
       search: { search: q || undefined, page: 1, by_type, by_category, by_subcategory, ...locSearch },
@@ -161,45 +164,24 @@ export function MarketplaceListPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold">Marketplace</h1>
-          <FeatureInfoTrigger info={marketplaceInfo} />
-        </div>
-        {isAuthenticated() && (
+    <ExploreListLayout
+      featureKey="marketplace"
+      title="Marketplace"
+      description="Browse and publish listings for services, materials, capacities and products. Connect with organizations across the circular textile ecosystem to find what you need or offer what you have."
+      action={
+        isAuthenticated() ? (
           <Link
             to="/marketplace/new"
             className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90 whitespace-nowrap"
           >
             New listing
           </Link>
-        )}
-      </div>
-
-      <FeatureIntro
-        info={marketplaceInfo}
-        title="Marketplace"
-        description="Browse and publish listings for services, materials, capacities and products. Connect with organizations across the circular textile ecosystem to find what you need or offer what you have."
-      />
-
+        ) : undefined
+      }
+    >
       {/* Search + Filters */}
       <div className="space-y-3">
-        <form onSubmit={handleSearch} className="flex gap-2">
-          <input
-            name="search"
-            defaultValue={search || ''}
-            placeholder="Search listings..."
-            className="flex-1 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-          <button
-            type="submit"
-            className="bg-secondary text-secondary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-secondary/80"
-          >
-            Search
-          </button>
-        </form>
+        <SearchBar defaultValue={search || ''} placeholder="Search listings..." onSearch={handleSearch} />
 
         <div className="flex items-center gap-3">
           <TaxonomyFilter
@@ -223,23 +205,7 @@ export function MarketplaceListPage() {
       </div>
 
       {/* Content */}
-      {query.isLoading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="animate-pulse bg-white border border-border rounded-lg overflow-hidden">
-              <div className="aspect-[16/10] bg-gray-200" />
-              <div className="p-4 space-y-2">
-                <div className="flex gap-2">
-                  <div className="h-5 bg-gray-200 rounded-full w-14" />
-                  <div className="h-5 bg-gray-200 rounded-full w-24" />
-                </div>
-                <div className="h-4 bg-gray-200 rounded w-3/4" />
-                <div className="h-3 bg-gray-200 rounded w-full" />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      {query.isLoading && <GridSkeleton />}
 
       {query.error && <p className="text-destructive">Failed to load listings</p>}
 
@@ -248,19 +214,19 @@ export function MarketplaceListPage() {
           <p className="text-sm text-muted-foreground">{meta?.total_count ?? 0} listings</p>
 
           {listings.length === 0 ? (
-            <div className="bg-white rounded-lg border border-border p-12 text-center space-y-3">
-              <div className="flex justify-center text-gray-400">
+            <EmptyState
+              icon={
                 <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z" />
                 </svg>
-              </div>
-              <h3 className="font-display font-semibold text-gray-900">No listings found</h3>
-              <p className="text-sm text-gray-500">
-                {search || by_type || by_category
+              }
+              title="No listings found"
+              message={
+                search || by_type || by_category
                   ? 'Try adjusting your filters or search terms.'
-                  : 'Be the first to post a listing!'}
-              </p>
-            </div>
+                  : 'Be the first to post a listing!'
+              }
+            />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {listings.map((listing) => (
@@ -269,34 +235,20 @@ export function MarketplaceListPage() {
             </div>
           )}
 
-          {/* Pagination */}
-          {meta && meta.total_pages > 1 && (
-            <div className="flex items-center justify-center gap-4">
-              {meta.prev_page && (
-                <Link
-                  to="/marketplace"
-                  search={{ search, page: meta.prev_page, by_type, by_category, by_subcategory, ...locSearch }}
-                  className="text-sm text-muted-foreground hover:text-foreground"
-                >
-                  &larr; Previous
-                </Link>
-              )}
-              <span className="text-sm text-muted-foreground">
-                Page {meta.current_page} of {meta.total_pages}
-              </span>
-              {meta.next_page && (
-                <Link
-                  to="/marketplace"
-                  search={{ search, page: meta.next_page, by_type, by_category, by_subcategory, ...locSearch }}
-                  className="text-sm text-muted-foreground hover:text-foreground"
-                >
-                  Next &rarr;
-                </Link>
-              )}
-            </div>
-          )}
+          <Pagination
+            meta={meta}
+            renderLink={(page, label) => (
+              <Link
+                to="/marketplace"
+                search={{ search, page, by_type, by_category, by_subcategory, ...locSearch }}
+                className={PAGINATION_LINK_CLASS}
+              >
+                {label}
+              </Link>
+            )}
+          />
         </>
       )}
-    </div>
+    </ExploreListLayout>
   );
 }

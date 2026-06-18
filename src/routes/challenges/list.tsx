@@ -10,7 +10,14 @@ import {
   ChallengeDateRange,
   ChallengeMeta,
 } from '../../components/ChallengeShared';
-import { useFeatureInfo, FeatureIntro, FeatureInfoTrigger } from '../../components/FeatureIntro';
+import {
+  ExploreListLayout,
+  SearchBar,
+  EmptyState,
+  ListSkeleton,
+  Pagination,
+  PAGINATION_LINK_CLASS,
+} from '../../components/ExploreList';
 
 function ChallengeCard({ challenge }: { challenge: Challenge }) {
   return (
@@ -43,7 +50,6 @@ function ChallengeCard({ challenge }: { challenge: Challenge }) {
 }
 
 export function ChallengesListPage() {
-  const challengesInfo = useFeatureInfo('challenges');
   const navigate = useNavigate();
   const { page, search, country, lon, lat, radius, location_label } = useSearch({ strict: false }) as {
     page?: number;
@@ -73,10 +79,7 @@ export function ChallengesListPage() {
 
   const locSearch = { country, lon, lat, radius, location_label };
 
-  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const q = (fd.get('search') as string) || '';
+  const handleSearch = (q: string) => {
     navigate({ to: '/challenges', search: { search: q || undefined, page: 1, ...locSearch } });
   };
 
@@ -92,69 +95,33 @@ export function ChallengesListPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold">Challenges</h1>
-          <FeatureInfoTrigger info={challengesInfo} />
-        </div>
-      </div>
-
-      <FeatureIntro
-        info={challengesInfo}
-        title="Challenges"
-        description="Explore open challenges posted by communities and organizations. Apply to contribute your expertise, collaborate on circular textile projects, and win recognition for your solutions."
-      />
-
-      {/* Search + Location */}
-      <div className="space-y-3 mb-6">
-        <form onSubmit={handleSearchSubmit} className="flex gap-2">
-          <input
-            name="search"
-            defaultValue={search || ''}
-            placeholder="Search challenges..."
-            className="flex-1 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-          <button
-            type="submit"
-            className="bg-secondary text-secondary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-secondary/80"
-          >
-            Search
-          </button>
-        </form>
+    <ExploreListLayout
+      featureKey="challenges"
+      title="Challenges"
+      description="Explore open challenges posted by communities and organizations. Apply to contribute your expertise, collaborate on circular textile projects, and win recognition for your solutions."
+    >
+      <div className="space-y-3">
+        <SearchBar defaultValue={search || ''} placeholder="Search challenges..." onSearch={handleSearch} />
         <LocationFilter
           value={{ country, lon, lat, radius, location_label }}
           onChange={handleLocationFilter}
         />
       </div>
 
-      <p className="text-sm text-muted-foreground mb-4">{meta?.total_count ?? 0} challenges</p>
+      <p className="text-sm text-muted-foreground">{meta?.total_count ?? 0} challenges</p>
 
-      {/* Content */}
       {query.isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="animate-pulse bg-white border border-border rounded-lg p-4 flex gap-4">
-              <div className="w-16 h-16 bg-gray-200 rounded-lg" />
-              <div className="flex-1 space-y-2 py-1">
-                <div className="h-4 bg-gray-200 rounded w-2/3" />
-                <div className="h-3 bg-gray-200 rounded w-1/2" />
-              </div>
-            </div>
-          ))}
-        </div>
+        <ListSkeleton />
       ) : challenges.length === 0 ? (
-        <div className="bg-white rounded-lg border border-border p-8 text-center space-y-3">
-          <div className="flex justify-center text-gray-400">
+        <EmptyState
+          icon={
             <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 0 1-.982-3.172M9.497 14.25a7.454 7.454 0 0 0 .981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 0 0 7.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0 1 16.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.023 6.023 0 0 1-2.27.308 6.023 6.023 0 0 1-2.27-.308" />
             </svg>
-          </div>
-          <h3 className="font-display font-semibold text-gray-900">No challenges yet</h3>
-          <p className="text-sm text-gray-500 max-w-md mx-auto">
-            There are no active or completed challenges across the platform yet.
-          </p>
-        </div>
+          }
+          title="No challenges yet"
+          message="There are no active or completed challenges across the platform yet."
+        />
       ) : (
         <div className="space-y-3">
           {challenges.map((challenge) => (
@@ -163,32 +130,14 @@ export function ChallengesListPage() {
         </div>
       )}
 
-      {/* Pagination */}
-      {meta && meta.total_pages > 1 && (
-        <div className="flex items-center justify-center gap-4 mt-6">
-          {meta.prev_page && (
-            <Link
-              to="/challenges"
-              search={{ search, page: meta.prev_page, ...locSearch }}
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
-              &larr; Previous
-            </Link>
-          )}
-          <span className="text-sm text-muted-foreground">
-            Page {meta.current_page} of {meta.total_pages}
-          </span>
-          {meta.next_page && (
-            <Link
-              to="/challenges"
-              search={{ search, page: meta.next_page, ...locSearch }}
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
-              Next &rarr;
-            </Link>
-          )}
-        </div>
-      )}
-    </div>
+      <Pagination
+        meta={meta}
+        renderLink={(page, label) => (
+          <Link to="/challenges" search={{ search, page, ...locSearch }} className={PAGINATION_LINK_CLASS}>
+            {label}
+          </Link>
+        )}
+      />
+    </ExploreListLayout>
   );
 }
