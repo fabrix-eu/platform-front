@@ -62,7 +62,7 @@ export function MarketplaceShowPage() {
 
   if (listingQuery.isLoading) {
     return (
-      <div className="max-w-5xl mx-auto p-6">
+      <div className="max-w-4xl mx-auto p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-6 bg-gray-200 rounded w-1/3" />
           <div className="aspect-[16/10] bg-gray-200 rounded-lg" />
@@ -75,7 +75,7 @@ export function MarketplaceShowPage() {
 
   if (listingQuery.error || !listing) {
     return (
-      <div className="max-w-5xl mx-auto p-6 text-center space-y-3">
+      <div className="max-w-4xl mx-auto p-6 text-center space-y-3">
         <p className="text-destructive">Listing not found</p>
         <Link to="/marketplace" className="text-sm text-primary hover:underline">
           &larr; Back to marketplace
@@ -102,7 +102,7 @@ export function MarketplaceShowPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6 pb-12 space-y-6">
+    <div className="max-w-4xl mx-auto p-6 pb-12 space-y-6">
       {/* Back link */}
       <Link to="/marketplace" className="text-sm text-gray-500 hover:text-gray-700 inline-block">
         &larr; Marketplace
