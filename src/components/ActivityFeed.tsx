@@ -39,29 +39,20 @@ function ActionLabel({ action }: { action: string }) {
   return <span className={`text-xs font-medium ${info.color}`}>{info.text}</span>;
 }
 
-function activityLink(activity: FeedActivity, orgSlug?: string): string | null {
-  const { trackable, community } = activity;
-  if (!trackable || !community) return null;
-
-  const base = orgSlug ? `/${orgSlug}/communities/${community.slug}` : null;
-  if (!base) return null;
+function activityLink(activity: FeedActivity): string | null {
+  const { trackable } = activity;
+  if (!trackable) return null;
 
   switch (trackable.type) {
     case 'community_organization':
-      return `${base}/members`;
-    case 'space_post':
-      return `${base}/spaces/${trackable.space.id}/posts/${trackable.id}`;
-    case 'space_post_comment':
-      return `${base}/spaces/${trackable.post.space_id}/posts/${trackable.post.id}`;
+      return `/organizations/${trackable.organization.slug}`;
     case 'event':
-      return `${base}/events/${trackable.id}`;
-    case 'challenge':
-      return `${base}/challenges/${trackable.id}`;
+      return `/events/${trackable.id}`;
     case 'listing':
       return `/marketplace/${trackable.id}`;
-    case 'community_space':
-      return `${base}/spaces/${trackable.id}`;
     default:
+      // Legacy trackables (spaces, posts, challenges) no longer have a page —
+      // render the card without a link.
       return null;
   }
 }
@@ -224,8 +215,8 @@ function TrackableContent({ activity }: { activity: FeedActivity }) {
   }
 }
 
-function FeedItem({ activity, orgSlug, showCommunity }: { activity: FeedActivity; orgSlug?: string; showCommunity?: boolean }) {
-  const link = activityLink(activity, orgSlug);
+function FeedItem({ activity }: { activity: FeedActivity }) {
+  const link = activityLink(activity);
 
   const card = (
     <div className="px-4 py-3">
@@ -239,12 +230,6 @@ function FeedItem({ activity, orgSlug, showCommunity }: { activity: FeedActivity
           </div>
           <div className="flex items-center gap-1.5 mt-0.5">
             <span className="text-xs text-gray-400">{formatDistanceToNow(activity.created_at)}</span>
-            {showCommunity && activity.community && (
-              <>
-                <span className="text-xs text-gray-300">·</span>
-                <span className="text-xs text-gray-400 truncate">{activity.community.name}</span>
-              </>
-            )}
           </div>
         </div>
       </div>
@@ -269,13 +254,9 @@ function FeedItem({ activity, orgSlug, showCommunity }: { activity: FeedActivity
 
 export function ActivityFeed({
   query,
-  orgSlug,
-  showCommunity = false,
   emptyMessage = 'No activity yet',
 }: {
   query: UseInfiniteQueryResult<InfiniteData<PaginatedFeed>, Error>;
-  orgSlug?: string;
-  showCommunity?: boolean;
   emptyMessage?: string;
 }) {
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -339,7 +320,7 @@ export function ActivityFeed({
     <div>
       <div className="divide-y divide-gray-100">
         {activities.map((activity) => (
-          <FeedItem key={activity.id} activity={activity} orgSlug={orgSlug} showCommunity={showCommunity} />
+          <FeedItem key={activity.id} activity={activity} />
         ))}
       </div>
 

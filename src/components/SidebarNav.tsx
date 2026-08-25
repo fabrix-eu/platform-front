@@ -4,6 +4,7 @@ import { Link, useLocation } from '@tanstack/react-router';
 export interface NavLeaf {
   to: string;
   label: string;
+  icon?: React.ReactNode;
   exact?: boolean;
   badge?: string | number | null;
   badgeVariant?: 'default' | 'highlight';
@@ -17,9 +18,16 @@ export interface NavGroup {
   unreadDot?: boolean;
 }
 
-export type NavItem = NavLeaf | NavGroup;
+export interface NavSeparator {
+  separator: true;
+  /** Optional muted section label shown under the divider */
+  label?: string;
+}
+
+export type NavItem = NavLeaf | NavGroup | NavSeparator;
 
 const isGroup = (item: NavItem): item is NavGroup => 'children' in item;
+const isSeparator = (item: NavItem): item is NavSeparator => 'separator' in item;
 
 function isActive(pathname: string, to: string, exact?: boolean) {
   return exact ? pathname === to : pathname.startsWith(to);
@@ -37,6 +45,7 @@ function LeafLink({ item, pathname }: { item: NavLeaf; pathname: string }) {
       }`}
     >
       <span className="flex items-center gap-2">
+        {item.icon && <span className="shrink-0 text-gray-500">{item.icon}</span>}
         {item.label}
         {item.unreadDot && !active && (
           <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
@@ -115,7 +124,7 @@ export function SidebarNav({ items }: { items: NavItem[] }) {
   const routeActiveKey =
     items.find(
       (it): it is NavGroup =>
-        isGroup(it) && it.children.some((c) => isActive(pathname, c.to, c.exact)),
+        !isSeparator(it) && isGroup(it) && it.children.some((c) => isActive(pathname, c.to, c.exact)),
     )?.label ?? null;
 
   // Headers expand independently — several can be open while browsing.
@@ -139,20 +148,30 @@ export function SidebarNav({ items }: { items: NavItem[] }) {
 
   return (
     <ul className="space-y-0.5">
-      {items.map((item) => (
-        <li key={isGroup(item) ? item.label : item.to}>
-          {isGroup(item) ? (
-            <Group
-              group={item}
-              pathname={pathname}
-              expanded={openKeys.has(item.label)}
-              onToggle={() => toggle(item.label)}
-            />
-          ) : (
-            <LeafLink item={item} pathname={pathname} />
-          )}
-        </li>
-      ))}
+      {items.map((item, i) =>
+        isSeparator(item) ? (
+          <li key={`sep-${i}`} className="pt-2 mt-2 border-t border-border" aria-hidden>
+            {item.label && (
+              <p className="px-3 pb-1 text-[11px] font-medium text-gray-400 uppercase tracking-wider truncate">
+                {item.label}
+              </p>
+            )}
+          </li>
+        ) : (
+          <li key={isGroup(item) ? item.label : item.to}>
+            {isGroup(item) ? (
+              <Group
+                group={item}
+                pathname={pathname}
+                expanded={openKeys.has(item.label)}
+                onToggle={() => toggle(item.label)}
+              />
+            ) : (
+              <LeafLink item={item} pathname={pathname} />
+            )}
+          </li>
+        ),
+      )}
     </ul>
   );
 }

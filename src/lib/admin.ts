@@ -35,13 +35,6 @@ export interface AdminOrganization {
   created_at: string;
 }
 
-export interface AdminCommunity {
-  id: string;
-  name: string;
-  slug: string;
-  created_at: string;
-}
-
 export interface AdminFeedback {
   id: string;
   category: string;
@@ -91,10 +84,6 @@ export function getAdminOrganizations(params: { page?: number; per_page?: number
   return adminGet<AdminOrganization>(`/admin/organizations${buildQuery(params)}`);
 }
 
-export function getAdminCommunities(params: { page?: number; per_page?: number; search?: string } = {}) {
-  return adminGet<AdminCommunity>(`/admin/communities${buildQuery(params)}`);
-}
-
 export function getAdminFeedbacks(params: { page?: number; per_page?: number; search?: string; category?: string } = {}) {
   return adminGet<AdminFeedback>(`/admin/feedbacks${buildQuery(params)}`);
 }
@@ -109,10 +98,6 @@ export function deleteAdminUser(id: string) {
 
 export function deleteAdminOrganization(id: string) {
   return api.delete(`/admin/organizations/${id}`);
-}
-
-export function deleteAdminCommunity(id: string) {
-  return api.delete(`/admin/communities/${id}`);
 }
 
 // ── Organization claims ─────────────────────────────────────

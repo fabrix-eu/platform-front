@@ -215,14 +215,6 @@ export function MarketplaceShowPage() {
         </Link>
       </div>
 
-      {/* Community */}
-      {listing.community && (
-        <div className="bg-gray-50 rounded-lg p-3">
-          <p className="text-xs text-gray-500 mb-0.5">Community</p>
-          <p className="text-sm font-medium text-gray-900">{listing.community.name}</p>
-        </div>
-      )}
-
       {/* Contact button */}
       {!isOwner && me.data && (
         <Link

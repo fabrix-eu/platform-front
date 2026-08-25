@@ -14,7 +14,7 @@ interface LocationFilterProps {
   onChange: (params: LocationFilterParams) => void;
 }
 
-const EU_COUNTRIES: { code: string; name: string }[] = [
+export const EU_COUNTRIES: { code: string; name: string }[] = [
   { code: 'BE', name: 'Belgium' },
   { code: 'BG', name: 'Bulgaria' },
   { code: 'CZ', name: 'Czech Republic' },

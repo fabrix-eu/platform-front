@@ -1,4 +1,4 @@
-import { api, BASE } from './api';
+import { BASE } from './api';
 
 export interface FeedOwner {
   id: string;
@@ -123,14 +123,6 @@ async function fetchFeed(path: string): Promise<PaginatedFeed> {
   return res.json();
 }
 
-export function getCommunityFeed(communityId: string, params: { page?: number; per_page?: number } = {}): Promise<PaginatedFeed> {
-  const qs = new URLSearchParams();
-  if (params.page) qs.set('page', String(params.page));
-  if (params.per_page) qs.set('per_page', String(params.per_page));
-  const query = qs.toString();
-  return fetchFeed(`/communities/${communityId}/feed${query ? `?${query}` : ''}`);
-}
-
 export function getUserFeed(params: { page?: number; per_page?: number } = {}): Promise<PaginatedFeed> {
   const qs = new URLSearchParams();
   if (params.page) qs.set('page', String(params.page));
@@ -145,10 +137,4 @@ export function getOrgFeed(orgId: string, params: { page?: number; per_page?: nu
   if (params.page) qs.set('page', String(params.page));
   if (params.per_page) qs.set('per_page', String(params.per_page));
   return fetchFeed(`/feed?${qs.toString()}`);
-}
-
-export type CommunitySection = 'overview' | 'spaces' | 'events' | 'challenges' | 'marketplace';
-
-export function markSectionRead(communityId: string, section: CommunitySection): Promise<void> {
-  return api.post(`/communities/${communityId}/read`, { section });
 }

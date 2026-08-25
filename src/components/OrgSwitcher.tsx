@@ -33,9 +33,8 @@ function OrgAvatar({ org }: { org: MeOrganization }) {
 
 /**
  * Compute the destination when switching org, based on current context:
- * - Shell A: go to /$newSlug/dashboard
- * - Shell B (/$orgSlug/profile): preserve section → /$newSlug/profile
- * - Shell C (/$orgSlug/communities/$c/...): don't preserve community → /$newSlug/communities
+ * - Outside an org shell: go to /$newSlug/dashboard
+ * - Inside (/$orgSlug/...): preserve the section → /$newSlug/...
  */
 function getOrgSwitchPath(
   currentSlug: string | undefined,
@@ -44,13 +43,6 @@ function getOrgSwitchPath(
 ): string {
   if (!currentSlug) {
     return `/${newSlug}/dashboard`;
-  }
-
-  const communityMatch = pathname.match(
-    new RegExp(`^/${currentSlug}/communities/[^/]+`)
-  );
-  if (communityMatch) {
-    return `/${newSlug}/communities`;
   }
 
   return pathname.replace(`/${currentSlug}`, `/${newSlug}`);

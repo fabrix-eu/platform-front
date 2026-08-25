@@ -19,7 +19,7 @@ export function PendingActions() {
 
   if (!actions.data || actions.data.total === 0) return null;
 
-  const { pendingClaims, pendingJoinRequests, pendingCommunityJoinRequests, incomingJoinRequests, receivedInvitations } = actions.data;
+  const { pendingClaims, pendingJoinRequests, incomingJoinRequests, receivedInvitations } = actions.data;
 
   return (
     <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-8">
@@ -63,11 +63,6 @@ export function PendingActions() {
             {pendingJoinRequests.map((req) => (
               <li key={req.id} className="text-sm text-amber-800">
                 Your request to join {req.organization.name} is pending
-              </li>
-            ))}
-            {pendingCommunityJoinRequests.map((req) => (
-              <li key={req.id} className="text-sm text-amber-800">
-                Your request to join {req.community.name} is pending
               </li>
             ))}
           </ul>

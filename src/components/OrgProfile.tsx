@@ -581,7 +581,6 @@ export function OrgProfile({
 
   const invalidateOrg = () => {
     queryClient.invalidateQueries({ queryKey: ['organizations'] });
-    queryClient.invalidateQueries({ queryKey: ['community_organization'] });
   };
 
   return (
@@ -763,34 +762,6 @@ export function OrgProfile({
         <ListingsSection orgId={org.id} listingType="service" />
         <ListingsSection orgId={org.id} listingType="capacity" />
         <ListingsSection orgId={org.id} listingType="material" />
-
-        {/* Communities */}
-        {org.communities && org.communities.length > 0 && (
-          <section className="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Communities</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {org.communities.map((community) => (
-                <div
-                  key={community.id}
-                  className="flex items-center gap-3 p-3 rounded-lg border border-gray-200"
-                >
-                  {community.image_url ? (
-                    <img
-                      src={community.image_url}
-                      alt={community.name}
-                      className="w-10 h-10 rounded-lg object-cover"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
-                      {community.name[0]}
-                    </div>
-                  )}
-                  <span className="text-sm font-medium text-gray-900 truncate">{community.name}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
 
         {/* Related Organizations */}
         {org.related_organizations && org.related_organizations.length > 0 && (

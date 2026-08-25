@@ -6,6 +6,7 @@ export interface Event {
   description: string;
   happens_at: string;
   address: string;
+  country_code: string | null;
   lon: number | null;
   lat: number | null;
   online: boolean;
@@ -14,11 +15,6 @@ export interface Event {
   created_by_id: string | null;
   created_at: string;
   updated_at: string;
-  community?: {
-    id: string;
-    name: string;
-    slug: string;
-  } | null;
 }
 
 export interface EventsResponse {
@@ -45,114 +41,6 @@ export interface EventParticipant {
     image_url: string | null;
   };
 }
-
-// ── Community-scoped events ──────────────────────────
-
-export async function getCommunityEvents(
-  communityId: string,
-  params: { page?: number; per_page?: number } = {},
-): Promise<EventsResponse> {
-  const qp = new URLSearchParams();
-  if (params.page) qp.set('page', String(params.page));
-  if (params.per_page) qp.set('per_page', String(params.per_page));
-
-  const token = localStorage.getItem('access_token');
-  const res = await fetch(`${BASE}/communities/${communityId}/events?${qp}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
-
-  if (!res.ok) {
-    return { data: [], meta: { current_page: 1, total_pages: 1, total_count: 0, next_page: null, prev_page: null } };
-  }
-
-  return res.json();
-}
-
-export async function getCommunityEvent(
-  communityId: string,
-  eventId: string,
-): Promise<Event> {
-  return api.get<Event>(`/communities/${communityId}/events/${eventId}`);
-}
-
-export async function createCommunityEvent(
-  communityId: string,
-  data: {
-    title: string;
-    description?: string;
-    happens_at: string;
-    address?: string;
-    lon?: number;
-    lat?: number;
-    online: boolean;
-    online_url?: string;
-    image_url?: string;
-  },
-): Promise<Event> {
-  return api.post<Event>(`/communities/${communityId}/events`, {
-    event: data,
-  });
-}
-
-export async function updateCommunityEvent(
-  communityId: string,
-  eventId: string,
-  data: Partial<{
-    title: string;
-    description: string;
-    happens_at: string;
-    address: string;
-    lon: number;
-    lat: number;
-    online: boolean;
-    online_url: string;
-    image_url: string;
-  }>,
-): Promise<Event> {
-  return api.patch<Event>(`/communities/${communityId}/events/${eventId}`, {
-    event: data,
-  });
-}
-
-export async function deleteCommunityEvent(
-  communityId: string,
-  eventId: string,
-): Promise<void> {
-  return api.delete(`/communities/${communityId}/events/${eventId}`);
-}
-
-export async function getEventParticipants(
-  communityId: string,
-  eventId: string,
-): Promise<EventParticipant[]> {
-  return api.get<EventParticipant[]>(`/communities/${communityId}/events/${eventId}/participants`);
-}
-
-export async function rsvpToEvent(
-  communityId: string,
-  eventId: string,
-  status: 'going' | 'maybe' | 'not_going' = 'going',
-): Promise<EventParticipant> {
-  return api.post<EventParticipant>(
-    `/communities/${communityId}/events/${eventId}/participants`,
-    { status },
-  );
-}
-
-export async function cancelRsvp(
-  communityId: string,
-  eventId: string,
-  participantId: string,
-): Promise<void> {
-  return api.delete(
-    `/communities/${communityId}/events/${eventId}/participants/${participantId}`,
-  );
-}
-
-// ── Global events (cross-community) ──────────────────────────
 
 export interface GlobalEventParams {
   page?: number;
@@ -195,39 +83,52 @@ export async function getEvent(eventId: string): Promise<Event> {
   return api.get<Event>(`/events/${eventId}`);
 }
 
-export async function createGlobalEvent(
-  data: {
-    title: string;
-    description?: string;
-    happens_at: string;
-    address?: string;
-    lon?: number;
-    lat?: number;
-    online: boolean;
-    online_url?: string;
-    image_url?: string;
-  },
-): Promise<Event> {
+export interface EventPayload {
+  title: string;
+  description?: string;
+  happens_at: string;
+  address?: string;
+  country_code?: string;
+  lon?: number;
+  lat?: number;
+  online: boolean;
+  online_url?: string;
+  image_url?: string;
+}
+
+export async function createGlobalEvent(data: EventPayload): Promise<Event> {
   return api.post<Event>('/events', { event: data });
 }
 
 export async function updateGlobalEvent(
   eventId: string,
-  data: Partial<{
-    title: string;
-    description: string;
-    happens_at: string;
-    address: string;
-    lon: number;
-    lat: number;
-    online: boolean;
-    online_url: string;
-    image_url: string;
-  }>,
+  data: Partial<EventPayload>,
 ): Promise<Event> {
   return api.patch<Event>(`/events/${eventId}`, { event: data });
 }
 
 export async function deleteGlobalEvent(eventId: string): Promise<void> {
   return api.delete(`/events/${eventId}`);
+}
+
+// ── RSVP / participants ──────────────────────────────────────
+
+export async function getEventParticipants(
+  eventId: string,
+): Promise<EventParticipant[]> {
+  return api.get<EventParticipant[]>(`/events/${eventId}/participants`);
+}
+
+export async function rsvpToEvent(
+  eventId: string,
+  status: 'going' | 'maybe' | 'not_going' = 'going',
+): Promise<EventParticipant> {
+  return api.post<EventParticipant>(`/events/${eventId}/participants`, { status });
+}
+
+export async function cancelRsvp(
+  eventId: string,
+  participantId: string,
+): Promise<void> {
+  return api.delete(`/events/${eventId}/participants/${participantId}`);
 }

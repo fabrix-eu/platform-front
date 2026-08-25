@@ -16,14 +16,6 @@ interface PendingJoinRequest {
   organization: { id: string; name: string; slug: string };
 }
 
-interface PendingCommunityJoinRequest {
-  id: string;
-  status: string;
-  message: string;
-  community: { id: string; name: string; slug: string };
-  organization: { id: string; name: string; slug: string };
-}
-
 interface IncomingJoinRequest {
   id: string;
   status: string;
@@ -48,8 +40,6 @@ export interface PendingActions {
   pendingClaims: PendingClaim[];
   /** Join requests you submitted to orgs, waiting for owner */
   pendingJoinRequests: PendingJoinRequest[];
-  /** Community join requests you submitted, waiting for admin */
-  pendingCommunityJoinRequests: PendingCommunityJoinRequest[];
   /** Join requests on your orgs that need your approval (you're owner) */
   incomingJoinRequests: { orgSlug: string; orgName: string; requests: IncomingJoinRequest[] }[];
   /** Invitations you received */
@@ -59,10 +49,9 @@ export interface PendingActions {
 }
 
 export async function getPendingActions(ownedOrgs: { id: string; slug: string; name: string }[]): Promise<PendingActions> {
-  const [claims, joinRequests, communityJoinRequests, invitations, ...orgJoinRequests] = await Promise.all([
+  const [claims, joinRequests, invitations, ...orgJoinRequests] = await Promise.all([
     api.get<PendingClaim[]>('/my/organization_claims'),
     api.get<PendingJoinRequest[]>('/my/join_requests'),
-    api.get<PendingCommunityJoinRequest[]>('/my/community_join_requests'),
     api.get<ReceivedInvitation[]>('/my/invitations'),
     ...ownedOrgs.map((org) =>
       api.get<IncomingJoinRequest[]>(`/organizations/${org.id}/join_requests`)
@@ -71,7 +60,6 @@ export async function getPendingActions(ownedOrgs: { id: string; slug: string; n
 
   const pendingClaims = claims.filter((c) => c.status === 'pending');
   const pendingJoinRequests = joinRequests.filter((j) => j.status === 'pending');
-  const pendingCommunityJoinRequests = communityJoinRequests.filter((j) => j.status === 'pending');
   const receivedInvitations = invitations.filter((i) => !i.expired);
 
   const incomingJoinRequests = ownedOrgs
@@ -85,9 +73,8 @@ export async function getPendingActions(ownedOrgs: { id: string; slug: string; n
   const total =
     pendingClaims.length +
     pendingJoinRequests.length +
-    pendingCommunityJoinRequests.length +
     receivedInvitations.length +
     incomingJoinRequests.reduce((sum, e) => sum + e.requests.length, 0);
 
-  return { pendingClaims, pendingJoinRequests, pendingCommunityJoinRequests, incomingJoinRequests, receivedInvitations, total };
+  return { pendingClaims, pendingJoinRequests, incomingJoinRequests, receivedInvitations, total };
 }

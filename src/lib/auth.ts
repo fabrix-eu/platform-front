@@ -17,21 +17,6 @@ export interface MeOrganization {
   relations_count: number;
   assessments_completed: number;
   assessments_total: number;
-  communities: {
-    community_id: string;
-    community_name: string;
-    community_slug: string;
-    community_image_url: string | null;
-  }[];
-}
-
-export interface AccessibleCommunity {
-  id: string;
-  name: string;
-  slug: string;
-  image_url: string | null;
-  is_admin: boolean;
-  unread_sections: string[];
 }
 
 export interface User {
@@ -41,7 +26,6 @@ export interface User {
   role: string;
   image_url: string | null;
   organizations: MeOrganization[];
-  accessible_communities: AccessibleCommunity[];
 }
 
 export async function login(email: string, password: string): Promise<AuthTokens> {

@@ -20,30 +20,18 @@ export interface NotificationPreference {
 }
 
 // ── Friendly labels for notification types ───────────────────
+// The API still lists preferences for retired features (communities,
+// challenges); only the types below are shown to the user.
 
 export const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
-  community_organization_created: 'Organization joined community',
-  organization_added_to_community: 'Your organization added to community',
   event_created: 'New event created',
   nearby_organization_created: 'Nearby organization registered',
-  challenge_created: 'New challenge created',
-  challenge_application_received: 'Challenge application received',
-  challenge_application_accepted: 'Challenge application accepted',
-  challenge_application_rejected: 'Challenge application rejected',
-  challenge_winner_selected: 'Challenge winner selected',
-  challenge_completed: 'Challenge completed',
-  community_invitation_received: 'Community invitation received',
-  community_invitation_accepted: 'Community invitation accepted',
   organization_invitation_accepted: 'Organization invitation accepted',
   organization_member_joined: 'New member joined organization',
   organization_claimed: 'Organization claimed',
-  organization_joined_community: 'Organization joined your community',
   join_request_received: 'Join request received',
   join_request_accepted: 'Join request accepted',
   join_request_declined: 'Join request declined',
-  community_join_request_received: 'Community join request received',
-  community_join_request_accepted: 'Community join request accepted',
-  community_join_request_declined: 'Community join request declined',
 };
 
 // ── API functions ────────────────────────────────────────────

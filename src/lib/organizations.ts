@@ -16,13 +16,6 @@ export const ORG_KINDS: Record<string, { label: string; badgeColor: string; hex:
   other:                                 { label: 'Other',               badgeColor: 'bg-gray-100 text-gray-800',      hex: '#6B7280' },
 };
 
-export interface OrganizationCommunity {
-  id: string;
-  name: string;
-  slug: string;
-  image_url: string | null;
-}
-
 export interface OrganizationRelation {
   id: string;
   name: string;
@@ -61,7 +54,6 @@ export interface Organization {
   secondary_nace_codes?: string[];
   sector?: string | null;
   organization_photos?: { id: string; url: string; caption: string | null; position: number }[];
-  communities?: OrganizationCommunity[];
   relations?: Relation[];
   related_organizations?: Organization[];
   profile_completion?: {

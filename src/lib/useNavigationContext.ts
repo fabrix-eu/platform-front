@@ -1,11 +1,10 @@
 import { useParams, useLocation } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { getMe, getActiveOrgSlug, isPersonalMode, type User, type MeOrganization, type AccessibleCommunity } from './auth';
+import { getMe, getActiveOrgSlug, isPersonalMode, type User, type MeOrganization } from './auth';
 
 export type RailSelection =
   | { kind: 'personal' }
   | { kind: 'org'; orgSlug: string }
-  | { kind: 'community'; orgSlug: string; communitySlug: string }
   | { kind: 'explore' };
 
 const PERSONAL_PATHS = ['/settings', '/notification-preferences'];
@@ -14,11 +13,8 @@ function computeSelection(
   params: Record<string, string | undefined>,
   pathname: string,
 ): RailSelection {
-  const { orgSlug, communitySlug } = params;
+  const { orgSlug } = params;
 
-  if (communitySlug && orgSlug) {
-    return { kind: 'community', orgSlug, communitySlug };
-  }
   if (orgSlug) {
     return { kind: 'org', orgSlug };
   }
@@ -39,7 +35,7 @@ export function useNavigationContext() {
 
   const hasOrgs = (user?.organizations.length ?? 0) > 0;
   const resolvedOrgSlug =
-    selection.kind === 'org' || selection.kind === 'community'
+    selection.kind === 'org'
       ? selection.orgSlug
       : getActiveOrgSlug() ?? undefined;
 
@@ -47,19 +43,9 @@ export function useNavigationContext() {
     ? user?.organizations.find((o) => o.organization_slug === resolvedOrgSlug)
     : undefined;
 
-  const communities = currentOrg?.communities ?? [];
-
-  const accessibleCommunities = user?.accessible_communities ?? [];
-  const unreadBySlug = new Map(
-    accessibleCommunities.map((c) => [c.slug, c.unread_sections ?? []]),
-  );
-
-  return { selection, user, currentOrg, communities, accessibleCommunities, unreadBySlug } as {
+  return { selection, user, currentOrg } as {
     selection: RailSelection;
     user: User | undefined;
     currentOrg: MeOrganization | undefined;
-    communities: MeOrganization['communities'];
-    accessibleCommunities: AccessibleCommunity[];
-    unreadBySlug: Map<string, string[]>;
   };
 }

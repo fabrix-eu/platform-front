@@ -25,35 +25,18 @@ The frontend holds **no business logic**. It is a thin rendering layer over the 
 - **Validation**: 100% server-side. No Zod/yup schemas. Submit the form, display server errors via `FieldError` component
 - **Auth**: JWT tokens in localStorage, auto-refresh on 401 (see `src/lib/api.ts`)
 
-### 3-shell navigation
+### Navigation (flat, single level)
+
+One sidebar (`AppSidebar`), a flat list with one icon per entry:
 
 ```
-Shell A — Explorer (no sidebar)
-  /                              Home (org cards or onboarding CTA)
-  /organizations                 Directory (list + search + pagination)
-  /organizations/$id             Public org profile
-  /organizations/new             Search → claim/create flow
-  /map                           MapLibre interactive map
-  /communities                   Public communities explorer
-
-Shell B — Mon Organisation (sidebar layout)
-  /$orgSlug                      → redirect to /$orgSlug/dashboard
-  /$orgSlug/dashboard            Stats overview
-  /$orgSlug/profile              Edit org profile
-  /$orgSlug/relations            Manage relations
-  /$orgSlug/assessments          Assessment forms
-  /$orgSlug/communities          My communities list
-  /$orgSlug/settings             Org settings
-
-Shell C — Community (nested in Shell B, tabs)
-  /$orgSlug/communities/$communitySlug
-  /$orgSlug/communities/$communitySlug/members
-  /$orgSlug/communities/$communitySlug/events
-  /$orgSlug/communities/$communitySlug/challenges
-  /$orgSlug/communities/$communitySlug/matchmaking
+Global:   Home (/ → org dashboard), Marketplace (/marketplace), Events (/events), Directory (/global)
+Org:      Profile (/$orgSlug/profile), Compass (/$orgSlug/assessments), Connections (/$orgSlug/relations),
+          Members (/$orgSlug/settings/members), Messages (/$orgSlug/messages)
+Personal: Notifications (/notifications), Settings (/settings)
 ```
 
-**Key rule**: a community is always accessed THROUGH an organization. The org is the "lens" through which the user participates. That's why it's `/$orgSlug/communities/$communitySlug`, not `/communities/$communitySlug`.
+Communities and challenges were retired: their routes/pages/libs are gone; `/communities*` redirects to `/global`. Events are first-class global (RSVP via `/events/:id/participants`, `country_code` on the event).
 
 ### Route guards
 
@@ -61,21 +44,14 @@ Defined in `src/lib/router.ts`, used in `beforeLoad`:
 
 - `requireAuth()` — redirects to `/login` if not authenticated
 - `requireOrgMember({ params })` — checks user belongs to `orgSlug`, else redirects to public profile
-- `requireCommunityMember({ params })` — checks org has access to `communitySlug`, else redirects to communities list
 
 Guards read from the React Query cache (`queryClient.getQueryData(['me'])`).
-
-### Header behavior
-
-- **Shell A**: header shows global nav (Home, Directory, Map, Communities) + user menu
-- **Shell B/C**: header is clean — only OrgSwitcher + user menu. Global nav is hidden. The sidebar footer has a "← Explorer" link to return to Shell A
 
 ### OrgSwitcher context-awareness
 
 The OrgSwitcher computes the destination based on current context:
-- **Shell A** → `/$newSlug/dashboard`
-- **Shell B** (`/$orgSlug/profile`) → `/$newSlug/profile` (preserves section)
-- **Shell C** (`/$orgSlug/communities/$c/...`) → `/$newSlug/communities` (does NOT preserve community, the other org may not be in it)
+- Outside an org shell → `/$newSlug/dashboard`
+- Inside (`/$orgSlug/...`) → `/$newSlug/...` (preserves section)
 
 ## File structure
 
@@ -103,7 +79,6 @@ src/
     ├── home.tsx                Org cards or onboarding CTA
     ├── login.tsx               Login form
     ├── map.tsx                 Map page
-    ├── communities.tsx         Communities explorer
     ├── organizations/          Shell A org pages
     │   ├── list.tsx            Directory with search + pagination
     │   ├── show.tsx            Public org profile
@@ -115,15 +90,9 @@ src/
     │   ├── profile.tsx         Org info
     │   ├── relations.tsx       Relations (stub)
     │   ├── assessments.tsx     Assessments (stub)
-    │   ├── communities-list.tsx  Communities list
-    │   └── settings.tsx        Settings (stub)
-    └── community/              Shell C pages
-        ├── layout.tsx          Tabs layout
-        ├── index.tsx           Overview (stub)
-        ├── members.tsx         Members (stub)
-        ├── events.tsx          Events (stub)
-        ├── challenges.tsx      Challenges (stub)
-        └── matchmaking.tsx     Matchmaking (stub)
+    │   └── settings.tsx        Org settings (members & invitations)
+    ├── events/                 Global events (list, show, new, edit)
+    └── marketplace/            Marketplace (list, show, new, edit)
 ```
 
 ## Conventions

@@ -99,7 +99,7 @@ function ProfileCompletion({ organization, orgSlug }: { organization: Organizati
   );
 }
 
-function OrgActivityFeed({ orgId, orgSlug }: { orgId: string; orgSlug: string }) {
+function OrgActivityFeed({ orgId }: { orgId: string }) {
   const feedQuery = useInfiniteQuery({
     queryKey: ['feed', 'org', orgId],
     queryFn: ({ pageParam }) => getOrgFeed(orgId, { page: pageParam, per_page: 20 }),
@@ -111,12 +111,7 @@ function OrgActivityFeed({ orgId, orgSlug }: { orgId: string; orgSlug: string })
     <div>
       <h2 className="text-sm font-semibold text-gray-900 mb-3">Recent activity</h2>
       <div className="bg-white rounded-lg border border-border">
-        <ActivityFeed
-          query={feedQuery}
-          orgSlug={orgSlug}
-          showCommunity
-          emptyMessage="No recent activity"
-        />
+        <ActivityFeed query={feedQuery} emptyMessage="No recent activity" />
       </div>
     </div>
   );
@@ -174,7 +169,7 @@ export function OrgDashboardPage() {
 
       {/* Stats */}
       {userOrg && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="bg-white rounded-lg border border-border p-4">
             <div className="text-sm text-gray-500 mb-1">Relations</div>
             <div className="text-2xl font-display font-bold">{userOrg.relations_count}</div>
@@ -188,15 +183,11 @@ export function OrgDashboardPage() {
               </span>
             </div>
           </div>
-          <div className="bg-white rounded-lg border border-border p-4">
-            <div className="text-sm text-gray-500 mb-1">Communities</div>
-            <div className="text-2xl font-display font-bold">{userOrg.communities.length}</div>
-          </div>
         </div>
       )}
 
       {/* Activity Feed */}
-      <OrgActivityFeed orgId={organization.id} orgSlug={orgSlug} />
+      <OrgActivityFeed orgId={organization.id} />
     </div>
   );
 }

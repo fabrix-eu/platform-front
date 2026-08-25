@@ -78,31 +78,29 @@ export function EventDetailPage() {
   });
 
   const event = eventQuery.data;
-  const communitySlug = event?.community?.slug;
 
   const isCreator = !!(me.data?.id && event?.created_by_id && me.data.id === event.created_by_id);
   const isAdmin = me.data?.role === 'admin';
   const canEdit = isCreator || isAdmin;
 
   const participantsQuery = useQuery({
-    queryKey: ['event_participants', communitySlug, eventId],
-    queryFn: () => getEventParticipants(communitySlug!, eventId),
-    enabled: !!communitySlug,
+    queryKey: ['event_participants', eventId],
+    queryFn: () => getEventParticipants(eventId),
   });
 
   const rsvpMutation = useMutation({
     mutationFn: (status: 'going' | 'maybe' | 'not_going') =>
-      rsvpToEvent(communitySlug!, eventId, status),
+      rsvpToEvent(eventId, status),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['event_participants', communitySlug, eventId] });
+      queryClient.invalidateQueries({ queryKey: ['event_participants', eventId] });
     },
   });
 
   const cancelMutation = useMutation({
     mutationFn: (participantId: string) =>
-      cancelRsvp(communitySlug!, eventId, participantId),
+      cancelRsvp(eventId, participantId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['event_participants', communitySlug, eventId] });
+      queryClient.invalidateQueries({ queryKey: ['event_participants', eventId] });
     },
   });
 
@@ -185,13 +183,6 @@ export function EventDetailPage() {
       {/* Title */}
       <h1 className="text-2xl font-display font-bold text-gray-900 mb-4">{event.title}</h1>
 
-      {/* Community */}
-      {event.community && (
-        <p className="text-sm text-gray-500 mb-3">
-          Organized by <span className="font-medium text-gray-700">{event.community.name}</span>
-        </p>
-      )}
-
       {/* Date */}
       <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
         <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -240,7 +231,7 @@ export function EventDetailPage() {
       )}
 
       {/* RSVP section */}
-      {me.data && communitySlug && (
+      {me.data && (
         <div className="bg-white border border-border rounded-lg p-5 mb-6">
           <h3 className="text-sm font-semibold text-gray-900 mb-3">Your RSVP</h3>
           <div className="flex gap-2">
@@ -267,8 +258,7 @@ export function EventDetailPage() {
       )}
 
       {/* Participants section */}
-      {communitySlug && (
-        <div className="bg-white border border-border rounded-lg p-5 mb-6">
+      <div className="bg-white border border-border rounded-lg p-5 mb-6">
           <div className="flex items-center gap-3 mb-4">
             <h3 className="text-sm font-semibold text-gray-900">Participants</h3>
             <span className="text-xs text-gray-500">
@@ -300,8 +290,7 @@ export function EventDetailPage() {
               ))}
             </div>
           )}
-        </div>
-      )}
+      </div>
 
       {/* Edit / Delete */}
       {canEdit && (

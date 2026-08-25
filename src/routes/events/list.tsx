@@ -80,11 +80,6 @@ function EventCard({ event }: { event: Event }) {
             </>
           ) : null}
         </p>
-        {event.community && (
-          <p className="text-[10px] text-gray-400 mt-1.5">
-            {event.community.name}
-          </p>
-        )}
       </div>
     </Link>
   );
@@ -94,7 +89,10 @@ type Tab = 'upcoming' | 'past';
 
 export function EventsListPage() {
   const meQuery = useQuery({ queryKey: ['me'], queryFn: getMe });
-  const canCreate = meQuery.data?.role === 'facilitator' || meQuery.data?.role === 'admin';
+  const canCreate =
+    meQuery.data?.role === 'facilitator' ||
+    meQuery.data?.role === 'admin' ||
+    (meQuery.data?.organizations.length ?? 0) > 0;
   const navigate = useNavigate();
   const { page, search, country, lon, lat, radius, location_label } = useSearch({ strict: false }) as {
     page?: number;
@@ -154,7 +152,7 @@ export function EventsListPage() {
     <ExploreListLayout
       featureKey="events"
       title="Events"
-      description="Discover events organized by communities across the circular textile ecosystem. Workshops, conferences, networking sessions and more — find opportunities to connect and learn."
+      description="Discover events across the circular textile ecosystem. Workshops, conferences, networking sessions and more — find opportunities to connect and learn."
       action={
         canCreate ? (
           <Link

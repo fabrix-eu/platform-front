@@ -6,12 +6,10 @@ import { Link } from '@tanstack/react-router';
 type Section =
   | 'home'
   | 'impact-compass'
-  | 'community-ecosystem'
-  | 'facilitator-tools'
+  | 'network-marketplace'
   | 'getting-started'
   | 'directory-map'
   | 'organizations'
-  | 'communities'
   | 'messaging';
 
 interface NavGroup {
@@ -28,8 +26,7 @@ const NAV: NavGroup[] = [
     title: 'Platform',
     items: [
       { key: 'impact-compass', label: 'Impact Compass' },
-      { key: 'community-ecosystem', label: 'Community & Ecosystem' },
-      { key: 'facilitator-tools', label: 'Facilitator Tools' },
+      { key: 'network-marketplace', label: 'Network & Marketplace' },
     ],
   },
   {
@@ -38,7 +35,6 @@ const NAV: NavGroup[] = [
       { key: 'getting-started', label: 'Getting started' },
       { key: 'directory-map', label: 'Directory & Map' },
       { key: 'organizations', label: 'Organizations' },
-      { key: 'communities', label: 'Communities' },
       { key: 'messaging', label: 'Messaging' },
     ],
   },
@@ -166,14 +162,14 @@ function HomeContent() {
           <PillarCard
             icon={<NetworkIcon className="w-5 h-5" />}
             color="bg-blue-50 text-blue-600 border-blue-200"
-            title="Community & Ecosystem"
+            title="Network & Marketplace"
             description="Find partners, materials, services, and equipment across the full circular textile value chain."
           />
           <PillarCard
             icon={<WrenchIcon className="w-5 h-5" />}
             color="bg-amber-50 text-amber-600 border-amber-200"
             title="Facilitator Tools"
-            description="Track member needs, match organizations, manage communities, and accelerate the circular transition."
+            description="Track the needs of your network, connect organizations, and accelerate the circular transition."
           />
         </div>
       </div>
@@ -194,7 +190,7 @@ function HomeContent() {
           <BenefitRow text="Assess your sustainability maturity across eco-design, manufacturing, supply chain, social impact, and more" />
           <BenefitRow text="Discover and connect with complementary partners through the interactive map and marketplace" />
           <BenefitRow text="List your materials, services, capacities, and products on the marketplace" />
-          <BenefitRow text="Join communities to access events, challenges, matchmaking, and facilitator support" />
+          <BenefitRow text="Participate in events — workshops, conferences, networking sessions" />
           <BenefitRow text="Earn the Impact Compass label to showcase your commitment on your products" />
         </div>
       </div>
@@ -208,15 +204,14 @@ function HomeContent() {
           Empower your territory
         </h2>
         <p className="text-sm text-gray-500 mb-6 max-w-md">
-          As a community manager, you are the catalyst of the circular transition.
+          As a facilitator, you are the catalyst of the circular transition.
           Fabrix gives you a CRM built for textile ecosystems.
         </p>
         <div className="space-y-3">
           <BenefitRow text="Track every organization in your territory — needs, performance, opportunities" />
           <BenefitRow text="Oversee Impact Compass assessments and identify priority actions for each member" />
-          <BenefitRow text="Auto-generate matchmaking between organizations based on proximity, capabilities, and roles" />
-          <BenefitRow text="Organize events, challenges, and discussions to activate your community" />
-          <BenefitRow text="Manage shared spaces, subsidies, and incubation programs" />
+          <BenefitRow text="Organize events to activate your network" />
+          <BenefitRow text="Connect organizations and develop meaningful partnerships" />
         </div>
       </div>
 
@@ -458,9 +453,9 @@ function ScoreLevel({
   );
 }
 
-// ─── Marketing: Community & Ecosystem ───────────────────────────────────
+// ─── Marketing: Network & Marketplace ───────────────────────────────────
 
-function CommunityEcosystemContent() {
+function NetworkMarketplaceContent() {
   return (
     <div className="-mx-8 -mt-8">
       {/* Hero */}
@@ -469,15 +464,15 @@ function CommunityEcosystemContent() {
           <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center border border-blue-200">
             <NetworkIcon className="w-4.5 h-4.5" />
           </div>
-          <span className="text-xs font-semibold text-blue-600 uppercase tracking-widest">Community & Ecosystem</span>
+          <span className="text-xs font-semibold text-blue-600 uppercase tracking-widest">Network & Marketplace</span>
         </div>
         <h1 className="text-2xl font-display font-bold text-gray-900 leading-tight mb-3">
           Find your partners.<br />Build your network.
         </h1>
         <p className="text-sm text-gray-600 leading-relaxed max-w-md">
           Fabrix maps the entire circular textile ecosystem — from raw materials to
-          end-of-life. Discover organizations, browse the marketplace, and join
-          communities to build meaningful partnerships.
+          end-of-life. Discover organizations, browse the marketplace, and connect
+          to build meaningful partnerships.
         </p>
       </div>
 
@@ -516,17 +511,15 @@ function CommunityEcosystemContent() {
         </div>
       </div>
 
-      {/* Community features */}
+      {/* Events */}
       <div className="px-8 py-8 border-t border-border">
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-5">
-          Community features
+          Events
         </p>
         <div className="space-y-3">
-          <BenefitRow text="Join communities managed by local facilitators who support your territory" />
           <BenefitRow text="Participate in events — workshops, conferences, networking sessions" />
-          <BenefitRow text="Apply to challenges — find partners for specific projects and win opportunities" />
-          <BenefitRow text="Get matched with complementary organizations through smart matchmaking" />
-          <BenefitRow text="Access discussion spaces to share knowledge and build relationships" />
+          <BenefitRow text="RSVP and see who else is going" />
+          <BenefitRow text="Create your own events to activate the ecosystem" />
         </div>
       </div>
 
@@ -539,7 +532,7 @@ function CommunityEcosystemContent() {
           <BenefitRow text="Interactive map — see every organization in Europe, color-coded by type" />
           <BenefitRow text="Directory with search, filters by type, claimed status, and location radius" />
           <BenefitRow text="12 organization types: producers, recyclers, designers, collectors, brands, and more" />
-          <BenefitRow text="Organization profiles with relations, assessments, communities, and contact" />
+          <BenefitRow text="Organization profiles with relations, assessments, and contact" />
         </div>
       </div>
 
@@ -585,133 +578,6 @@ function MarketplaceStat({ number, label }: { number: string; label: string }) {
   );
 }
 
-// ─── Marketing: Facilitator Tools ───────────────────────────────────────
-
-function FacilitatorToolsContent() {
-  return (
-    <div className="-mx-8 -mt-8">
-      {/* Hero */}
-      <div className="bg-gradient-to-br from-amber-50/80 via-white to-amber-50/50 px-8 pt-10 pb-8 border-b border-border">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center border border-amber-200">
-            <WrenchIcon className="w-4.5 h-4.5" />
-          </div>
-          <span className="text-xs font-semibold text-amber-600 uppercase tracking-widest">Facilitator Tools</span>
-        </div>
-        <h1 className="text-2xl font-display font-bold text-gray-900 leading-tight mb-3">
-          Your CRM for the<br />circular textile transition.
-        </h1>
-        <p className="text-sm text-gray-600 leading-relaxed max-w-md">
-          As a community manager, you need to see the big picture and act on the
-          details. Fabrix gives you everything to track, support, and connect
-          the organizations in your territory.
-        </p>
-      </div>
-
-      {/* Member tracking */}
-      <div className="px-8 py-8">
-        <ToolSection
-          title="Member tracking"
-          description="A complete view of every organization in your community."
-          features={[
-            'Member directory with search, filters by type, and card/list views',
-            'Detailed profiles with private facilitator notes',
-            'Organization data — employees, turnover, NACE codes, specialties',
-            'Needs & opportunities tracking to understand what members are looking for',
-          ]}
-        />
-      </div>
-
-      {/* Assessment oversight */}
-      <div className="px-8 py-8 border-t border-border">
-        <ToolSection
-          title="Assessment oversight"
-          description="Monitor every member's sustainability journey."
-          features={[
-            'See all 7 Impact Compass scores for each member at a glance',
-            'Track assessment status — not started, in progress, or completed',
-            'Read detailed answers and identify priority improvement areas',
-            'Compare members and spot patterns across your community',
-          ]}
-        />
-      </div>
-
-      {/* Matchmaking */}
-      <div className="px-8 py-8 border-t border-border">
-        <ToolSection
-          title="Smart matchmaking"
-          description="Auto-generate connections between organizations."
-          features={[
-            'Matching engine based on proximity, capabilities, and roles',
-            'Scored matches (0–100) with detailed breakdown',
-            'Relation types: input/output, services, R&D, energy, shareholder',
-            'Bulk regeneration of matches for your entire community',
-          ]}
-        />
-      </div>
-
-      {/* Community management */}
-      <div className="px-8 py-8 border-t border-border">
-        <ToolSection
-          title="Community management"
-          description="Activate your ecosystem with events, challenges, and spaces."
-          features={[
-            'Create and manage events — workshops, meetups, webinars',
-            'Launch challenges to drive innovation and connect members',
-            'Review challenge applications, accept, reject, and select winners',
-            'Manage discussion spaces for community conversations',
-            'Define your territory with geographic center and radius',
-          ]}
-        />
-      </div>
-
-      {/* Admin */}
-      <div className="px-8 py-8 border-t border-border bg-gray-50/50">
-        <ToolSection
-          title="Administration"
-          description="Manage access, invitations, and your facilitator team."
-          features={[
-            'Add and remove community members',
-            'Invite new admins and manage facilitator roles',
-            'Review join requests from organizations',
-            'Send and track organization invitations',
-          ]}
-        />
-      </div>
-
-      {/* CTA */}
-      <div className="px-8 py-8 border-t border-border text-center">
-        <p className="text-sm text-gray-600 mb-4">
-          Ready to manage your textile ecosystem?
-        </p>
-        <CTA to="/register-facilitator">Register as facilitator <ArrowRightIcon /></CTA>
-      </div>
-    </div>
-  );
-}
-
-function ToolSection({
-  title,
-  description,
-  features,
-}: {
-  title: string;
-  description: string;
-  features: string[];
-}) {
-  return (
-    <div>
-      <h3 className="text-base font-semibold text-gray-900 mb-1">{title}</h3>
-      <p className="text-sm text-gray-500 mb-4">{description}</p>
-      <div className="space-y-2.5">
-        {features.map((f, i) => (
-          <BenefitRow key={i} text={f} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // ─── Guide: Getting Started ─────────────────────────────────────────────
 
 function GettingStartedContent() {
@@ -724,7 +590,7 @@ function GettingStartedContent() {
 
       <Feature title="1. Create your account">
         Register as an <strong>organization</strong> (SME, brand, recycler...),
-        a <strong>facilitator</strong> (community manager), or a <strong>basic user</strong>.
+        a <strong>facilitator</strong> (network facilitator), or a <strong>basic user</strong>.
         If your organization is already in the directory, you can claim it during registration.
       </Feature>
 
@@ -738,19 +604,14 @@ function GettingStartedContent() {
         textile space. Use the marketplace to find materials, services, and partners.
       </Feature>
 
-      <Feature title="4. Join a community">
-        Request to join a community managed by a local facilitator. Access events,
-        challenges, matchmaking, and discussion spaces.
-      </Feature>
-
-      <Feature title="5. Take the Impact Compass">
+      <Feature title="4. Take the Impact Compass">
         Complete the 7 sustainability assessments to understand your strengths,
         get recommendations, and earn the Impact Compass label.
       </Feature>
 
       <Tip>
-        Use the sidebar on the left to navigate between your organizations,
-        communities, and the global explorer.
+        Use the sidebar on the left to navigate between the marketplace, events,
+        the directory, and your organization.
       </Tip>
     </div>
   );
@@ -780,7 +641,7 @@ function DirectoryMapContent() {
 
       <Feature title="Organization profiles">
         Click any organization to see their public profile — description, location,
-        communities, relations, and contact information. Use the Message button to
+        relations, and contact information. Use the Message button to
         start a conversation.
       </Feature>
 
@@ -804,8 +665,8 @@ function OrganizationsContent() {
       </P>
 
       <Feature title="Dashboard">
-        Overview of your activity — relations, completed assessments, and communities.
-        Your communities are listed in the sidebar for quick access.
+        Overview of your activity — relations, completed assessments, and recent
+        activity from your organization.
       </Feature>
 
       <Feature title="Profile">
@@ -842,52 +703,6 @@ function OrganizationsContent() {
   );
 }
 
-// ─── Guide: Communities ─────────────────────────────────────────────────
-
-function CommunitiesContent() {
-  return (
-    <div>
-      <SectionTitle>Communities</SectionTitle>
-      <P>
-        Communities are groups of organizations managed by facilitators, focused
-        on a geographic area or thematic topic in circular textile.
-      </P>
-
-      <Feature title="Joining a community">
-        Browse public communities from the explorer. Request to join — facilitators
-        will review your application. Once accepted, access all community features
-        through your organization sidebar.
-      </Feature>
-
-      <Feature title="Overview">
-        See a map of members, recent events, active challenges, and latest
-        discussions at a glance.
-      </Feature>
-
-      <Feature title="Members">
-        Browse community members with search and filters. Click a member to see
-        their full profile in the community context.
-      </Feature>
-
-      <Feature title="Events">
-        View upcoming and past events. RSVP with Going, Maybe, or Not Going.
-        Community admins and event creators can manage events.
-      </Feature>
-
-      <Feature title="Challenges">
-        Challenges are calls for participation. Browse active challenges, submit
-        applications, and track outcomes. Any member can create a challenge.
-      </Feature>
-
-      <Feature title="Matchmaking">
-        Get matched with complementary organizations based on proximity,
-        capabilities, and roles. Facilitators can generate matches for the
-        entire community.
-      </Feature>
-    </div>
-  );
-}
-
 // ─── Guide: Messaging ───────────────────────────────────────────────────
 
 function MessagingContent() {
@@ -912,8 +727,7 @@ function MessagingContent() {
 
       <Feature title="Notifications">
         Stay informed with the notification bell — join requests, new events,
-        challenge updates, and new community members. Mark as read individually
-        or all at once.
+        and organization updates. Mark as read individually or all at once.
       </Feature>
 
       <Tip>
@@ -929,12 +743,10 @@ function MessagingContent() {
 const CONTENT: Record<Section, () => React.ReactNode> = {
   home: HomeContent,
   'impact-compass': ImpactCompassContent,
-  'community-ecosystem': CommunityEcosystemContent,
-  'facilitator-tools': FacilitatorToolsContent,
+  'network-marketplace': NetworkMarketplaceContent,
   'getting-started': GettingStartedContent,
   'directory-map': DirectoryMapContent,
   organizations: OrganizationsContent,
-  communities: CommunitiesContent,
   messaging: MessagingContent,
 };
 

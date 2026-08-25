@@ -1,117 +1,60 @@
-import { useQuery } from '@tanstack/react-query';
-import { Building2, Users, Globe, User } from 'lucide-react';
-import { getMe, isPersonalMode, type MeOrganization } from '../lib/auth';
+import {
+  Home,
+  ShoppingBag,
+  Calendar,
+  Map,
+  Building2,
+  Compass,
+  Network,
+  Users,
+  MessageSquare,
+  Bell,
+  Settings,
+} from 'lucide-react';
 import { useNavigationContext } from '../lib/useNavigationContext';
-import { SidebarNav, type NavItem, type NavGroup } from './SidebarNav';
-
-function buildOrgGroup(orgSlug: string, userOrg?: MeOrganization): NavGroup {
-  return {
-    label: userOrg?.organization_name ?? 'Organization',
-    icon: <Building2 className="h-4 w-4" />,
-    children: [
-      { to: `/${orgSlug}/dashboard`, label: 'Dashboard' },
-      { to: `/${orgSlug}/profile`, label: 'Profile' },
-      {
-        to: `/${orgSlug}/assessments`,
-        label: 'Impact Compass',
-        badge: userOrg ? `${userOrg.assessments_completed}/${userOrg.assessments_total}` : null,
-      },
-      {
-        to: `/${orgSlug}/relations`,
-        label: 'Relations',
-        badge: userOrg?.relations_count ?? null,
-      },
-      { to: `/${orgSlug}/messages`, label: 'Messages' },
-      { to: `/${orgSlug}/listings`, label: 'Listings' },
-      { to: `/${orgSlug}/challenges`, label: 'Challenges' },
-      { to: `/${orgSlug}/settings/members`, label: 'Members' },
-    ],
-  };
-}
-
-function buildCommunityGroup(
-  orgSlug: string,
-  community: MeOrganization['communities'][number],
-  unreadSections: string[],
-  isAdmin: boolean,
-): NavGroup {
-  const base = `/${orgSlug}/communities/${community.community_slug}`;
-  const unread = new Set(unreadSections);
-
-  const children = [
-    { to: base, label: 'Overview', exact: true, unreadDot: unread.has('overview') },
-    { to: `${base}/members`, label: 'Members' },
-    { to: `${base}/spaces`, label: 'Spaces', unreadDot: unread.has('spaces') },
-    { to: `${base}/events`, label: 'Events', unreadDot: unread.has('events') },
-    { to: `${base}/challenges`, label: 'Challenges', unreadDot: unread.has('challenges') },
-    { to: `${base}/marketplace`, label: 'Marketplace', unreadDot: unread.has('marketplace') },
-    { to: `${base}/matchmaking`, label: 'Matchmaking' },
-  ];
-
-  if (isAdmin) {
-    children.push(
-      { to: `${base}/join-requests`, label: 'Join Requests' },
-      { to: `${base}/settings`, label: 'Settings' },
-    );
-  }
-
-  return {
-    label: community.community_name,
-    icon: <Users className="h-4 w-4" />,
-    children,
-    unreadDot: unreadSections.length > 0,
-  };
-}
-
-const EXPLORE_GROUP: NavGroup = {
-  label: 'Explore',
-  icon: <Globe className="h-4 w-4" />,
-  children: [
-    { to: '/global', label: 'Directory Map' },
-    { to: '/events', label: 'Events' },
-    { to: '/challenges', label: 'Challenges' },
-    { to: '/marketplace', label: 'Marketplace' },
-    { to: '/communities', label: 'Communities' },
-  ],
-};
+import { SidebarNav, type NavItem } from './SidebarNav';
 
 export function AppSidebar({ className = '' }: { className?: string }) {
-  const { user, currentOrg, communities, unreadBySlug } = useNavigationContext();
-  const meQuery = useQuery({ queryKey: ['me'], queryFn: getMe });
-  const accessibleCommunities = meQuery.data?.accessible_communities ?? [];
+  const { user, currentOrg } = useNavigationContext();
 
   if (!user) return null;
 
   const orgSlug = currentOrg?.organization_slug;
-  const personalMode = isPersonalMode() && !orgSlug;
 
-  const items: NavItem[] = [];
-
-  if (personalMode) {
-    items.push({
-      label: user.name,
-      icon: <User className="h-4 w-4" />,
-      children: [
-        { to: '/', label: 'Home', exact: true },
-        { to: '/messages', label: 'Messages' },
-        { to: '/notifications', label: 'Notifications' },
-        { to: '/settings', label: 'Settings' },
-      ],
-    });
-  }
+  // Flat, single-level navigation: global features first, then the
+  // current organization's, then personal entries.
+  const items: NavItem[] = [
+    // '/' redirects org members to their dashboard — link there directly so
+    // the entry shows as active.
+    {
+      to: orgSlug ? `/${orgSlug}/dashboard` : '/',
+      label: 'Home',
+      icon: <Home className="h-4 w-4" />,
+      exact: !orgSlug,
+    },
+    { to: '/marketplace', label: 'Marketplace', icon: <ShoppingBag className="h-4 w-4" /> },
+    { to: '/events', label: 'Events', icon: <Calendar className="h-4 w-4" /> },
+    { to: '/global', label: 'Directory', icon: <Map className="h-4 w-4" /> },
+  ];
 
   if (orgSlug) {
-    items.push(buildOrgGroup(orgSlug, currentOrg));
-
-    for (const c of communities) {
-      const accessible = accessibleCommunities.find((ac) => ac.slug === c.community_slug);
-      const isAdmin = accessible?.is_admin ?? false;
-      const unreadSections = unreadBySlug.get(c.community_slug) ?? [];
-      items.push(buildCommunityGroup(orgSlug, c, unreadSections, isAdmin));
-    }
+    items.push(
+      { separator: true, label: currentOrg?.organization_name },
+      { to: `/${orgSlug}/profile`, label: 'Profile', icon: <Building2 className="h-4 w-4" /> },
+      { to: `/${orgSlug}/assessments`, label: 'Compass', icon: <Compass className="h-4 w-4" /> },
+      { to: `/${orgSlug}/relations`, label: 'Connections', icon: <Network className="h-4 w-4" /> },
+      // Members carries the invite-a-partner flow — the primary referral loop
+      { to: `/${orgSlug}/settings/members`, label: 'Members', icon: <Users className="h-4 w-4" /> },
+      { to: `/${orgSlug}/messages`, label: 'Messages', icon: <MessageSquare className="h-4 w-4" /> },
+    );
+  } else {
+    items.push({ to: '/messages', label: 'Messages', icon: <MessageSquare className="h-4 w-4" /> });
   }
 
-  items.push(EXPLORE_GROUP);
+  items.push(
+    { to: '/notifications', label: 'Notifications', icon: <Bell className="h-4 w-4" /> },
+    { to: '/settings', label: 'Settings', icon: <Settings className="h-4 w-4" /> },
+  );
 
   return (
     <aside className={`w-64 border-r border-border bg-white flex-shrink-0 overflow-y-auto flex flex-col ${className}`}>

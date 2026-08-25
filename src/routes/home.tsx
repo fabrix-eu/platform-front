@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
-import { getMe, isAuthenticated, type MeOrganization, type AccessibleCommunity } from '../lib/auth';
+import { getMe, isAuthenticated, type MeOrganization } from '../lib/auth';
 import { ORG_KINDS } from '../lib/organizations';
 import { PendingActions } from '../components/PendingActions';
 import { getUserFeed } from '../lib/feed';
@@ -61,55 +61,9 @@ function OrgCard({ org }: { org: MeOrganization }) {
             <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
               <span>{org.relations_count} relations</span>
               <span>{org.assessments_completed}/{org.assessments_total} assessments</span>
-              <span>{org.communities.length} communities</span>
             </div>
           </div>
         </div>
-      </div>
-    </Link>
-  );
-}
-
-function CommunityCard({ community, orgSlug }: { community: AccessibleCommunity; orgSlug?: string }) {
-  const initials = community.name
-    .split(' ')
-    .map((w) => w[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-
-  const linkProps = orgSlug
-    ? { to: '/$orgSlug/communities/$communitySlug' as const, params: { orgSlug, communitySlug: community.slug } }
-    : { to: '/communities' as const, params: {} };
-
-  return (
-    <Link
-      {...linkProps}
-      className="block bg-white rounded-lg border border-border hover:border-gray-300 hover:shadow-md transition-all group"
-    >
-      <div className="p-4 flex items-center gap-3">
-        {community.image_url ? (
-          <img
-            src={community.image_url}
-            alt={community.name}
-            className="h-10 w-10 rounded-lg object-cover flex-shrink-0"
-          />
-        ) : (
-          <div className="h-10 w-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-semibold flex-shrink-0">
-            {initials}
-          </div>
-        )}
-        <div className="flex-1 min-w-0">
-          <h3 className="font-display font-semibold text-sm text-gray-900 truncate group-hover:text-primary transition-colors">
-            {community.name}
-          </h3>
-        </div>
-        <span className="text-xs font-medium bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full flex-shrink-0">
-          Admin
-        </span>
-        <svg className="h-4 w-4 text-gray-400 group-hover:text-gray-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-        </svg>
       </div>
     </Link>
   );
@@ -240,9 +194,9 @@ function LandingPage() {
             iconBg="bg-blue-100"
             iconColor="text-blue-600"
             title="Facilitators"
-            description="I lead a community (through an incubator, co-working, lab, trade association, union, public authority etc.)"
+            description="I support a network of organizations (through an incubator, co-working, lab, trade association, union, public authority etc.)"
             features={[
-              { icon: <MapPin className="h-4 w-4" />, text: 'Map and manage your community' },
+              { icon: <MapPin className="h-4 w-4" />, text: 'Map and manage your network' },
               { icon: <Network className="h-4 w-4" />, text: 'Match members to develop meaningful partnerships' },
               { icon: <TrendingUp className="h-4 w-4" />, text: 'Measure the connections you create' },
               { icon: <Recycle className="h-4 w-4" />, text: 'Make your local economy more circular' },
@@ -260,7 +214,7 @@ function LandingPage() {
             description="I want to explore the platform and learn about sustainable textile networks"
             features={[
               { icon: <MapPin className="h-4 w-4" />, text: 'Browse and explore the textile network' },
-              { icon: <Network className="h-4 w-4" />, text: 'Discover sustainable organizations and communities' },
+              { icon: <Network className="h-4 w-4" />, text: 'Discover sustainable organizations and initiatives' },
               { icon: <TrendingUp className="h-4 w-4" />, text: 'Learn about circular economy initiatives' },
               { icon: <Recycle className="h-4 w-4" />, text: 'Stay informed about industry developments' },
             ]}
@@ -360,7 +314,6 @@ function LandingPage() {
                   <h4 className="font-semibold mb-3">Quick Links</h4>
                   <ul className="space-y-2 text-sm text-muted-foreground">
                     <li><a href="https://www.fabrixproject.eu/about" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">About</a></li>
-                    <li><Link to="/communities" className="hover:text-primary transition-colors">Communities</Link></li>
                     <li><a href="https://www.fabrixproject.eu/news" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">News</a></li>
                     <li><a href="https://www.fabrixproject.eu/contact" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Contact</a></li>
                   </ul>
@@ -451,9 +404,7 @@ export function HomePage() {
 
   const user = me.data!;
   const orgs = user.organizations ?? [];
-  const adminCommunities = (user.accessible_communities ?? []).filter((c) => c.is_admin);
-  const firstOrgSlug = orgs[0]?.organization_slug;
-  const isViewer = orgs.length === 0 && adminCommunities.length === 0;
+  const isViewer = orgs.length === 0;
 
   const feedQuery = useInfiniteQuery({
     queryKey: ['feed', 'user'],
@@ -478,26 +429,8 @@ export function HomePage() {
 
       <PendingActions />
 
-      {adminCommunities.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-lg font-display font-semibold text-gray-900">Your communities</h2>
-          <p className="text-sm text-gray-500 mt-1 mb-3">Communities you manage as a facilitator</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {adminCommunities.map((c) => (
-              <CommunityCard key={c.id} community={c} orgSlug={firstOrgSlug} />
-            ))}
-          </div>
-        </div>
-      )}
-
       {orgs.length > 0 ? (
         <div>
-          {adminCommunities.length > 0 && (
-            <>
-              <h2 className="text-lg font-display font-semibold text-gray-900">Your organizations</h2>
-              <p className="text-sm text-gray-500 mt-1 mb-3">Organizations you are a member of</p>
-            </>
-          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {orgs.map((org) => (
               <OrgCard key={org.organization_id} org={org} />
@@ -534,12 +467,7 @@ export function HomePage() {
         <div className="mt-8">
           <h2 className="text-lg font-display font-semibold text-gray-900 mb-3">Recent activity</h2>
           <div className="bg-white rounded-lg border border-border">
-            <ActivityFeed
-              query={feedQuery}
-              orgSlug={firstOrgSlug}
-              showCommunity
-              emptyMessage="No recent activity from your communities"
-            />
+            <ActivityFeed query={feedQuery} emptyMessage="No recent activity" />
           </div>
         </div>
       )}

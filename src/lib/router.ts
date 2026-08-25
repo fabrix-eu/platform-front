@@ -21,28 +21,8 @@ import { OrgRelationsPage } from '../routes/org/relations';
 import { OrgAssessmentsPage } from '../routes/org/assessments';
 import { AssessmentFormPage } from '../routes/org/assessment-form';
 import { AssessmentResultsPage } from '../routes/org/assessment-results';
-import { OrgCommunitiesListPage } from '../routes/org/communities-list';
 import { OrgSettingsMembersPage } from '../routes/org/settings';
-import { CommunityLayout } from '../routes/community/layout';
-import { CommunityOverviewPage } from '../routes/community/index';
-import { CommunityMembersPage } from '../routes/community/members';
-import { CommunityMemberDetailPage } from '../routes/community/member-detail';
-import { CommunityMemberAssessmentPage } from '../routes/community/member-assessment';
-import { CommunityEventsListPage } from '../routes/community/events';
-import { CommunityEventDetailPage } from '../routes/community/event-detail';
-import { CommunityEventNewPage } from '../routes/community/event-new';
-import { CommunityEventEditPage } from '../routes/community/event-edit';
-import { CommunityChallengesListPage } from '../routes/community/challenges';
-import { ChallengeDetailPage } from '../routes/community/challenge-detail';
-import { ChallengeNewPage } from '../routes/community/challenge-new';
-import { ChallengeEditPage } from '../routes/community/challenge-edit';
-import { CommunityMatchmakingPage } from '../routes/community/matchmaking';
-import { CommunityJoinRequestsPage } from '../routes/community/join-requests';
-import { CommunitySettingsPage } from '../routes/community/settings';
 import { DirectoryMapPage } from '../routes/directory-map';
-import { CommunitiesPage } from '../routes/communities';
-import { CommunityShowPage } from '../routes/communities/show';
-import { CommunityNewPage } from '../routes/communities/new';
 import { ForgotPasswordPage } from '../routes/forgot-password';
 import { ResetPasswordPage } from '../routes/reset-password';
 import { RegisterPage } from '../routes/register';
@@ -59,23 +39,18 @@ import { FeedbackPage } from '../routes/feedback';
 import { AdminLayout } from '../routes/admin/layout';
 import { AdminOrganizationsPage } from '../routes/admin/organizations';
 import { AdminUsersPage } from '../routes/admin/users';
-import { AdminCommunitiesPage } from '../routes/admin/communities';
 import { AdminFeedbacksPage } from '../routes/admin/feedbacks';
 import { AdminClaimsPage } from '../routes/admin/claims';
 import { EventsListPage } from '../routes/events/list';
 import { EventNewPage } from '../routes/events/new';
 import { EventEditPage } from '../routes/events/edit';
 import { EventDetailPage } from '../routes/events/show';
-import { ChallengesListPage } from '../routes/challenges/list';
-import { ChallengeShowPage } from '../routes/challenges/show';
 import { NotificationsPage } from '../routes/notifications';
 import { SettingsPage } from '../routes/settings';
 import { NotificationPreferencesPage } from '../routes/notification-preferences';
 import { MessagesPage } from '../routes/messages';
 import { OrgMessagesPage } from '../routes/org/messages';
 import { OrgListingsPage } from '../routes/org/listings';
-import { ChallengesPage } from '../routes/org/opportunities';
-import { ApplicationDetailPage } from '../routes/org/application-detail';
 import { DataLayout } from '../routes/data/layout';
 import { RotterdamPage } from '../routes/data/rotterdam';
 import { RotterdamChartsPage } from '../routes/data/rotterdam-charts';
@@ -85,11 +60,6 @@ import { MarketplaceShowPage } from '../routes/marketplace/show';
 import { MarketplaceNewPage } from '../routes/marketplace/new';
 import { MarketplaceEditPage } from '../routes/marketplace/edit';
 import { ValueChainPage } from '../routes/value-chain';
-import { CommunityMarketplacePage } from '../routes/community/marketplace';
-import { CommunityMarketplaceDetailPage } from '../routes/community/marketplace-detail';
-import { CommunitySpacesPage } from '../routes/community/spaces';
-import { CommunitySpaceDetailPage } from '../routes/community/space-detail';
-import { CommunitySpacePostPage } from '../routes/community/space-post';
 import { isAuthenticated, getMe, type User } from './auth';
 import { queryClient } from './queryClient';
 
@@ -128,31 +98,6 @@ async function requireAdmin() {
   const me = await ensureMe();
   if (me.role !== 'admin') {
     throw redirect({ to: '/' });
-  }
-}
-
-async function requireCommunityMember({
-  params,
-}: {
-  params: { orgSlug: string; communitySlug: string };
-}) {
-  if (!isAuthenticated()) throw redirect({ to: '/login' });
-  const me = await ensureMe();
-  const org = me.organizations.find(
-    (o) => o.organization_slug === params.orgSlug
-  );
-  const hasCommunity = org?.communities.some(
-    (c) => c.community_slug === params.communitySlug
-  );
-  // Also allow community admins (e.g. facilitator who created the community)
-  const isCommunityAdmin = me.accessible_communities?.some(
-    (c) => c.slug === params.communitySlug && c.is_admin
-  );
-  if (!hasCommunity && !isCommunityAdmin) {
-    throw redirect({
-      to: '/$orgSlug/communities',
-      params: { orgSlug: params.orgSlug },
-    });
   }
 }
 
@@ -424,29 +369,22 @@ const directoryRedirectRoute = createRoute({
   },
 });
 
-const communitiesRoute = createRoute({
+// Legacy redirects: communities have been retired, but links to them are
+// still in circulation (notification emails, bookmarks).
+const communitiesRedirectRoute = createRoute({
   getParentRoute: () => explorerRoute,
   path: '/communities',
-  beforeLoad: requireAuth,
+  beforeLoad: () => {
+    throw redirect({ to: '/global' });
+  },
 });
 
-const communitiesIndexRoute = createRoute({
-  getParentRoute: () => communitiesRoute,
-  path: '/',
-  component: CommunitiesPage,
-});
-
-const communityNewRoute = createRoute({
-  getParentRoute: () => communitiesRoute,
-  path: '/new',
-  beforeLoad: requireAuth,
-  component: CommunityNewPage,
-});
-
-const communityShowRoute = createRoute({
-  getParentRoute: () => communitiesRoute,
-  path: '/$id',
-  component: CommunityShowPage,
+const communityShowRedirectRoute = createRoute({
+  getParentRoute: () => explorerRoute,
+  path: '/communities/$id',
+  beforeLoad: () => {
+    throw redirect({ to: '/global' });
+  },
 });
 
 // ── Data (under Explorer) ────────────────────────────────────
@@ -579,33 +517,6 @@ const eventDetailRoute = createRoute({
   component: EventDetailPage,
 });
 
-const challengesRoute = createRoute({
-  getParentRoute: () => globalRoute,
-  path: '/challenges',
-  beforeLoad: requireAuth,
-});
-
-const challengesIndexRoute = createRoute({
-  getParentRoute: () => challengesRoute,
-  path: '/',
-  validateSearch: z.object({
-    page: z.number().optional(),
-    search: z.string().optional(),
-    country: z.string().optional(),
-    lon: z.number().optional(),
-    lat: z.number().optional(),
-    radius: z.number().optional(),
-    location_label: z.string().optional(),
-  }),
-  component: ChallengesListPage,
-});
-
-const challengeDetailRoute = createRoute({
-  getParentRoute: () => challengesRoute,
-  path: '/$challengeId',
-  component: ChallengeShowPage,
-});
-
 // ── Shell B: Mon Organisation (/$orgSlug) ────────────────────
 
 const orgRoute = createRoute({
@@ -689,33 +600,6 @@ const orgListingsRoute = createRoute({
   }),
 });
 
-const orgChallengesRoute = createRoute({
-  getParentRoute: () => orgRoute,
-  path: '/challenges',
-});
-
-const orgChallengesIndexRoute = createRoute({
-  getParentRoute: () => orgChallengesRoute,
-  path: '/',
-  validateSearch: z.object({
-    tab: z.string().optional(),
-    page: z.number().optional(),
-  }),
-  component: ChallengesPage,
-});
-
-const orgApplicationDetailRoute = createRoute({
-  getParentRoute: () => orgChallengesRoute,
-  path: '/$applicationId',
-  component: ApplicationDetailPage,
-});
-
-const orgCommunitiesRoute = createRoute({
-  getParentRoute: () => orgRoute,
-  path: '/communities',
-  component: OrgCommunitiesListPage,
-});
-
 const orgSettingsRoute = createRoute({
   getParentRoute: () => orgRoute,
   path: '/settings',
@@ -737,156 +621,6 @@ const orgSettingsMembersRoute = createRoute({
   getParentRoute: () => orgSettingsRoute,
   path: '/members',
   component: OrgSettingsMembersPage,
-});
-
-// ── Shell C: Community (/$orgSlug/communities/$communitySlug) ─
-
-const communityRoute = createRoute({
-  getParentRoute: () => orgRoute,
-  path: '/communities/$communitySlug',
-  beforeLoad: async ({ params }) => {
-    await requireCommunityMember({ params });
-  },
-  component: CommunityLayout,
-});
-
-const communityIndexRoute = createRoute({
-  getParentRoute: () => communityRoute,
-  path: '/',
-  validateSearch: z.object({
-    search: z.string().optional(),
-    kinds: z.string().optional(),
-  }),
-  component: CommunityOverviewPage,
-});
-
-const communityMembersRoute = createRoute({
-  getParentRoute: () => communityRoute,
-  path: '/members',
-  validateSearch: z.object({
-    search: z.string().optional(),
-    page: z.number().optional(),
-    kinds: z.string().optional(),
-  }),
-  component: CommunityMembersPage,
-});
-
-const communityMemberDetailRoute = createRoute({
-  getParentRoute: () => communityRoute,
-  path: '/members/$memberId',
-  component: CommunityMemberDetailPage,
-});
-
-const communityMemberAssessmentRoute = createRoute({
-  getParentRoute: () => communityRoute,
-  path: '/members/$memberId/assessments/$formKey',
-  component: CommunityMemberAssessmentPage,
-});
-
-const communityEventsRoute = createRoute({
-  getParentRoute: () => communityRoute,
-  path: '/events',
-  component: CommunityEventsListPage,
-});
-
-const communityEventNewRoute = createRoute({
-  getParentRoute: () => communityRoute,
-  path: '/events/new',
-  component: CommunityEventNewPage,
-});
-
-const communityEventDetailRoute = createRoute({
-  getParentRoute: () => communityRoute,
-  path: '/events/$eventId',
-  component: CommunityEventDetailPage,
-});
-
-const communityEventEditRoute = createRoute({
-  getParentRoute: () => communityRoute,
-  path: '/events/$eventId/edit',
-  component: CommunityEventEditPage,
-});
-
-const communityChallengesRoute = createRoute({
-  getParentRoute: () => communityRoute,
-  path: '/challenges',
-  component: CommunityChallengesListPage,
-});
-
-const communityChallengeNewRoute = createRoute({
-  getParentRoute: () => communityRoute,
-  path: '/challenges/new',
-  component: ChallengeNewPage,
-});
-
-const communityChallengeDetailRoute = createRoute({
-  getParentRoute: () => communityRoute,
-  path: '/challenges/$challengeId',
-  component: ChallengeDetailPage,
-});
-
-const communityChallengeEditRoute = createRoute({
-  getParentRoute: () => communityRoute,
-  path: '/challenges/$challengeId/edit',
-  component: ChallengeEditPage,
-});
-
-const communityMatchmakingRoute = createRoute({
-  getParentRoute: () => communityRoute,
-  path: '/matchmaking',
-  component: CommunityMatchmakingPage,
-});
-
-const communityJoinRequestsRoute = createRoute({
-  getParentRoute: () => communityRoute,
-  path: '/join-requests',
-  component: CommunityJoinRequestsPage,
-});
-
-const communitySettingsRoute = createRoute({
-  getParentRoute: () => communityRoute,
-  path: '/settings',
-  component: CommunitySettingsPage,
-});
-
-const communityMarketplaceRoute = createRoute({
-  getParentRoute: () => communityRoute,
-  path: '/marketplace',
-  validateSearch: z.object({
-    page: z.number().optional(),
-    search: z.string().optional(),
-    by_type: z.string().optional(),
-    by_category: z.string().optional(),
-    by_subcategory: z.string().optional(),
-  }),
-  component: CommunityMarketplacePage,
-});
-
-const communityMarketplaceDetailRoute = createRoute({
-  getParentRoute: () => communityRoute,
-  path: '/marketplace/$listingId',
-  component: CommunityMarketplaceDetailPage,
-});
-
-const communitySpacesRoute = createRoute({
-  getParentRoute: () => communityRoute,
-  path: '/spaces',
-  component: CommunitySpacesPage,
-});
-
-const communitySpaceDetailRoute = createRoute({
-  getParentRoute: () => communityRoute,
-  path: '/spaces/$spaceId',
-  validateSearch: z.object({
-    page: z.number().optional(),
-  }),
-  component: CommunitySpaceDetailPage,
-});
-
-const communitySpacePostRoute = createRoute({
-  getParentRoute: () => communityRoute,
-  path: '/spaces/$spaceId/posts/$postId',
-  component: CommunitySpacePostPage,
 });
 
 // ── Admin ────────────────────────────────────────────────────
@@ -916,12 +650,6 @@ const adminUsersRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: '/users',
   component: AdminUsersPage,
-});
-
-const adminCommunitiesRoute = createRoute({
-  getParentRoute: () => adminRoute,
-  path: '/communities',
-  component: AdminCommunitiesPage,
 });
 
 const adminFeedbacksRoute = createRoute({
@@ -959,7 +687,6 @@ const routeTree = rootRoute.addChildren([
     adminIndexRoute,
     adminOrganizationsRoute,
     adminUsersRoute,
-    adminCommunitiesRoute,
     adminFeedbacksRoute,
     adminClaimsRoute,
   ]),
@@ -967,11 +694,8 @@ const routeTree = rootRoute.addChildren([
     indexRoute,
     mapRedirectRoute,
     directoryRedirectRoute,
-    communitiesRoute.addChildren([
-      communitiesIndexRoute,
-      communityNewRoute,
-      communityShowRoute,
-    ]),
+    communitiesRedirectRoute,
+    communityShowRedirectRoute,
     messagesRoute,
     notificationsRoute,
     valueChainRoute,
@@ -999,10 +723,6 @@ const routeTree = rootRoute.addChildren([
       eventNewRoute,
       eventEditRoute,
       eventDetailRoute,
-      challengesRoute.addChildren([
-        challengesIndexRoute,
-        challengeDetailRoute,
-      ]),
     ]),
   ]),
   orgRoute.addChildren([
@@ -1015,36 +735,9 @@ const routeTree = rootRoute.addChildren([
     orgAssessmentFormRoute,
     orgMessagesRoute,
     orgListingsRoute,
-    orgChallengesRoute.addChildren([
-      orgChallengesIndexRoute,
-      orgApplicationDetailRoute,
-    ]),
-    orgCommunitiesRoute,
     orgSettingsRoute.addChildren([
       orgSettingsIndexRoute,
       orgSettingsMembersRoute,
-    ]),
-    communityRoute.addChildren([
-      communityIndexRoute,
-      communityMembersRoute,
-      communityMemberDetailRoute,
-      communityMemberAssessmentRoute,
-      communityEventsRoute,
-      communityEventNewRoute,
-      communityEventDetailRoute,
-      communityEventEditRoute,
-      communityChallengesRoute,
-      communityChallengeNewRoute,
-      communityChallengeDetailRoute,
-      communityChallengeEditRoute,
-      communityMatchmakingRoute,
-      communityJoinRequestsRoute,
-      communitySettingsRoute,
-      communityMarketplaceRoute,
-      communityMarketplaceDetailRoute,
-      communitySpacesRoute,
-      communitySpaceDetailRoute,
-      communitySpacePostRoute,
     ]),
   ]),
 ]);

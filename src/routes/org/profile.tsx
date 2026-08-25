@@ -987,7 +987,7 @@ export function OrgProfilePage() {
                 title="Needs & Opportunities"
                 featureInfoId="profile-needs"
                 featureInfoTitle="Help your facilitator help you"
-                featureInfoDescription="By sharing your challenges and interests, you enable your community facilitator to provide tailored support, connect you with the right partners, and shape programs that address real needs across the ecosystem."
+                featureInfoDescription="By sharing your needs and interests, you enable facilitators to provide tailored support, connect you with the right partners, and shape programs that address real needs across the ecosystem."
               />
             )}
             {activeSection === 'photos' && <PhotosSection orgSlug={orgSlug} />}

@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createGlobalEvent, updateGlobalEvent } from '../../lib/events';
 import { uploadFile } from '../../lib/uploads';
 import { FieldError, FormError } from '../../components/FieldError';
+import { EU_COUNTRIES } from '../../components/LocationFilter';
 
 export function EventNewPage() {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ export function EventNewPage() {
   const [happensAt, setHappensAt] = useState('');
   const [online, setOnline] = useState(false);
   const [address, setAddress] = useState('');
+  const [countryCode, setCountryCode] = useState('');
   const [onlineUrl, setOnlineUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -27,6 +29,7 @@ export function EventNewPage() {
         happens_at: new Date(happensAt).toISOString(),
         online,
         address: online ? undefined : address || undefined,
+        country_code: online ? undefined : countryCode || undefined,
         online_url: online ? onlineUrl || undefined : undefined,
       });
 
@@ -166,6 +169,24 @@ export function EventNewPage() {
               placeholder="12 Rue du Textile, Lyon"
             />
             <FieldError mutation={mutation} field="address" />
+            <div className="mt-4">
+              <label htmlFor="country_code" className="block text-sm font-medium text-gray-700 mb-1">
+                Country
+              </label>
+              <select
+                id="country_code"
+                name="country_code"
+                value={countryCode}
+                onChange={(e) => setCountryCode(e.target.value)}
+                className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">Select a country</option>
+                {EU_COUNTRIES.map((c) => (
+                  <option key={c.code} value={c.code}>{c.name}</option>
+                ))}
+              </select>
+              <FieldError mutation={mutation} field="country_code" />
+            </div>
           </div>
         )}
 

@@ -117,22 +117,13 @@ export function useMarkAllAsRead() {
 
 /**
  * Returns the URL to navigate to when clicking a notification.
- * Uses metadata + the user's me data to resolve org/community slugs.
+ * Uses metadata + the user's me data to resolve org slugs.
+ *
+ * Community and challenge notification types are legacy (the features were
+ * retired): their notifications render without a link.
  */
 export function getNotificationUrl(n: Notification, me: User | null): string | null {
   const m = n.metadata;
-
-  // Helper: find the orgSlug from the user's orgs that gives access to a community
-  function orgSlugForCommunity(communitySlug: string): string | null {
-    if (!me) return null;
-    for (const org of me.organizations) {
-      if (org.communities.some((c) => c.community_slug === communitySlug)) {
-        return org.organization_slug;
-      }
-    }
-    // Fallback: user might be community admin without org membership
-    return me.organizations[0]?.organization_slug ?? null;
-  }
 
   // Helper: find the orgSlug from an organization_id
   function orgSlugForId(orgId: string): string | null {
@@ -150,21 +141,6 @@ export function getNotificationUrl(n: Notification, me: User | null): string | n
     case 'join_request_declined':
       return m.organization_id ? `/organizations/${m.organization_id}` : null;
 
-    // ── Community join requests ──
-    case 'community_join_request_received': {
-      const orgSlug = orgSlugForCommunity(m.community_slug);
-      return orgSlug && m.community_slug
-        ? `/${orgSlug}/communities/${m.community_slug}/join-requests`
-        : null;
-    }
-    case 'community_join_request_accepted':
-    case 'community_join_request_declined': {
-      const orgSlug = orgSlugForCommunity(m.community_slug);
-      return orgSlug && m.community_slug
-        ? `/${orgSlug}/communities/${m.community_slug}`
-        : null;
-    }
-
     // ── Organization invitations ──
     case 'organization_invitation_accepted':
     case 'organization_member_joined': {
@@ -176,44 +152,9 @@ export function getNotificationUrl(n: Notification, me: User | null): string | n
     case 'organization_claimed':
       return '/my/organization_claims';
 
-    // ── Community invitations ──
-    case 'community_invitation_received':
-      return '/my/invitations';
-    case 'community_invitation_accepted': {
-      const orgSlug = orgSlugForCommunity(m.community_slug);
-      return orgSlug && m.community_slug
-        ? `/${orgSlug}/communities/${m.community_slug}`
-        : null;
-    }
-
-    // ── Community events / challenges ──
-    case 'event_created': {
-      const orgSlug = orgSlugForCommunity(m.community_slug);
-      return orgSlug && m.community_slug
-        ? `/${orgSlug}/communities/${m.community_slug}/events`
-        : null;
-    }
-    case 'challenge_created':
-    case 'challenge_application_received':
-    case 'challenge_application_accepted':
-    case 'challenge_application_rejected':
-    case 'challenge_winner_selected':
-    case 'challenge_completed': {
-      const orgSlug = orgSlugForCommunity(m.community_slug);
-      return orgSlug && m.community_slug
-        ? `/${orgSlug}/communities/${m.community_slug}/challenges`
-        : null;
-    }
-
-    // ── Community membership ──
-    case 'community_organization_created':
-    case 'organization_added_to_community':
-    case 'organization_joined_community': {
-      const orgSlug = orgSlugForCommunity(m.community_slug);
-      return orgSlug && m.community_slug
-        ? `/${orgSlug}/communities/${m.community_slug}/members`
-        : null;
-    }
+    // ── Events ──
+    case 'event_created':
+      return n.notifiable?.id ? `/events/${n.notifiable.id}` : '/events';
 
     // ── Nearby org ──
     case 'nearby_organization_created':

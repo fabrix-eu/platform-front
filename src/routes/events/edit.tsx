@@ -8,6 +8,7 @@ import {
 } from '../../lib/events';
 import { uploadFile } from '../../lib/uploads';
 import { FieldError, FormError } from '../../components/FieldError';
+import { EU_COUNTRIES } from '../../components/LocationFilter';
 
 function toDatetimeLocal(iso: string): string {
   const d = new Date(iso);
@@ -30,6 +31,7 @@ export function EventEditPage() {
   const [happensAt, setHappensAt] = useState('');
   const [online, setOnline] = useState(false);
   const [address, setAddress] = useState('');
+  const [countryCode, setCountryCode] = useState('');
   const [onlineUrl, setOnlineUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
@@ -44,6 +46,7 @@ export function EventEditPage() {
     setHappensAt(event.happens_at ? toDatetimeLocal(event.happens_at) : '');
     setOnline(event.online);
     setAddress(event.address || '');
+    setCountryCode(event.country_code?.toUpperCase() || '');
     setOnlineUrl(event.online_url || '');
     setCurrentImageUrl(event.image_url);
     setInitialized(true);
@@ -64,6 +67,7 @@ export function EventEditPage() {
         happens_at: new Date(happensAt).toISOString(),
         online,
         address: online ? undefined : address || undefined,
+        country_code: online ? undefined : countryCode || undefined,
         online_url: online ? onlineUrl || undefined : undefined,
         ...(imageUrl ? { image_url: imageUrl } : {}),
       });
@@ -239,6 +243,24 @@ export function EventEditPage() {
               placeholder="12 Rue du Textile, Lyon"
             />
             <FieldError mutation={updateMutation} field="address" />
+            <div className="mt-4">
+              <label htmlFor="country_code" className="block text-sm font-medium text-gray-700 mb-1">
+                Country
+              </label>
+              <select
+                id="country_code"
+                name="country_code"
+                value={countryCode}
+                onChange={(e) => setCountryCode(e.target.value)}
+                className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">Select a country</option>
+                {EU_COUNTRIES.map((c) => (
+                  <option key={c.code} value={c.code}>{c.name}</option>
+                ))}
+              </select>
+              <FieldError mutation={updateMutation} field="country_code" />
+            </div>
           </div>
         )}
 

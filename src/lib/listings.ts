@@ -280,12 +280,6 @@ export interface ListingOrganization {
   image_url: string | null;
 }
 
-export interface ListingCommunity {
-  id: string;
-  name: string;
-  slug: string;
-}
-
 export interface Listing {
   id: string;
   listing_type: string;
@@ -300,7 +294,6 @@ export interface Listing {
   updated_at: string;
   thumbnail_url: string | null;
   organization: ListingOrganization;
-  community: ListingCommunity | null;
   // extended view only
   images?: ListingImage[];
 }
@@ -323,8 +316,6 @@ export interface ListingParams {
   by_type?: string;
   by_category?: string;
   by_subcategory?: string;
-  by_community?: string;
-  by_community_id?: string;
   by_organization?: string;
   by_country?: string;
   'within_distance[lon]'?: string;
@@ -334,7 +325,6 @@ export interface ListingParams {
 
 export interface ListingPayload {
   organization_id: string;
-  community_id?: string;
   listing_type: string;
   category: string;
   subcategory?: string;
@@ -355,8 +345,6 @@ export async function getListings(params: ListingParams = {}): Promise<ListingsR
   if (params.by_type) qs.set('by_type', params.by_type);
   if (params.by_category) qs.set('by_category', params.by_category);
   if (params.by_subcategory) qs.set('by_subcategory', params.by_subcategory);
-  if (params.by_community) qs.set('by_community', params.by_community);
-  if (params.by_community_id) qs.set('by_community_id', params.by_community_id);
   if (params.by_organization) qs.set('by_organization', params.by_organization);
   if (params.by_country) qs.set('by_country', params.by_country);
   if (params['within_distance[lon]']) qs.set('within_distance[lon]', params['within_distance[lon]']);

@@ -10,10 +10,13 @@ import {
 export function NotificationPreferencesPage() {
   const queryClient = useQueryClient();
 
-  const { data: prefs, isLoading } = useQuery({
+  const { data: allPrefs, isLoading } = useQuery({
     queryKey: ['notification_preferences'],
     queryFn: getNotificationPreferences,
   });
+
+  // The API still lists preferences for retired features — only show known types
+  const prefs = allPrefs?.filter((p) => p.notification_type in NOTIFICATION_TYPE_LABELS);
 
   const mutation = useMutation({
     mutationFn: updateNotificationPreference,
