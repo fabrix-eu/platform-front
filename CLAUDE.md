@@ -38,6 +38,16 @@ Personal: Notifications (/notifications), Settings (/settings)
 
 Communities and challenges were retired: their routes/pages/libs are gone; `/communities*` redirects to `/global`. Events are first-class global (RSVP via `/events/:id/participants`, `country_code` on the event).
 
+### Explore pages (Marketplace, Events, Directory)
+
+The three explore pages share one framework:
+
+- `src/components/explore/ExploreShell.tsx` — filter sidebar + header (result count, action, cards|list|map `ViewModeToggle` driven by the `view` search param) + infinite scroll (`InfiniteScrollSentinel`)
+- `src/components/explore/ExploreFilters.tsx` — sidebar sections: text search, Location ("Near" + radius + country), listing-type taxonomy (hidden for Events)
+- `src/components/explore/PointsMap.tsx` — generic MapLibre map (`MapPoint[]`, filter circle, legend overlay); `OrganizationsMap` is a thin Organization wrapper over it
+- `src/lib/explore.ts` — `resolveLocation`/`useMyOrgLocation`: the location filter **defaults to "Me"** (current org address from `/me`, radius 100 km); `near=all` in the URL means cleared; explicit `lon/lat` means a chosen place
+- Map data comes from the non-paginated `view=map` API mode on all three endpoints
+
 ### Route guards
 
 Defined in `src/lib/router.ts`, used in `beforeLoad`:

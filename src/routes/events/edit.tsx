@@ -8,7 +8,7 @@ import {
 } from '../../lib/events';
 import { uploadFile } from '../../lib/uploads';
 import { FieldError, FormError } from '../../components/FieldError';
-import { EU_COUNTRIES } from '../../components/LocationFilter';
+import { EU_COUNTRIES } from '../../lib/countries';
 
 function toDatetimeLocal(iso: string): string {
   const d = new Date(iso);

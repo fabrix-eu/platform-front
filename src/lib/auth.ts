@@ -11,6 +11,10 @@ export interface MeOrganization {
   organization_slug: string;
   organization_kind: string;
   organization_image_url: string | null;
+  organization_address: string | null;
+  organization_country_code: string | null;
+  organization_lon: number | null;
+  organization_lat: number | null;
   organization_registration_step: number;
   onboarding_complete: boolean;
   role: 'owner' | 'admin' | 'member';

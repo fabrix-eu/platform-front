@@ -124,6 +124,52 @@ export async function getOrganizations(params: {
   return { organizations: json.organizations, meta: json.meta };
 }
 
+/** Lightweight payload returned by GET /organizations?view=map */
+export interface OrganizationMapPin {
+  id: string;
+  name: string;
+  slug: string | null;
+  kind: string | null;
+  address: string | null;
+  image_url: string | null;
+  lon: number | null;
+  lat: number | null;
+}
+
+export async function getOrganizationsMap(params: {
+  search?: string;
+  kinds?: string;
+  specialties?: string;
+  by_claimed?: string;
+  by_country?: string;
+  lon?: number;
+  lat?: number;
+  radius?: number;
+}): Promise<{ organizations: OrganizationMapPin[]; meta: { total_count: number } }> {
+  const qs = new URLSearchParams();
+  qs.set('view', 'map');
+  if (params.search) qs.set('search', params.search);
+  if (params.kinds) qs.set('kinds', params.kinds);
+  if (params.specialties) qs.set('specialties', params.specialties);
+  if (params.by_claimed !== undefined) qs.set('by_claimed', params.by_claimed);
+  if (params.by_country) qs.set('by_country', params.by_country);
+  if (params.lon !== undefined && params.lat !== undefined) {
+    qs.set('within_distance[lon]', String(params.lon));
+    qs.set('within_distance[lat]', String(params.lat));
+    if (params.radius) qs.set('within_distance[radius]', String(params.radius));
+  }
+
+  const token = localStorage.getItem('access_token');
+  const res = await fetch(`${BASE}/organizations?${qs}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+  const json = await res.json();
+  return { organizations: json.organizations, meta: json.meta };
+}
+
 export async function getOrganization(id: string): Promise<Organization> {
   return api.get<Organization>(`/organizations/${id}`);
 }

@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createGlobalEvent, updateGlobalEvent } from '../../lib/events';
 import { uploadFile } from '../../lib/uploads';
 import { FieldError, FormError } from '../../components/FieldError';
-import { EU_COUNTRIES } from '../../components/LocationFilter';
+import { EU_COUNTRIES } from '../../lib/countries';
 
 export function EventNewPage() {
   const navigate = useNavigate();

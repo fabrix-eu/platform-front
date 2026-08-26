@@ -3,12 +3,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 // ── Types ────────────────────────────────────────────────────
 
-export const LISTING_TYPES: Record<string, { label: string; badgeColor: string }> = {
-  material: { label: 'Materials', badgeColor: 'bg-emerald-100 text-emerald-800' },
-  capacity: { label: 'Capacities', badgeColor: 'bg-amber-100 text-amber-800' },
-  service: { label: 'Services', badgeColor: 'bg-blue-100 text-blue-800' },
-  product: { label: 'Products', badgeColor: 'bg-rose-100 text-rose-800' },
-  distribution: { label: 'Distribution', badgeColor: 'bg-violet-100 text-violet-800' },
+export const LISTING_TYPES: Record<string, { label: string; badgeColor: string; hex: string }> = {
+  material: { label: 'Materials', badgeColor: 'bg-emerald-100 text-emerald-800', hex: '#10B981' },
+  capacity: { label: 'Capacities', badgeColor: 'bg-amber-100 text-amber-800', hex: '#F59E0B' },
+  service: { label: 'Services', badgeColor: 'bg-blue-100 text-blue-800', hex: '#3B82F6' },
+  product: { label: 'Products', badgeColor: 'bg-rose-100 text-rose-800', hex: '#F43F5E' },
+  distribution: { label: 'Distribution', badgeColor: 'bg-violet-100 text-violet-800', hex: '#8B5CF6' },
 };
 
 export const LISTING_CATEGORIES: Record<string, { label: string; badgeColor: string }> = {
@@ -278,6 +278,10 @@ export interface ListingOrganization {
   name: string;
   slug: string;
   image_url: string | null;
+  kind: string | null;
+  address: string | null;
+  lon: number | null;
+  lat: number | null;
 }
 
 export interface Listing {
@@ -312,15 +316,16 @@ interface ListingsResponse {
 export interface ListingParams {
   page?: number;
   per_page?: number;
+  view?: 'map';
   search?: string;
   by_type?: string;
   by_category?: string;
   by_subcategory?: string;
   by_organization?: string;
-  by_country?: string;
-  'within_distance[lon]'?: string;
-  'within_distance[lat]'?: string;
-  'within_distance[radius]'?: string;
+  country?: string;
+  lon?: number;
+  lat?: number;
+  radius?: number;
 }
 
 export interface ListingPayload {
@@ -341,15 +346,18 @@ export async function getListings(params: ListingParams = {}): Promise<ListingsR
   const qs = new URLSearchParams();
   if (params.page) qs.set('page', String(params.page));
   if (params.per_page) qs.set('per_page', String(params.per_page));
+  if (params.view) qs.set('view', params.view);
   if (params.search) qs.set('search', params.search);
   if (params.by_type) qs.set('by_type', params.by_type);
   if (params.by_category) qs.set('by_category', params.by_category);
   if (params.by_subcategory) qs.set('by_subcategory', params.by_subcategory);
   if (params.by_organization) qs.set('by_organization', params.by_organization);
-  if (params.by_country) qs.set('by_country', params.by_country);
-  if (params['within_distance[lon]']) qs.set('within_distance[lon]', params['within_distance[lon]']);
-  if (params['within_distance[lat]']) qs.set('within_distance[lat]', params['within_distance[lat]']);
-  if (params['within_distance[radius]']) qs.set('within_distance[radius]', params['within_distance[radius]']);
+  if (params.country) qs.set('by_country', params.country);
+  if (params.lon !== undefined && params.lat !== undefined) {
+    qs.set('within_distance[lon]', String(params.lon));
+    qs.set('within_distance[lat]', String(params.lat));
+    if (params.radius) qs.set('within_distance[radius]', String(params.radius));
+  }
 
   const query = qs.toString();
   // The API returns { data: [...], meta: {...} } — we need both, so raw fetch

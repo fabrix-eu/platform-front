@@ -1,79 +1,9 @@
 import type { ReactNode } from 'react';
-import { useFeatureInfo, FeatureIntro, FeatureInfoTrigger } from './FeatureIntro';
 
 /**
- * Shared scaffolding for the public "Explore" list pages
- * (Marketplace, Events, Challenges). Keeps their width, header, search,
- * empty state, skeletons and pagination identical — the page only provides
- * its filters, cards and search-param wiring.
+ * Shared empty state and loading skeletons for the explore pages
+ * (Marketplace, Events, Directory).
  */
-
-// ── Page shell: consistent width + header + feature intro ────────────────
-export function ExploreListLayout({
-  featureKey,
-  title,
-  description,
-  action,
-  children,
-}: {
-  featureKey: string;
-  title: string;
-  description: string;
-  action?: ReactNode;
-  children: ReactNode;
-}) {
-  const info = useFeatureInfo(featureKey);
-  return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold">{title}</h1>
-          <FeatureInfoTrigger info={info} />
-        </div>
-        {action}
-      </div>
-
-      <FeatureIntro info={info} title={title} description={description} />
-
-      {children}
-    </div>
-  );
-}
-
-// ── Uncontrolled search input + button (FormData, server is authority) ───
-export function SearchBar({
-  defaultValue,
-  placeholder,
-  onSearch,
-}: {
-  defaultValue?: string;
-  placeholder: string;
-  onSearch: (value: string) => void;
-}) {
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        const fd = new FormData(e.currentTarget);
-        onSearch((fd.get('search') as string) || '');
-      }}
-      className="flex gap-2"
-    >
-      <input
-        name="search"
-        defaultValue={defaultValue}
-        placeholder={placeholder}
-        className="flex-1 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-      />
-      <button
-        type="submit"
-        className="bg-secondary text-secondary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-secondary/80"
-      >
-        Search
-      </button>
-    </form>
-  );
-}
 
 // ── Empty state card ─────────────────────────────────────────────────────
 export function EmptyState({
@@ -127,37 +57,6 @@ export function GridSkeleton({ count = 6 }: { count?: number }) {
           </div>
         </div>
       ))}
-    </div>
-  );
-}
-
-// ── Pagination ───────────────────────────────────────────────────────────
-// The caller supplies the route-typed <Link> via renderLink so TanStack's
-// type-safe routing is preserved; this owns the layout and prev/next logic.
-export const PAGINATION_LINK_CLASS = 'text-sm text-muted-foreground hover:text-foreground';
-
-export interface PageMeta {
-  current_page: number;
-  total_pages: number;
-  prev_page: number | null;
-  next_page: number | null;
-}
-
-export function Pagination({
-  meta,
-  renderLink,
-}: {
-  meta: PageMeta | undefined;
-  renderLink: (page: number, label: ReactNode) => ReactNode;
-}) {
-  if (!meta || meta.total_pages <= 1) return null;
-  return (
-    <div className="flex items-center justify-center gap-4">
-      {meta.prev_page && renderLink(meta.prev_page, <>&larr; Previous</>)}
-      <span className="text-sm text-muted-foreground">
-        Page {meta.current_page} of {meta.total_pages}
-      </span>
-      {meta.next_page && renderLink(meta.next_page, <>Next &rarr;</>)}
     </div>
   );
 }

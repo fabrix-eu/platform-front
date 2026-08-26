@@ -259,19 +259,31 @@ const globalRoute = createRoute({
   component: GlobalLayout,
 });
 
+// Search params shared by the three explore pages (Marketplace, Events, Directory)
+const exploreSearchSchema = z.object({
+  search: z.string().optional(),
+  view: z.enum(['cards', 'list', 'map']).optional(),
+  near: z.literal('all').optional(),
+  country: z.string().optional(),
+  lon: z.number().optional(),
+  lat: z.number().optional(),
+  radius: z.number().optional(),
+  location_label: z.string().optional(),
+});
+
+const taxonomySearchSchema = z.object({
+  by_type: z.string().optional(),
+  by_category: z.string().optional(),
+  by_subcategory: z.string().optional(),
+});
+
 const globalOverviewRoute = createRoute({
   getParentRoute: () => globalRoute,
   path: '/global',
   beforeLoad: requireAuth,
-  validateSearch: z.object({
-    search: z.string().optional(),
+  validateSearch: exploreSearchSchema.merge(taxonomySearchSchema).extend({
     kinds: z.string().optional(),
     claimed: z.string().optional(),
-    country: z.string().optional(),
-    lon: z.number().optional(),
-    lat: z.number().optional(),
-    radius: z.number().optional(),
-    location_label: z.string().optional(),
   }),
   component: DirectoryMapPage,
 });
@@ -431,18 +443,7 @@ const marketplaceRoute = createRoute({
 const marketplaceIndexRoute = createRoute({
   getParentRoute: () => marketplaceRoute,
   path: '/',
-  validateSearch: z.object({
-    page: z.number().optional(),
-    search: z.string().optional(),
-    by_type: z.string().optional(),
-    by_category: z.string().optional(),
-    by_subcategory: z.string().optional(),
-    country: z.string().optional(),
-    lon: z.number().optional(),
-    lat: z.number().optional(),
-    radius: z.number().optional(),
-    location_label: z.string().optional(),
-  }),
+  validateSearch: exploreSearchSchema.merge(taxonomySearchSchema),
   component: MarketplaceListPage,
 });
 
@@ -483,14 +484,8 @@ const valueChainRoute = createRoute({
 const eventsRoute = createRoute({
   getParentRoute: () => globalRoute,
   path: '/events',
-  validateSearch: z.object({
-    page: z.number().optional(),
-    search: z.string().optional(),
-    country: z.string().optional(),
-    lon: z.number().optional(),
-    lat: z.number().optional(),
-    radius: z.number().optional(),
-    location_label: z.string().optional(),
+  validateSearch: exploreSearchSchema.extend({
+    when: z.enum(['upcoming', 'past']).optional(),
   }),
   beforeLoad: requireAuth,
   component: EventsListPage,

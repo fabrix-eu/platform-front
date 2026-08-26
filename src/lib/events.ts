@@ -45,11 +45,14 @@ export interface EventParticipant {
 export interface GlobalEventParams {
   page?: number;
   per_page?: number;
+  view?: 'map';
   search?: string;
-  by_country?: string;
-  'within_distance[lon]'?: string;
-  'within_distance[lat]'?: string;
-  'within_distance[radius]'?: string;
+  country?: string;
+  lon?: number;
+  lat?: number;
+  radius?: number;
+  upcoming?: boolean;
+  past?: boolean;
 }
 
 export async function getAllEvents(
@@ -58,11 +61,16 @@ export async function getAllEvents(
   const qp = new URLSearchParams();
   if (params.page) qp.set('page', String(params.page));
   if (params.per_page) qp.set('per_page', String(params.per_page));
+  if (params.view) qp.set('view', params.view);
   if (params.search) qp.set('search', params.search);
-  if (params.by_country) qp.set('by_country', params.by_country);
-  if (params['within_distance[lon]']) qp.set('within_distance[lon]', params['within_distance[lon]']);
-  if (params['within_distance[lat]']) qp.set('within_distance[lat]', params['within_distance[lat]']);
-  if (params['within_distance[radius]']) qp.set('within_distance[radius]', params['within_distance[radius]']);
+  if (params.country) qp.set('by_country', params.country);
+  if (params.upcoming) qp.set('upcoming', 'true');
+  if (params.past) qp.set('past', 'true');
+  if (params.lon !== undefined && params.lat !== undefined) {
+    qp.set('within_distance[lon]', String(params.lon));
+    qp.set('within_distance[lat]', String(params.lat));
+    if (params.radius) qp.set('within_distance[radius]', String(params.radius));
+  }
 
   const token = localStorage.getItem('access_token');
   const res = await fetch(`${BASE}/events?${qp}`, {

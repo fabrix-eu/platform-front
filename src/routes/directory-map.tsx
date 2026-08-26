@@ -1,147 +1,141 @@
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { getOrganizations, ORG_KINDS } from '../lib/organizations';
+import { getOrganizations, getOrganizationsMap, ORG_KINDS } from '../lib/organizations';
 import { taxonomyToSpecialties } from '../lib/listings';
-import { LocationFilter } from '../components/LocationFilter';
-import type { LocationFilterParams } from '../components/LocationFilter';
-import { DirectoryMapLayout } from '../components/DirectoryMapLayout';
+import {
+  useMyOrgLocation,
+  resolveLocation,
+  geoApiParams,
+  EUROPE_BOUNDS,
+  type ViewMode,
+  type ExploreLocationSearch,
+} from '../lib/explore';
+import { ExploreShell, InfiniteScrollSentinel } from '../components/explore/ExploreShell';
+import {
+  SearchSection,
+  LocationSection,
+  TaxonomySection,
+  FilterSection,
+  type FilterUpdates,
+} from '../components/explore/ExploreFilters';
+import { PointsMap, MapLegendOverlay, type MapPoint } from '../components/explore/PointsMap';
+import { OrgCard, OrgListRow } from '../components/OrgShared';
+import { EmptyState, GridSkeleton, ListSkeleton } from '../components/ExploreList';
 
 const ALL_KINDS = Object.entries(ORG_KINDS);
-const PER_PAGE = 20;
-const EUROPE_BOUNDS: [[number, number], [number, number]] = [[-11, 34], [45, 58]];
+
+type DirectorySearch = ExploreLocationSearch & {
+  search?: string;
+  view?: ViewMode;
+  kinds?: string;
+  claimed?: string;
+  by_type?: string;
+  by_category?: string;
+  by_subcategory?: string;
+};
 
 export function DirectoryMapPage() {
   const navigate = useNavigate();
-  const searchParams = useSearch({ strict: false }) as {
-    search?: string;
-    kinds?: string;
-    claimed?: string;
-    country?: string;
-    lon?: number;
-    lat?: number;
-    radius?: number;
-    location_label?: string;
-    by_type?: string;
-    by_category?: string;
-    by_subcategory?: string;
-  };
-
-  const { search, kinds, claimed, country, lon, lat, radius, by_type, by_category, by_subcategory } = searchParams;
+  const searchParams = useSearch({ strict: false }) as DirectorySearch;
+  const { search, kinds, claimed, country, by_type, by_category, by_subcategory } = searchParams;
+  const view = searchParams.view ?? 'cards';
 
   const claimedFilter = claimed ?? 'true';
   const byClaimedParam = claimedFilter === 'all' ? undefined : claimedFilter;
   const selectedKinds = kinds ? kinds.split(',') : [];
-
   const specialties = taxonomyToSpecialties({ by_type, by_category, by_subcategory });
 
-  const activeFilterCount =
-    (claimedFilter !== 'true' ? 1 : 0) +
-    (selectedKinds.length > 0 ? 1 : 0) +
-    (country || lon !== undefined ? 1 : 0);
+  const myLocation = useMyOrgLocation();
+  const location = resolveLocation(searchParams, myLocation);
+  const geo = geoApiParams(location, country);
 
-  const filterParams = { search, kinds, claimed: claimedFilter, country, lon, lat, radius, specialties };
+  const apiParams = {
+    search,
+    kinds,
+    specialties,
+    by_claimed: byClaimedParam,
+    by_country: geo.country,
+    lon: geo.lon,
+    lat: geo.lat,
+    radius: geo.radius,
+  };
 
-  const {
-    data,
-    isLoading,
-    error,
-    hasNextPage,
-    isFetchingNextPage,
-    fetchNextPage,
-  } = useInfiniteQuery({
-    queryKey: ['organizations', 'directory-map', filterParams],
-    queryFn: ({ pageParam }) => getOrganizations({
-      page: pageParam,
-      per_page: PER_PAGE,
-      search,
-      kinds,
-      specialties,
-      by_claimed: byClaimedParam,
-      by_country: country,
-      lon,
-      lat,
-      radius,
-    }),
+  const listQuery = useInfiniteQuery({
+    queryKey: ['organizations', 'explore', apiParams],
+    queryFn: ({ pageParam }) => getOrganizations({ ...apiParams, page: pageParam, per_page: 20 }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => lastPage.meta.next_page ?? undefined,
+    enabled: view !== 'map',
   });
-
-  const organizations = data?.pages.flatMap((p) => p.organizations) ?? [];
-  const totalCount = data?.pages[0]?.meta.total_count ?? 0;
 
   const mapQuery = useQuery({
-    queryKey: ['organizations', 'map', filterParams],
-    queryFn: () => getOrganizations({
-      per_page: 1000,
-      search,
-      kinds,
-      specialties,
-      by_claimed: byClaimedParam,
-      by_country: country,
-      lon,
-      lat,
-      radius,
-    }),
+    queryKey: ['organizations', 'explore-map', apiParams],
+    queryFn: () => getOrganizationsMap(apiParams),
+    enabled: view === 'map',
   });
 
-  const updateSearch = (updates: Record<string, unknown>) => {
-    navigate({
-      to: '/global',
-      search: { ...searchParams, ...updates },
-    });
+  const organizations = listQuery.data?.pages.flatMap((p) => p.organizations) ?? [];
+  const totalCount =
+    view === 'map'
+      ? mapQuery.data?.meta.total_count
+      : listQuery.data?.pages[0]?.meta.total_count;
+
+  const update = (updates: FilterUpdates) => {
+    navigate({ to: '/global', search: { ...searchParams, ...updates } });
   };
 
   const toggleKind = (kind: string) => {
     const next = selectedKinds.includes(kind)
       ? selectedKinds.filter((k) => k !== kind)
       : [...selectedKinds, kind];
-    updateSearch({ kinds: next.length > 0 ? next.join(',') : undefined });
+    update({ kinds: next.length > 0 ? next.join(',') : undefined });
   };
 
-  const handleLocationChange = (loc: LocationFilterParams) => {
-    updateSearch({
-      country: loc.country || undefined,
-      lon: loc.lon,
-      lat: loc.lat,
-      radius: loc.radius,
-      location_label: loc.location_label,
-    });
-  };
+  const mapPoints: MapPoint[] = (mapQuery.data?.organizations ?? [])
+    .filter((org) => org.lon != null && org.lat != null)
+    .map((org) => ({
+      id: org.id,
+      lon: org.lon!,
+      lat: org.lat!,
+      color: ORG_KINDS[org.kind ?? '']?.hex ?? '#6B7280',
+      title: org.name,
+      subtitle: org.address || undefined,
+      href: `/organizations/${org.slug || org.id}`,
+    }));
+
+  const isEmpty = !listQuery.isLoading && organizations.length === 0;
 
   return (
-    <DirectoryMapLayout
-      searchDefault={search}
-      searchPlaceholder="Search organizations..."
-      onSearchSubmit={(q) => updateSearch({ search: q || undefined })}
-      activeFilterCount={activeFilterCount}
-      filterContent={
+    <ExploreShell
+      featureKey="directory"
+      title="Directory"
+      description="Discover organizations across the circular textile ecosystem — designers, producers, collectors, recyclers, brands and more."
+      action={
+        <Link
+          to="/organizations/new"
+          className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90 whitespace-nowrap"
+        >
+          + Add Member
+        </Link>
+      }
+      view={view}
+      onViewChange={(v) => update({ view: v === 'cards' ? undefined : v })}
+      resultCount={totalCount}
+      resultLabel="organizations"
+      filters={
         <>
-          <div>
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Status</label>
-            <div className="flex gap-2">
-              {([
-                { value: 'true', label: 'Claimed' },
-                { value: 'false', label: 'Unclaimed' },
-                { value: 'all', label: 'All' },
-              ] as const).map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => updateSearch({ claimed: opt.value === 'true' ? undefined : opt.value })}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    claimedFilter === opt.value
-                      ? 'bg-primary text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Organization type</label>
+          <SearchSection
+            defaultValue={search}
+            placeholder="Search organizations..."
+            onSearch={(q) => update({ search: q || undefined })}
+          />
+          <LocationSection
+            location={location}
+            hasMyLocation={myLocation !== null}
+            country={country}
+            onChange={update}
+          />
+          <FilterSection title="Organization type">
             <div className="flex flex-wrap gap-1.5">
               {ALL_KINDS.map(([key, cfg]) => (
                 <button
@@ -158,65 +152,87 @@ export function DirectoryMapPage() {
                 </button>
               ))}
             </div>
-          </div>
-
-          <div>
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Location</label>
-            <LocationFilter
-              value={{ country, lon, lat, radius, location_label: searchParams.location_label }}
-              onChange={handleLocationChange}
-            />
-          </div>
-
-          {activeFilterCount > 0 && (
-            <div className="pt-2 border-t border-border">
-              <button
-                type="button"
-                onClick={() => updateSearch({
-                  kinds: undefined,
-                  claimed: undefined,
-                  country: undefined,
-                  lon: undefined,
-                  lat: undefined,
-                  radius: undefined,
-                  location_label: undefined,
-                })}
-                className="text-sm text-gray-500 hover:text-gray-700"
-              >
-                Clear all filters
-              </button>
+          </FilterSection>
+          <TaxonomySection
+            by_type={by_type}
+            by_category={by_category}
+            by_subcategory={by_subcategory}
+            onChange={update}
+          />
+          <FilterSection title="Status">
+            <div className="flex gap-2">
+              {([
+                { value: 'true', label: 'Claimed' },
+                { value: 'false', label: 'Unclaimed' },
+                { value: 'all', label: 'All' },
+              ] as const).map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => update({ claimed: opt.value === 'true' ? undefined : opt.value })}
+                  className={`flex-1 px-2 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    claimedFilter === opt.value
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
-          )}
+          </FilterSection>
         </>
       }
-      by_type={by_type}
-      by_category={by_category}
-      by_subcategory={by_subcategory}
-      onTaxonomyFilter={(params) => updateSearch({ ...params })}
-      actionButton={
-        <Link
-          to="/organizations/new"
-          className="bg-primary text-primary-foreground rounded-lg px-3 py-1.5 text-xs font-medium hover:bg-primary/90 whitespace-nowrap"
-        >
-          + Add Member
-        </Link>
-      }
-      items={organizations.map((org) => ({
-        key: org.id,
-        org,
-        linkTo: `/organizations/${org.slug || org.id}`,
-      }))}
-      totalCount={totalCount}
-      resultLabel="results"
-      isLoading={isLoading}
-      error={error}
-      hasNextPage={hasNextPage ?? false}
-      isFetchingNextPage={isFetchingNextPage}
-      fetchNextPage={fetchNextPage}
-      mapOrganizations={mapQuery.data?.organizations ?? []}
-      mapLoading={mapQuery.isLoading}
-      selectedKinds={selectedKinds}
-      maxBounds={EUROPE_BOUNDS}
-    />
+    >
+      {view === 'map' ? (
+        <>
+          <PointsMap
+            points={mapPoints}
+            center={location.active ? [location.lon!, location.lat!] : undefined}
+            radiusKm={location.active ? location.radius : undefined}
+            maxBounds={EUROPE_BOUNDS}
+          />
+          <MapLegendOverlay
+            items={(selectedKinds.length > 0 ? ALL_KINDS.filter(([k]) => selectedKinds.includes(k)) : ALL_KINDS)
+              .map(([, cfg]) => ({ label: cfg.label, color: cfg.hex }))}
+          />
+        </>
+      ) : listQuery.isLoading ? (
+        view === 'cards' ? <GridSkeleton /> : <ListSkeleton />
+      ) : listQuery.error ? (
+        <p className="text-destructive">Failed to load organizations</p>
+      ) : isEmpty ? (
+        <EmptyState
+          icon={
+            <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
+            </svg>
+          }
+          title="No organizations found"
+          message="Try adjusting your filters or search terms."
+        />
+      ) : (
+        <>
+          {view === 'cards' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+              {organizations.map((org) => (
+                <OrgCard key={org.id} org={org} linkTo={`/organizations/${org.slug || org.id}`} />
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {organizations.map((org) => (
+                <OrgListRow key={org.id} org={org} linkTo={`/organizations/${org.slug || org.id}`} />
+              ))}
+            </div>
+          )}
+          <InfiniteScrollSentinel
+            hasNextPage={listQuery.hasNextPage ?? false}
+            isFetchingNextPage={listQuery.isFetchingNextPage}
+            fetchNextPage={listQuery.fetchNextPage}
+          />
+        </>
+      )}
+    </ExploreShell>
   );
 }
