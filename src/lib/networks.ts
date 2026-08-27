@@ -13,6 +13,7 @@ export interface Network {
   center_lon: number | null;
   radius_km: number | null;
   role?: string; // present on /my/networks
+  organization: { id: string; name: string; slug: string | null; image_url: string | null } | null;
 }
 
 export interface NetworkOrganizationOrg {
@@ -271,6 +272,23 @@ export async function getNetworkMembers(networkSlug: string): Promise<NetworkMem
 
 export async function inviteNetworkMember(networkSlug: string, email: string): Promise<void> {
   await api.post(`/networks/${networkSlug}/members`, { email });
+}
+
+export interface NetworkCandidate {
+  id: string;
+  name: string;
+  email: string;
+  image_url: string | null;
+}
+
+/** Colleagues of the central organization without facilitator access yet */
+export async function getNetworkCandidates(networkSlug: string): Promise<NetworkCandidate[]> {
+  const json = await fetchJson<{ data: NetworkCandidate[] }>(`/networks/${networkSlug}/members/candidates`);
+  return json.data;
+}
+
+export async function grantNetworkAccess(networkSlug: string, userId: string): Promise<void> {
+  await api.post(`/networks/${networkSlug}/members`, { user_id: userId });
 }
 
 export async function removeNetworkMember(networkSlug: string, memberId: string): Promise<void> {

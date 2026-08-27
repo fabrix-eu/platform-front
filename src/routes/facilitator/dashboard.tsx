@@ -50,7 +50,9 @@ export function FacilitatorDashboardPage() {
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-display font-bold text-gray-900">{network.name}</h1>
-          <p className="text-sm text-gray-500 mt-1">Facilitator dashboard</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Facilitator dashboard{network.organization ? ` — ${network.organization.name}` : ''}
+          </p>
         </div>
         {networks.length > 1 && (
           <select
@@ -78,7 +80,7 @@ export function FacilitatorDashboardPage() {
         <div className="lg:col-span-2">
           <TasksPanel networkSlug={network.slug} />
         </div>
-        <TeamPanel networkSlug={network.slug} />
+        <TeamPanel networkSlug={network.slug} organizationName={network.organization?.name} />
       </div>
     </div>
   );

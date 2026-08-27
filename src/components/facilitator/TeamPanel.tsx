@@ -2,17 +2,35 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getNetworkMembers,
   getNetworkInvitations,
+  getNetworkCandidates,
+  grantNetworkAccess,
   inviteNetworkMember,
   cancelNetworkInvitation,
 } from '../../lib/networks';
 import { getInitials } from '../../lib/utils';
 
-export function TeamPanel({ networkSlug }: { networkSlug: string }) {
+function Avatar({ name, imageUrl }: { name: string; imageUrl: string | null }) {
+  if (imageUrl) {
+    return <img src={imageUrl} alt={name} className="h-7 w-7 rounded-full object-cover" />;
+  }
+  return (
+    <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold">
+      {getInitials(name)}
+    </div>
+  );
+}
+
+export function TeamPanel({ networkSlug, organizationName }: { networkSlug: string; organizationName?: string }) {
   const queryClient = useQueryClient();
 
   const membersQuery = useQuery({
     queryKey: ['network_members', networkSlug],
     queryFn: () => getNetworkMembers(networkSlug),
+  });
+
+  const candidatesQuery = useQuery({
+    queryKey: ['network_candidates', networkSlug],
+    queryFn: () => getNetworkCandidates(networkSlug),
   });
 
   const invitationsQuery = useQuery({
@@ -22,8 +40,14 @@ export function TeamPanel({ networkSlug }: { networkSlug: string }) {
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['network_members', networkSlug] });
+    queryClient.invalidateQueries({ queryKey: ['network_candidates', networkSlug] });
     queryClient.invalidateQueries({ queryKey: ['network_invitations', networkSlug] });
   };
+
+  const grant = useMutation({
+    mutationFn: (userId: string) => grantNetworkAccess(networkSlug, userId),
+    onSuccess: invalidate,
+  });
 
   const invite = useMutation({
     mutationFn: (email: string) => inviteNetworkMember(networkSlug, email),
@@ -35,20 +59,17 @@ export function TeamPanel({ networkSlug }: { networkSlug: string }) {
     onSuccess: invalidate,
   });
 
+  const candidates = candidatesQuery.data ?? [];
+
   return (
     <section className="bg-white rounded-lg border border-border p-5">
       <h2 className="text-sm font-semibold text-gray-900 mb-3">Team</h2>
 
+      <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Has facilitator access</p>
       <ul className="space-y-2 mb-4">
         {(membersQuery.data ?? []).map((member) => (
           <li key={member.id} className="flex items-center gap-2.5">
-            {member.user.image_url ? (
-              <img src={member.user.image_url} alt={member.user.name} className="h-7 w-7 rounded-full object-cover" />
-            ) : (
-              <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold">
-                {getInitials(member.user.name)}
-              </div>
-            )}
+            <Avatar name={member.user.name} imageUrl={member.user.image_url} />
             <div className="min-w-0">
               <p className="text-sm text-gray-900 truncate">{member.user.name}</p>
               <p className="text-xs text-gray-400 truncate">{member.user.email}</p>
@@ -56,6 +77,33 @@ export function TeamPanel({ networkSlug }: { networkSlug: string }) {
           </li>
         ))}
       </ul>
+
+      {candidates.length > 0 && (
+        <div className="mb-4">
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">
+            Other people{organizationName ? ` at ${organizationName}` : ''}
+          </p>
+          <ul className="space-y-2">
+            {candidates.map((candidate) => (
+              <li key={candidate.id} className="flex items-center gap-2.5">
+                <Avatar name={candidate.name} imageUrl={candidate.image_url} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-gray-900 truncate">{candidate.name}</p>
+                  <p className="text-xs text-gray-400 truncate">{candidate.email}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => grant.mutate(candidate.id)}
+                  disabled={grant.isPending}
+                  className="shrink-0 text-xs font-medium text-primary border border-primary/30 rounded-lg px-2.5 py-1 hover:bg-primary/5 disabled:opacity-50"
+                >
+                  Grant access
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {(invitationsQuery.data ?? []).length > 0 && (
         <div className="mb-4">

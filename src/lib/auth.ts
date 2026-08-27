@@ -28,6 +28,7 @@ export interface UserNetwork {
   name: string;
   slug: string;
   role: string;
+  organization: { id: string; name: string } | null;
 }
 
 export interface User {
