@@ -40,10 +40,9 @@ export function AppSidebar({ className = '' }: { className?: string }) {
   ];
 
   // Facilitator dashboard (CRM) — for facilitators and network members
-  const network = user.networks?.[0];
-  if (network || user.role === 'facilitator') {
+  if ((user.networks?.length ?? 0) > 0 || user.role === 'facilitator') {
     items.push(
-      { separator: true, label: network?.name ?? 'Facilitator' },
+      { separator: true, label: 'Facilitator dashboard' },
       { to: '/facilitator', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" />, exact: true },
       { to: '/facilitator/network', label: 'My Network', icon: <FolderKanban className="h-4 w-4" /> },
     );
