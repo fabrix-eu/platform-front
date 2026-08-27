@@ -6,7 +6,8 @@ import { ORG_KINDS } from '../../lib/organizations';
 import { CrmFieldsForm } from '../../components/facilitator/CrmFieldsForm';
 import { ContactTimeline } from '../../components/facilitator/ContactTimeline';
 import { TasksPanel } from '../../components/facilitator/TasksPanel';
-import { OnboardingFormSection } from '../org/profile';
+import { NeedsChecklist } from '../../components/facilitator/NeedsChecklist';
+import { NeedsFormReadOnly } from '../../components/facilitator/NeedsFormReadOnly';
 import { getInitials } from '../../lib/utils';
 
 export function FacilitatorOrgDetailPage() {
@@ -102,22 +103,23 @@ export function FacilitatorOrgDetailPage() {
         <CrmFieldsForm networkSlug={network.slug} record={record} />
       </section>
 
+      {/* Facilitator's needs assessment (private checklist) */}
+      <NeedsChecklist networkSlug={network.slug} record={record} />
+
       {/* Contact history */}
       <ContactTimeline networkSlug={network.slug} networkOrgId={record.id} />
 
       {/* Tasks for this organization */}
       <TasksPanel networkSlug={network.slug} networkOrgId={record.id} />
 
-      {/* Needs — the organization's needs-opportunities form, editable on their behalf */}
-      {org.slug && (
-        <section className="bg-white rounded-lg border border-border p-5">
-          <h2 className="text-sm font-semibold text-gray-900 mb-1">Needs &amp; Opportunities</h2>
-          <p className="text-xs text-gray-400 mb-4">
-            This is the organization's own needs form — anything you enter here appears on their profile.
-          </p>
-          <OnboardingFormSection orgSlug={org.slug} formKey="needs-opportunities" />
-        </section>
-      )}
+      {/* The organization's own onboarding needs form — read-only for facilitators */}
+      <section className="bg-white rounded-lg border border-border p-5">
+        <h2 className="text-sm font-semibold text-gray-900 mb-1">Needs &amp; Opportunities</h2>
+        <p className="text-xs text-gray-400 mb-4">
+          Self-assessment from the organization's onboarding — read-only.
+        </p>
+        <NeedsFormReadOnly orgId={org.id} />
+      </section>
     </div>
   );
 }

@@ -579,7 +579,7 @@ function TableRatingRow({
   );
 }
 
-export function OnboardingFormSection({ orgSlug, formKey, title, featureInfoId, featureInfoTitle, featureInfoDescription }: {
+function OnboardingFormSection({ orgSlug, formKey, title, featureInfoId, featureInfoTitle, featureInfoDescription }: {
   orgSlug: string;
   formKey: string;
   title?: string;
