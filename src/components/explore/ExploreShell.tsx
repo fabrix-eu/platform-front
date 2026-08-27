@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { LayoutGrid, List, Map } from 'lucide-react';
+import { LayoutGrid, List, Map, Waypoints } from 'lucide-react';
 import { useFeatureInfo, FeatureIntro, FeatureInfoTrigger } from '../FeatureIntro';
 import type { ViewMode } from '../../lib/explore';
 
@@ -7,12 +7,21 @@ const VIEW_MODES: { key: ViewMode; label: string; icon: ReactNode }[] = [
   { key: 'cards', label: 'Cards', icon: <LayoutGrid className="h-4 w-4" /> },
   { key: 'list', label: 'List', icon: <List className="h-4 w-4" /> },
   { key: 'map', label: 'Map', icon: <Map className="h-4 w-4" /> },
+  { key: 'graph', label: 'Graph', icon: <Waypoints className="h-4 w-4" /> },
 ];
 
-export function ViewModeToggle({ value, onChange }: { value: ViewMode; onChange: (view: ViewMode) => void }) {
+export function ViewModeToggle({
+  value,
+  onChange,
+  modes = ['cards', 'list', 'map'],
+}: {
+  value: ViewMode;
+  onChange: (view: ViewMode) => void;
+  modes?: ViewMode[];
+}) {
   return (
     <div className="flex items-center rounded-lg border border-border bg-white p-0.5">
-      {VIEW_MODES.map((mode) => (
+      {VIEW_MODES.filter((m) => modes.includes(m.key)).map((mode) => (
         <button
           key={mode.key}
           type="button"
@@ -46,6 +55,7 @@ export function ExploreShell({
   filters,
   view,
   onViewChange,
+  viewModes,
   resultCount,
   resultLabel,
   children,
@@ -57,6 +67,7 @@ export function ExploreShell({
   filters: ReactNode;
   view: ViewMode;
   onViewChange: (view: ViewMode) => void;
+  viewModes?: ViewMode[];
   resultCount?: number;
   resultLabel: string;
   children: ReactNode;
@@ -86,11 +97,11 @@ export function ExploreShell({
           </div>
           <div className="flex items-center gap-3 shrink-0">
             {action}
-            <ViewModeToggle value={view} onChange={onViewChange} />
+            <ViewModeToggle value={view} onChange={onViewChange} modes={viewModes} />
           </div>
         </header>
 
-        {view === 'map' ? (
+        {view === 'map' || view === 'graph' ? (
           <div className="flex-1 min-h-0 relative">{children}</div>
         ) : (
           <div className="flex-1 min-h-0 overflow-y-auto">

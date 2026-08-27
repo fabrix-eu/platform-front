@@ -139,7 +139,7 @@ function ListingRow({ listing }: { listing: Listing }) {
 
 type MarketplaceSearch = ExploreLocationSearch & {
   search?: string;
-  view?: ViewMode;
+  view?: Exclude<ViewMode, 'graph'>;
   by_type?: string;
   by_category?: string;
   by_subcategory?: string;

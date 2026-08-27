@@ -549,7 +549,7 @@ const facilitatorNetworkRoute = createRoute({
   validateSearch: z.object({
     network: z.string().optional(),
     search: z.string().optional(),
-    view: z.enum(['cards', 'list', 'map']).optional(),
+    view: z.enum(['cards', 'list', 'map', 'graph']).optional(),
     kinds: z.string().optional(),
     economic_health: z.string().optional(),
     country: z.string().optional(),

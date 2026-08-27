@@ -219,6 +219,26 @@ export async function removeNetworkOrganization(networkSlug: string, id: string)
   await api.delete(`/networks/${networkSlug}/organizations/${id}`);
 }
 
+// ── Graph ────────────────────────────────────────────────────
+
+export interface NetworkGraphData {
+  nodes: {
+    id: string;
+    organization_id: string;
+    name: string;
+    kind: string | null;
+    image_url: string | null;
+    number_of_workers: number | null;
+    economic_health: string;
+  }[];
+  links: { source: string; target: string; relation_type: string; kind: string }[];
+}
+
+export async function getNetworkGraph(networkSlug: string): Promise<NetworkGraphData> {
+  const json = await fetchJson<{ data: NetworkGraphData }>(`/networks/${networkSlug}/graph`);
+  return json.data;
+}
+
 // ── Contact points ───────────────────────────────────────────
 
 export async function getContactPoints(

@@ -6,7 +6,7 @@ import { useNavigationContext } from './useNavigationContext';
  * default-to-"Me" behaviour.
  */
 
-export type ViewMode = 'cards' | 'list' | 'map';
+export type ViewMode = 'cards' | 'list' | 'map' | 'graph';
 
 export const DEFAULT_RADIUS_KM = 100;
 export const RADIUS_OPTIONS = [25, 50, 100, 200, 500];

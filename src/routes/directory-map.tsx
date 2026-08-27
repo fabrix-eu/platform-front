@@ -26,7 +26,7 @@ const ALL_KINDS = Object.entries(ORG_KINDS);
 
 type DirectorySearch = ExploreLocationSearch & {
   search?: string;
-  view?: ViewMode;
+  view?: Exclude<ViewMode, 'graph'>;
   kinds?: string;
   claimed?: string;
   by_type?: string;

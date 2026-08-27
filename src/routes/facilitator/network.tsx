@@ -14,6 +14,7 @@ import { SearchSection, FilterSection, type FilterUpdates } from '../../componen
 import { PointsMap, MapLegendOverlay, type MapPoint } from '../../components/explore/PointsMap';
 import { EmptyState, GridSkeleton, ListSkeleton } from '../../components/ExploreList';
 import { AddOrganizationForm } from '../../components/facilitator/AddOrganizationForm';
+import { NetworkGraph } from '../../components/facilitator/NetworkGraph';
 import { getInitials } from '../../lib/utils';
 
 const ALL_KINDS = Object.entries(ORG_KINDS);
@@ -141,6 +142,7 @@ export function FacilitatorNetworkPage() {
       description="The organizations your structure follows — their health, needs and history. This CRM is private to your facilitator team."
       view={view}
       onViewChange={(v) => update({ view: v === 'cards' ? undefined : v })}
+      viewModes={['cards', 'list', 'map', 'graph']}
       resultCount={totalCount}
       resultLabel="organizations"
       filters={
@@ -191,7 +193,9 @@ export function FacilitatorNetworkPage() {
         </>
       }
     >
-      {view === 'map' ? (
+      {view === 'graph' ? (
+        <NetworkGraph networkSlug={network.slug} />
+      ) : view === 'map' ? (
         <>
           <PointsMap points={mapPoints} maxBounds={EUROPE_BOUNDS} />
           <MapLegendOverlay
