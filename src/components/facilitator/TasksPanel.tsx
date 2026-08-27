@@ -98,9 +98,9 @@ export function TasksPanel({ networkSlug, networkOrgId }: { networkSlug: string;
   const tasks = tasksQuery.data?.data ?? [];
 
   return (
-    <section className="bg-white rounded-lg border border-border p-5">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-semibold text-gray-900">Tasks</h2>
+    <section className="bg-white rounded-lg border border-border p-4">
+      <div className="flex items-center justify-between mb-2.5">
+        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tasks</h2>
         <div className="flex gap-1">
           {(['open', 'done'] as const).map((t) => (
             <button

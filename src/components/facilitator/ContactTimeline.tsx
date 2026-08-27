@@ -40,11 +40,11 @@ export function ContactTimeline({ networkSlug, networkOrgId }: { networkSlug: st
   const points = query.data?.data ?? [];
 
   return (
-    <section className="bg-white rounded-lg border border-border p-5">
-      <h2 className="text-sm font-semibold text-gray-900 mb-3">Contact history</h2>
+    <section className="bg-white rounded-lg border border-border p-4">
+      <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2.5">Contacts</h2>
 
       <form
-        className="flex flex-wrap gap-2 mb-4"
+        className="flex flex-wrap gap-2 mb-3"
         onSubmit={(e) => {
           e.preventDefault();
           const fd = new FormData(e.currentTarget);

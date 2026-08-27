@@ -22,12 +22,12 @@ type Needs = Record<string, { selected?: boolean; note?: string }>;
 export function NeedsChecklist({ networkSlug, record }: { networkSlug: string; record: NetworkOrganization }) {
   const queryClient = useQueryClient();
   const [needs, setNeeds] = useState<Needs>((record.needs as Needs) ?? {});
+  const [editing, setEditing] = useState(false);
 
   const save = useMutation({
     mutationFn: (next: Needs) =>
       updateNetworkOrganization(networkSlug, record.id, { needs: next }),
     onError: () => {
-      // Revert to the server state on failure
       setNeeds((record.needs as Needs) ?? {});
     },
     onSuccess: () => {
@@ -50,54 +50,67 @@ export function NeedsChecklist({ networkSlug, record }: { networkSlug: string; r
     save.mutate({ ...needs, [key]: { selected: needs[key]?.selected ?? false, note: needs[key]?.note ?? '' } });
   };
 
-  const selectedCount = Object.values(needs).filter((n) => n?.selected).length;
+  const selected = NEED_OPTIONS.filter((o) => needs[o.key]?.selected);
+  const visible = editing ? NEED_OPTIONS : selected;
 
   return (
-    <section className="bg-white rounded-lg border border-border p-5">
-      <div className="flex items-center gap-2 mb-1">
-        <h2 className="text-sm font-semibold text-gray-900">Needs assessment</h2>
-        {selectedCount > 0 && (
-          <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-            {selectedCount} identified
-          </span>
-        )}
+    <section className="bg-white rounded-lg border border-border p-4">
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+          Needs
+          {selected.length > 0 && <span className="ml-1.5 text-primary">{selected.length}</span>}
+        </h2>
+        <button
+          type="button"
+          onClick={() => setEditing(!editing)}
+          className="text-xs font-medium text-primary hover:underline"
+        >
+          {editing ? 'Done' : 'Edit'}
+        </button>
       </div>
-      <p className="text-xs text-gray-400 mb-4">Your team's diagnosis — private to the network.</p>
 
-      <ul className="space-y-2.5">
-        {NEED_OPTIONS.map((option) => {
-          const value = needs[option.key];
-          const selected = !!value?.selected;
-          return (
-            <li key={option.key}>
-              <label className="flex items-start gap-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={selected}
-                  onChange={() => toggle(option.key)}
-                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary focus:ring-ring shrink-0"
-                />
-                <span className="min-w-0">
-                  <span className={`text-sm block ${selected ? 'text-gray-900 font-medium' : 'text-gray-700'}`}>
-                    {option.label}
-                  </span>
-                  <span className="text-xs text-gray-400 block">{option.description}</span>
-                </span>
-              </label>
-              {selected && (
-                <input
-                  type="text"
-                  value={value?.note ?? ''}
-                  onChange={(e) => setNote(option.key, e.target.value)}
-                  onBlur={() => persistNote(option.key)}
-                  placeholder="Add a note..."
-                  className="mt-1.5 ml-6 w-[calc(100%-1.5rem)] border border-border rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              )}
-            </li>
-          );
-        })}
-      </ul>
+      {visible.length === 0 ? (
+        <p className="text-sm text-gray-300">No needs identified — edit to assess.</p>
+      ) : (
+        <ul className={editing ? 'space-y-2' : 'space-y-2.5'}>
+          {visible.map((option) => {
+            const value = needs[option.key];
+            const isSelected = !!value?.selected;
+            return (
+              <li key={option.key}>
+                {editing ? (
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggle(option.key)}
+                      className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary focus:ring-ring shrink-0"
+                    />
+                    <span className="min-w-0">
+                      <span className={`text-sm block ${isSelected ? 'text-gray-900 font-medium' : 'text-gray-600'}`}>
+                        {option.label}
+                      </span>
+                      <span className="text-xs text-gray-400 block">{option.description}</span>
+                    </span>
+                  </label>
+                ) : (
+                  <p className="text-sm font-medium text-gray-900">{option.label}</p>
+                )}
+                {isSelected && (
+                  <input
+                    type="text"
+                    value={value?.note ?? ''}
+                    onChange={(e) => setNote(option.key, e.target.value)}
+                    onBlur={() => persistNote(option.key)}
+                    placeholder="Add a note…"
+                    className={`mt-1 w-full text-sm text-gray-600 placeholder-gray-300 focus:outline-none border-b border-transparent focus:border-border pb-0.5 ${editing ? 'ml-6 w-[calc(100%-1.5rem)]' : ''}`}
+                  />
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </section>
   );
 }
