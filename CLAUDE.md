@@ -33,6 +33,7 @@ One sidebar (`AppSidebar`), a flat list with one icon per entry:
 Global:   Home (/ → org dashboard), Marketplace (/marketplace), Events (/events), Directory (/global)
 Org:      Profile (/$orgSlug/profile), Compass (/$orgSlug/assessments), Connections (/$orgSlug/relations),
           Members (/$orgSlug/settings/members), Messages (/$orgSlug/messages)
+Facilitator (role facilitator / network member): Dashboard (/facilitator), My Network (/facilitator/network)
 Personal: Notifications (/notifications), Settings (/settings)
 ```
 

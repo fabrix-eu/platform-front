@@ -77,15 +77,14 @@ export function LocationSection({
   // Debounced city search via Photon
   useEffect(() => {
     if (justSelectedRef.current) { justSelectedRef.current = false; return; }
-    if (!cityQuery || cityQuery.length < 2) {
-      setSuggestions([]);
-      return;
-    }
+    if (!cityQuery || cityQuery.length < 2) return;
     const t = setTimeout(() => {
       searchCity(cityQuery).then(setSuggestions);
     }, 300);
     return () => clearTimeout(t);
   }, [cityQuery]);
+
+  const visibleSuggestions = cityQuery.length >= 2 ? suggestions : [];
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -164,12 +163,12 @@ export function LocationSection({
             placeholder="Near a city..."
             className="w-full border border-border rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
-          {suggestions.length > 0 && (
+          {visibleSuggestions.length > 0 && (
             <div
               ref={dropdownRef}
               className="absolute z-30 left-0 right-0 mt-1 bg-white border border-border rounded-lg shadow-lg overflow-hidden"
             >
-              {suggestions.map((s) => (
+              {visibleSuggestions.map((s) => (
                 <button
                   key={s.id}
                   type="button"
