@@ -177,6 +177,18 @@ export async function getNetworkOrganization(networkSlug: string, id: string): P
   return api.get<NetworkOrganization>(`/networks/${networkSlug}/organizations/${id}`);
 }
 
+export interface OrgPerson {
+  id: string;
+  role: string;
+  user: { id: string; name: string; email: string; image_url: string | null };
+}
+
+/** The people working at a followed organization (its active members). */
+export async function getNetworkOrgPeople(networkSlug: string, id: string): Promise<OrgPerson[]> {
+  const json = await fetchJson<{ data: OrgPerson[] }>(`/networks/${networkSlug}/organizations/${id}/people`);
+  return json.data;
+}
+
 export async function addNetworkOrganization(networkSlug: string, organizationId: string): Promise<NetworkOrganization> {
   return api.post<NetworkOrganization>(`/networks/${networkSlug}/organizations`, {
     network_organization: { organization_id: organizationId },

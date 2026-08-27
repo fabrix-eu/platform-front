@@ -41,7 +41,7 @@ export function ContactTimeline({ networkSlug, networkOrgId }: { networkSlug: st
 
   return (
     <section className="bg-white rounded-lg border border-border p-4">
-      <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2.5">Contacts</h2>
+      <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2.5">Interactions</h2>
 
       <form
         className="flex flex-wrap gap-2 mb-3"
@@ -89,7 +89,7 @@ export function ContactTimeline({ networkSlug, networkOrgId }: { networkSlug: st
       {query.isLoading ? (
         <p className="text-sm text-gray-400">Loading...</p>
       ) : points.length === 0 ? (
-        <p className="text-sm text-gray-400">No contact logged yet.</p>
+        <p className="text-sm text-gray-400">No interaction logged yet.</p>
       ) : (
         <ul className="space-y-3">
           {points.map((point) => (

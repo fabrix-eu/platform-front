@@ -8,6 +8,7 @@ import { ORG_KINDS } from '../../lib/organizations';
 import { HealthSelect, BusinessDataCard } from '../../components/facilitator/CrmFieldsForm';
 import { NotesCard } from '../../components/facilitator/NotesCard';
 import { ContactTimeline } from '../../components/facilitator/ContactTimeline';
+import { PeopleCard } from '../../components/facilitator/PeopleCard';
 import { TasksPanel } from '../../components/facilitator/TasksPanel';
 import { NeedsChecklist } from '../../components/facilitator/NeedsChecklist';
 import { NeedsFormReadOnly } from '../../components/facilitator/NeedsFormReadOnly';
@@ -115,6 +116,7 @@ export function FacilitatorOrgDetailPage() {
           <BusinessDataCard networkSlug={network.slug} record={record} />
         </div>
         <div className="space-y-4">
+          <PeopleCard networkSlug={network.slug} networkOrgId={record.id} />
           <TasksPanel networkSlug={network.slug} networkOrgId={record.id} />
           <ContactTimeline networkSlug={network.slug} networkOrgId={record.id} />
         </div>
