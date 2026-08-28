@@ -12,6 +12,7 @@ import {
   Settings,
   LayoutDashboard,
   FolderKanban,
+  GraduationCap,
 } from 'lucide-react';
 import { useNavigationContext } from '../lib/useNavigationContext';
 import { SidebarNav, type NavItem } from './SidebarNav';
@@ -63,6 +64,14 @@ export function AppSidebar({ className = '' }: { className?: string }) {
   }
 
   items.push(
+    { separator: true, label: 'Resources' },
+    {
+      to: 'https://learn.fabrixproject.eu',
+      label: 'Learning Hub',
+      icon: <GraduationCap className="h-4 w-4" />,
+      external: true,
+    },
+    { separator: true },
     { to: '/notifications', label: 'Notifications', icon: <Bell className="h-4 w-4" /> },
     { to: '/settings', label: 'Settings', icon: <Settings className="h-4 w-4" /> },
   );
