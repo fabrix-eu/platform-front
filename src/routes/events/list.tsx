@@ -128,7 +128,7 @@ function EventCard({ event }: { event: Event }) {
 
 type EventsSearch = ExploreLocationSearch & {
   search?: string;
-  view?: ViewMode;
+  view?: Exclude<ViewMode, 'graph'>;
   when?: 'upcoming' | 'past';
 };
 

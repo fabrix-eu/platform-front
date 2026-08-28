@@ -16,7 +16,7 @@ interface OrganizationsMapProps {
   maxBounds?: [[number, number], [number, number]];
 }
 
-export function getKindColor(kind: string | null): string {
+function getKindColor(kind: string | null): string {
   return ORG_KINDS[kind ?? '']?.hex ?? '#6B7280';
 }
 

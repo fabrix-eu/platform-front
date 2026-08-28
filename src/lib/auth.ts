@@ -23,6 +23,17 @@ export interface MeOrganization {
   assessments_total: number;
 }
 
+export interface UserNetwork {
+  id: string;
+  name: string;
+  slug: string;
+  role: string;
+  center_lon: number | null;
+  center_lat: number | null;
+  radius_km: number | null;
+  organization: { id: string; name: string; lon: number | null; lat: number | null } | null;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -30,6 +41,7 @@ export interface User {
   role: string;
   image_url: string | null;
   organizations: MeOrganization[];
+  networks: UserNetwork[];
 }
 
 export async function login(email: string, password: string): Promise<AuthTokens> {

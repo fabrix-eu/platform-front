@@ -10,6 +10,8 @@ import {
   MessageSquare,
   Bell,
   Settings,
+  LayoutDashboard,
+  FolderKanban,
 } from 'lucide-react';
 import { useNavigationContext } from '../lib/useNavigationContext';
 import { SidebarNav, type NavItem } from './SidebarNav';
@@ -36,6 +38,15 @@ export function AppSidebar({ className = '' }: { className?: string }) {
     { to: '/events', label: 'Events', icon: <Calendar className="h-4 w-4" /> },
     { to: '/global', label: 'Directory', icon: <Map className="h-4 w-4" /> },
   ];
+
+  // Facilitator dashboard (CRM) — for facilitators and network members
+  if ((user.networks?.length ?? 0) > 0 || user.role === 'facilitator') {
+    items.push(
+      { separator: true, label: 'Facilitator dashboard' },
+      { to: '/facilitator', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" />, exact: true },
+      { to: '/facilitator/network', label: 'My Network', icon: <FolderKanban className="h-4 w-4" /> },
+    );
+  }
 
   if (orgSlug) {
     items.push(

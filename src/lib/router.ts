@@ -60,6 +60,10 @@ import { MarketplaceShowPage } from '../routes/marketplace/show';
 import { MarketplaceNewPage } from '../routes/marketplace/new';
 import { MarketplaceEditPage } from '../routes/marketplace/edit';
 import { ValueChainPage } from '../routes/value-chain';
+import { FacilitatorDashboardPage } from '../routes/facilitator/dashboard';
+import { FacilitatorNetworkPage } from '../routes/facilitator/network';
+import { FacilitatorOrgDetailPage } from '../routes/facilitator/org-detail';
+import { NetworkInvitationPage } from '../routes/network-invitation';
 import { isAuthenticated, getMe, type User } from './auth';
 import { queryClient } from './queryClient';
 
@@ -90,6 +94,16 @@ async function requireOrgMember({ params }: { params: { orgSlug: string } }) {
       to: '/organizations/$id',
       params: { id: params.orgSlug },
     });
+  }
+}
+
+async function requireFacilitator() {
+  if (!isAuthenticated()) throw redirect({ to: '/login' });
+  const me = await ensureMe();
+  const isFacilitator =
+    (me.networks?.length ?? 0) > 0 || me.role === 'facilitator' || me.role === 'admin';
+  if (!isFacilitator) {
+    throw redirect({ to: '/' });
   }
 }
 
@@ -512,6 +526,55 @@ const eventDetailRoute = createRoute({
   component: EventDetailPage,
 });
 
+// ── Facilitator dashboard (CRM) ──────────────────────────────
+
+const facilitatorRoute = createRoute({
+  getParentRoute: () => explorerRoute,
+  path: '/facilitator',
+  beforeLoad: requireFacilitator,
+});
+
+const facilitatorDashboardRoute = createRoute({
+  getParentRoute: () => facilitatorRoute,
+  path: '/',
+  validateSearch: z.object({
+    network: z.string().optional(),
+  }),
+  component: FacilitatorDashboardPage,
+});
+
+const facilitatorNetworkRoute = createRoute({
+  getParentRoute: () => facilitatorRoute,
+  path: '/network',
+  validateSearch: z.object({
+    network: z.string().optional(),
+    search: z.string().optional(),
+    view: z.enum(['cards', 'list', 'map', 'graph']).optional(),
+    kinds: z.string().optional(),
+    economic_health: z.string().optional(),
+    country: z.string().optional(),
+  }),
+  component: FacilitatorNetworkPage,
+});
+
+const facilitatorOrgDetailRoute = createRoute({
+  getParentRoute: () => facilitatorRoute,
+  path: '/network/$norgId',
+  validateSearch: z.object({
+    network: z.string().optional(),
+  }),
+  component: FacilitatorOrgDetailPage,
+});
+
+const networkInvitationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/network-invitation',
+  validateSearch: z.object({
+    token: z.string().optional(),
+  }),
+  component: NetworkInvitationPage,
+});
+
 // ── Shell B: Mon Organisation (/$orgSlug) ────────────────────
 
 const orgRoute = createRoute({
@@ -678,6 +741,7 @@ const routeTree = rootRoute.addChildren([
   feedbackRoute,
   settingsRoute,
   notificationPreferencesRoute,
+  networkInvitationRoute,
   adminRoute.addChildren([
     adminIndexRoute,
     adminOrganizationsRoute,
@@ -691,6 +755,11 @@ const routeTree = rootRoute.addChildren([
     directoryRedirectRoute,
     communitiesRedirectRoute,
     communityShowRedirectRoute,
+    facilitatorRoute.addChildren([
+      facilitatorDashboardRoute,
+      facilitatorNetworkRoute,
+      facilitatorOrgDetailRoute,
+    ]),
     messagesRoute,
     notificationsRoute,
     valueChainRoute,
