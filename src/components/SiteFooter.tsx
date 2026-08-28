@@ -85,6 +85,9 @@ export function SiteFooter() {
             <a href="https://www.fabrixproject.eu/privacy-policy" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
               Privacy policy
             </a>
+            <a href="https://www.fabrixproject.eu/privacy-policy/cookies" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+              Cookies policy
+            </a>
             <span className="ml-auto">&copy; {new Date().getFullYear()} FABRIX</span>
           </div>
         </div>
