@@ -15,6 +15,10 @@ const matomoSiteId = import.meta.env.VITE_MATOMO_SITE_ID;
 
 if (matomoUrl && matomoSiteId) {
   const _paq = (window._paq = window._paq || []);
+  // Cookieless: Matomo counts visits without storing anything on the visitor's
+  // device, so no consent banner is required. Must be pushed before matomo.js
+  // loads, and before any trackPageView.
+  _paq.push(['disableCookies']);
   _paq.push(['enableLinkTracking']);
   _paq.push(['setTrackerUrl', `${matomoUrl}matomo.php`]);
   _paq.push(['setSiteId', matomoSiteId]);
