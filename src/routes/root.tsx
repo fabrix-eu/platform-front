@@ -58,8 +58,8 @@ export function RootLayout() {
           {authed && me.data && me.data.organizations.length > 0 ? (
             <OrgSwitcher />
           ) : (
-            <Link to="/" className="text-lg font-display font-bold text-primary">
-              Fabrix
+            <Link to="/" className="flex items-center">
+              <img src="/fabrix-logo.svg" alt="FABRIX" className="h-5 w-auto" />
             </Link>
           )}
         </div>
