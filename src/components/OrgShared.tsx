@@ -1,7 +1,20 @@
+import type { ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import { ORG_KINDS } from '../lib/organizations';
-import type { Organization } from '../lib/organizations';
 import { LISTING_CATEGORIES, LISTING_SUBCATEGORIES } from '../lib/listings';
+
+// Structural subset of Organization, so wrappers with a lighter org payload
+// (e.g. the facilitator CRM records) can reuse these components.
+export interface OrgCardItem {
+  name: string;
+  image_url: string | null;
+  kind: string | null;
+  address: string | null;
+  country_code?: string | null;
+  claimed?: boolean;
+  relations_count?: number;
+  specialties?: string[];
+}
 
 export function OrgAvatar({
   org,
@@ -47,12 +60,23 @@ export function KindBadge({ kind }: { kind: string | null }) {
   );
 }
 
-export function OrgCard({ org, linkTo }: { org: Organization; linkTo: string }) {
+export function OrgCard({
+  org,
+  linkTo,
+  search,
+  extra,
+}: {
+  org: OrgCardItem;
+  linkTo: string;
+  search?: Record<string, string>;
+  extra?: ReactNode;
+}) {
   const kind = org.kind ? ORG_KINDS[org.kind] || ORG_KINDS.other : null;
 
   return (
     <Link
       to={linkTo}
+      search={search}
       className="block bg-white rounded-lg border border-border hover:border-gray-300 hover:shadow-md transition-all group"
     >
       <div className="p-4">
@@ -84,9 +108,10 @@ export function OrgCard({ org, linkTo }: { org: Organization; linkTo: string }) 
                 {[org.address, org.country_code].filter(Boolean).join(', ')}
               </p>
             )}
-            {org.relations_count > 0 && (
+            {(org.relations_count ?? 0) > 0 && (
               <p className="text-xs text-muted-foreground mt-1">{org.relations_count} relations</p>
             )}
+            {extra && <div className="flex items-center gap-1.5 mt-2">{extra}</div>}
           </div>
         </div>
       </div>
@@ -114,10 +139,21 @@ export function SpecialtyBadge({ specialty }: { specialty: string }) {
   );
 }
 
-export function OrgListRow({ org, linkTo }: { org: Organization; linkTo: string }) {
+export function OrgListRow({
+  org,
+  linkTo,
+  search,
+  extra,
+}: {
+  org: OrgCardItem;
+  linkTo: string;
+  search?: Record<string, string>;
+  extra?: ReactNode;
+}) {
   return (
     <Link
       to={linkTo}
+      search={search}
       className="flex items-center gap-4 px-4 py-3 hover:bg-muted/50 transition-colors"
     >
       <OrgAvatar org={org} />
@@ -147,7 +183,8 @@ export function OrgListRow({ org, linkTo }: { org: Organization; linkTo: string 
         )}
       </div>
       <div className="flex items-center gap-3 shrink-0">
-        {org.relations_count > 0 && (
+        {extra}
+        {(org.relations_count ?? 0) > 0 && (
           <span className="text-xs text-muted-foreground">
             {org.relations_count} rel.
           </span>

@@ -1,4 +1,4 @@
-import { Link, useNavigate, useSearch } from '@tanstack/react-router';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { ORG_KINDS } from '../../lib/organizations';
 import {
@@ -13,9 +13,9 @@ import { ExploreShell, InfiniteScrollSentinel } from '../../components/explore/E
 import { SearchSection, FilterSection, type FilterUpdates } from '../../components/explore/ExploreFilters';
 import { PointsMap, MapLegendOverlay, type MapPoint } from '../../components/explore/PointsMap';
 import { EmptyState, GridSkeleton, ListSkeleton } from '../../components/ExploreList';
+import { OrgCard, OrgListRow } from '../../components/OrgShared';
 import { AddOrganizationForm } from '../../components/facilitator/AddOrganizationForm';
 import { NetworkGraph } from '../../components/facilitator/NetworkGraph';
-import { getInitials } from '../../lib/utils';
 
 const ALL_KINDS = Object.entries(ORG_KINDS);
 
@@ -26,57 +26,12 @@ function HealthBadge({ level }: { level: string }) {
   return <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium ${cfg.badgeColor}`}>{cfg.label}</span>;
 }
 
-function NetworkOrgCard({ record, networkSlug }: { record: NetworkOrganization; networkSlug: string }) {
-  const org = record.organization;
-  const kind = org.kind ? ORG_KINDS[org.kind] : null;
+function HealthBadges({ record }: { record: NetworkOrganization }) {
   return (
-    <Link
-      to="/facilitator/network/$norgId"
-      params={{ norgId: record.id }}
-      search={{ network: networkSlug }}
-      className="block bg-white rounded-lg border border-border hover:border-gray-300 hover:shadow-md transition-all p-4"
-    >
-      <div className="flex items-start gap-3">
-        {org.image_url ? (
-          <img src={org.image_url} alt={org.name} className="h-10 w-10 rounded-full object-cover shrink-0" />
-        ) : (
-          <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">
-            {getInitials(org.name)}
-          </div>
-        )}
-        <div className="min-w-0 flex-1">
-          <h3 className="font-display font-semibold text-sm text-gray-900 truncate">{org.name}</h3>
-          {kind && (
-            <span className={`inline-block text-[10px] px-1.5 py-0 rounded-full mt-1 ${kind.badgeColor}`}>{kind.label}</span>
-          )}
-          {org.address && <p className="text-xs text-gray-400 mt-1 truncate">{org.address}</p>}
-          <div className="flex items-center gap-1.5 mt-2">
-            <HealthBadge level={record.economic_health} />
-            <HealthBadge level={record.environmental_score} />
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-function NetworkOrgRow({ record, networkSlug }: { record: NetworkOrganization; networkSlug: string }) {
-  const org = record.organization;
-  const kind = org.kind ? ORG_KINDS[org.kind] : null;
-  return (
-    <Link
-      to="/facilitator/network/$norgId"
-      params={{ norgId: record.id }}
-      search={{ network: networkSlug }}
-      className="flex items-center gap-3 bg-white border border-border rounded-lg px-4 py-2.5 hover:border-gray-300 hover:shadow-sm transition-all"
-    >
-      <div className="min-w-0 flex-1">
-        <span className="text-sm font-medium text-gray-900 truncate block">{org.name}</span>
-        {org.address && <span className="text-xs text-gray-400 truncate block">{org.address}</span>}
-      </div>
-      {kind && <span className={`shrink-0 text-[10px] px-1.5 py-0 rounded-full ${kind.badgeColor}`}>{kind.label}</span>}
+    <>
       <HealthBadge level={record.economic_health} />
-    </Link>
+      <HealthBadge level={record.environmental_score} />
+    </>
   );
 }
 
@@ -232,13 +187,25 @@ export function FacilitatorNetworkPage() {
           {view === 'cards' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
               {records.map((record) => (
-                <NetworkOrgCard key={record.id} record={record} networkSlug={network.slug} />
+                <OrgCard
+                  key={record.id}
+                  org={record.organization}
+                  linkTo={`/facilitator/network/${record.id}`}
+                  search={{ network: network.slug }}
+                  extra={<HealthBadges record={record} />}
+                />
               ))}
             </div>
           ) : (
             <div className="space-y-2">
               {records.map((record) => (
-                <NetworkOrgRow key={record.id} record={record} networkSlug={network.slug} />
+                <OrgListRow
+                  key={record.id}
+                  org={record.organization}
+                  linkTo={`/facilitator/network/${record.id}`}
+                  search={{ network: network.slug }}
+                  extra={<HealthBadges record={record} />}
+                />
               ))}
             </div>
           )}
