@@ -154,7 +154,7 @@ export function OrgListRow({
     <Link
       to={linkTo}
       search={search}
-      className="flex items-center gap-4 px-4 py-3 hover:bg-muted/50 transition-colors"
+      className="flex items-center gap-4 bg-white border border-border rounded-lg px-4 py-3 hover:border-gray-300 hover:shadow-sm transition-all"
     >
       <OrgAvatar org={org} />
       <div className="flex-1 min-w-0">

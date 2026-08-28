@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import type { UseMutationResult } from '@tanstack/react-query';
 import { FieldError, FormError } from './FieldError';
+import { SpecialtySelector } from './SpecialtySelector';
+import { ORG_KINDS } from '../lib/organizations';
 import type { Organization } from '../lib/organizations';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -18,6 +21,8 @@ export function OrganizationForm({
   submitLabel,
   pendingLabel,
 }: OrganizationFormProps) {
+  const [specialties, setSpecialties] = useState<string[]>(defaultValues?.specialties ?? []);
+
   return (
     <form
       onSubmit={(e) => {
@@ -27,6 +32,7 @@ export function OrganizationForm({
         for (const [key, value] of fd.entries()) {
           if (value !== '') data[key] = value;
         }
+        data.specialties = specialties;
         mutation.mutate(data);
       }}
       className="space-y-4"
@@ -58,13 +64,16 @@ export function OrganizationForm({
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         >
           <option value="">Select...</option>
-          <option value="brand_retailer">Brand / Retailer</option>
-          <option value="producer">Producer</option>
-          <option value="collector_sorter">Collector / Sorter</option>
-          <option value="recycler">Recycler</option>
-          <option value="other">Other</option>
+          {Object.entries(ORG_KINDS).map(([key, cfg]) => (
+            <option key={key} value={key}>{cfg.label}</option>
+          ))}
         </select>
         <FieldError mutation={mutation} field="kind" />
+      </div>
+
+      <div>
+        <SpecialtySelector value={specialties} onChange={setSpecialties} />
+        <FieldError mutation={mutation} field="specialties" />
       </div>
 
       <div>
