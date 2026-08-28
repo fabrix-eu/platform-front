@@ -12,6 +12,7 @@ import { PeopleCard } from '../../components/facilitator/PeopleCard';
 import { TasksPanel } from '../../components/facilitator/TasksPanel';
 import { NeedsChecklist } from '../../components/facilitator/NeedsChecklist';
 import { NeedsFormReadOnly } from '../../components/facilitator/NeedsFormReadOnly';
+import { SpecialtyBadge } from '../../components/OrgShared';
 import { getInitials } from '../../lib/utils';
 
 export function FacilitatorOrgDetailPage() {
@@ -79,6 +80,13 @@ export function FacilitatorOrgDetailPage() {
             {kind && <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${kind.badgeColor}`}>{kind.label}</span>}
           </div>
           {org.address && <p className="text-xs text-gray-400 truncate">{org.address}</p>}
+          {org.specialties && org.specialties.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {org.specialties.map((s) => (
+                <SpecialtyBadge key={s} specialty={s} />
+              ))}
+            </div>
+          )}
           <div className="flex items-center gap-4 mt-1.5">
             <HealthSelect networkSlug={network.slug} record={record} field="economic_health" label="Economic" />
             <HealthSelect networkSlug={network.slug} record={record} field="environmental_score" label="Environmental" />
