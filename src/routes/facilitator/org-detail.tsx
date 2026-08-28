@@ -77,7 +77,11 @@ export function FacilitatorOrgDetailPage() {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-lg font-display font-bold text-gray-900 truncate">{org.name}</h1>
-            {kind && <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${kind.badgeColor}`}>{kind.label}</span>}
+            {kind ? (
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${kind.badgeColor}`}>{kind.label}</span>
+            ) : (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-400">No type set</span>
+            )}
           </div>
           {org.address && <p className="text-xs text-gray-400 truncate">{org.address}</p>}
           {org.specialties && org.specialties.length > 0 && (
@@ -99,6 +103,13 @@ export function FacilitatorOrgDetailPage() {
             className="text-primary hover:underline"
           >
             Public profile →
+          </Link>
+          <Link
+            to="/organizations/$id/edit"
+            params={{ id: org.slug || org.id }}
+            className="text-xs text-gray-400 hover:text-gray-700"
+          >
+            Edit profile
           </Link>
           <button
             type="button"
