@@ -28,7 +28,10 @@ export interface UserNetwork {
   name: string;
   slug: string;
   role: string;
-  organization: { id: string; name: string } | null;
+  center_lon: number | null;
+  center_lat: number | null;
+  radius_km: number | null;
+  organization: { id: string; name: string; lon: number | null; lat: number | null } | null;
 }
 
 export interface User {

@@ -135,6 +135,14 @@ export function FacilitatorNetworkPage() {
       href: `/facilitator/network/${r.id}?network=${network.slug}`,
     }));
 
+  // Map center: the network's own territory if set, else its central organization
+  const mapCenter: [number, number] | undefined =
+    network.center_lon != null && network.center_lat != null
+      ? [network.center_lon, network.center_lat]
+      : network.organization?.lon != null && network.organization?.lat != null
+        ? [network.organization.lon, network.organization.lat]
+        : undefined;
+
   return (
     <ExploreShell
       featureKey="facilitator-network"
@@ -197,7 +205,12 @@ export function FacilitatorNetworkPage() {
         <NetworkGraph networkSlug={network.slug} />
       ) : view === 'map' ? (
         <>
-          <PointsMap points={mapPoints} maxBounds={EUROPE_BOUNDS} />
+          <PointsMap
+            points={mapPoints}
+            center={mapCenter}
+            radiusKm={mapCenter ? (network.radius_km ?? 25) : undefined}
+            maxBounds={EUROPE_BOUNDS}
+          />
           <MapLegendOverlay
             items={ALL_KINDS.map(([, cfg]) => ({ label: cfg.label, color: cfg.hex }))}
           />
