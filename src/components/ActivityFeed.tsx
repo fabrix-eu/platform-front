@@ -29,6 +29,8 @@ function ActionLabel({ action }: { action: string }) {
   const labels: Record<string, { text: string; color: string }> = {
     member_joined: { text: 'added a member', color: 'text-green-600' },
     event_created: { text: 'created an event', color: 'text-orange-600' },
+    post_created: { text: 'started a discussion', color: 'text-blue-600' },
+    comment_created: { text: 'commented', color: 'text-blue-500' },
     listing_created: { text: 'published a listing', color: 'text-purple-600' },
   };
   const info = labels[action] ?? { text: action, color: 'text-gray-500' };
@@ -46,6 +48,10 @@ function activityLink(activity: FeedActivity): string | null {
       return `/events/${trackable.id}`;
     case 'listing':
       return `/marketplace/${trackable.id}`;
+    case 'post':
+      return `/discussions/${trackable.id}`;
+    case 'post_comment':
+      return `/discussions/${trackable.post.id}`;
     default:
       return null;
   }
@@ -111,6 +117,25 @@ function TrackableContent({ activity }: { activity: FeedActivity }) {
   switch (trackable.type) {
     case 'community_organization':
       return <MemberJoinedCard activity={activity} />;
+
+    case 'post':
+      return (
+        <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-100">
+          <p className="font-medium text-sm text-gray-900">{trackable.title}</p>
+          {trackable.body && (
+            <p className="text-xs text-gray-600 mt-1 line-clamp-3">{trackable.body}</p>
+          )}
+        </div>
+      );
+
+    case 'post_comment':
+      return (
+        <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-100">
+          <p className="text-xs text-gray-500">
+            on <span className="font-medium text-gray-700">{trackable.post.title}</span>
+          </p>
+        </div>
+      );
 
     case 'event':
       return (

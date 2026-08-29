@@ -39,6 +39,19 @@ export interface TrackableEvent {
   image_url: string | null;
 }
 
+export interface TrackablePost {
+  type: 'post';
+  id: string;
+  title: string;
+  body: string | null;
+}
+
+export interface TrackablePostComment {
+  type: 'post_comment';
+  id: string;
+  post: { id: string; title: string };
+}
+
 export interface TrackableListing {
   type: 'listing';
   id: string;
@@ -52,6 +65,8 @@ export type Trackable =
   | TrackableMemberJoined
   | TrackableEvent
   | TrackableListing
+  | TrackablePost
+  | TrackablePostComment
   | null;
 
 export interface FeedActivity {

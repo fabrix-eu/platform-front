@@ -56,6 +56,8 @@ import { RotterdamPage } from '../routes/data/rotterdam';
 import { RotterdamChartsPage } from '../routes/data/rotterdam-charts';
 import { AthensPage } from '../routes/data/athens';
 import { MarketplaceListPage } from '../routes/marketplace/list';
+import { DiscussionsListPage } from '../routes/discussions/list';
+import { DiscussionShowPage } from '../routes/discussions/show';
 import { MarketplaceShowPage } from '../routes/marketplace/show';
 import { MarketplaceNewPage } from '../routes/marketplace/new';
 import { MarketplaceEditPage } from '../routes/marketplace/edit';
@@ -447,6 +449,31 @@ const dataAthensRoute = createRoute({
   component: AthensPage,
 });
 
+// ── Discussions (global) ─────────────────────────────────────
+
+const discussionsRoute = createRoute({
+  getParentRoute: () => globalRoute,
+  path: '/discussions',
+});
+
+const discussionsIndexRoute = createRoute({
+  getParentRoute: () => discussionsRoute,
+  path: '/',
+  beforeLoad: requireAuth,
+  validateSearch: z.object({
+    search: z.string().optional(),
+    compose: z.boolean().optional(),
+  }),
+  component: DiscussionsListPage,
+});
+
+const discussionShowRoute = createRoute({
+  getParentRoute: () => discussionsRoute,
+  path: '/$postId',
+  beforeLoad: requireAuth,
+  component: DiscussionShowPage,
+});
+
 // ── Marketplace (under Explorer) ─────────────────────────────
 
 const marketplaceRoute = createRoute({
@@ -776,6 +803,10 @@ const routeTree = rootRoute.addChildren([
         organizationNewRoute,
         organizationShowRoute,
         organizationEditRoute,
+      ]),
+      discussionsRoute.addChildren([
+        discussionsIndexRoute,
+        discussionShowRoute,
       ]),
       marketplaceRoute.addChildren([
         marketplaceIndexRoute,
