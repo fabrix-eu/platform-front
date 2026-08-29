@@ -28,12 +28,8 @@ function Avatar({ name, imageUrl, size = 'md' }: { name: string; imageUrl: strin
 function ActionLabel({ action }: { action: string }) {
   const labels: Record<string, { text: string; color: string }> = {
     member_joined: { text: 'added a member', color: 'text-green-600' },
-    post_created: { text: 'posted', color: 'text-blue-600' },
-    comment_created: { text: 'commented', color: 'text-blue-500' },
     event_created: { text: 'created an event', color: 'text-orange-600' },
-    challenge_created: { text: 'launched a challenge', color: 'text-yellow-600' },
     listing_created: { text: 'published a listing', color: 'text-purple-600' },
-    space_created: { text: 'created a space', color: 'text-indigo-600' },
   };
   const info = labels[action] ?? { text: action, color: 'text-gray-500' };
   return <span className={`text-xs font-medium ${info.color}`}>{info.text}</span>;
@@ -51,8 +47,6 @@ function activityLink(activity: FeedActivity): string | null {
     case 'listing':
       return `/marketplace/${trackable.id}`;
     default:
-      // Legacy trackables (spaces, posts, challenges) no longer have a page —
-      // render the card without a link.
       return null;
   }
 }
@@ -110,21 +104,6 @@ function ImageCard({
   );
 }
 
-function PostCard({ activity }: { activity: FeedActivity }) {
-  if (activity.trackable?.type !== 'space_post') return null;
-  const { title, body, space } = activity.trackable;
-
-  return (
-    <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-100">
-      <p className="font-medium text-sm text-gray-900">{title}</p>
-      {body && (
-        <p className="text-xs text-gray-600 mt-1 line-clamp-3">{body}</p>
-      )}
-      <p className="text-[10px] text-gray-400 mt-2">in {space.name}</p>
-    </div>
-  );
-}
-
 function TrackableContent({ activity }: { activity: FeedActivity }) {
   const { trackable } = activity;
   if (!trackable) return null;
@@ -132,18 +111,6 @@ function TrackableContent({ activity }: { activity: FeedActivity }) {
   switch (trackable.type) {
     case 'community_organization':
       return <MemberJoinedCard activity={activity} />;
-
-    case 'space_post':
-      return <PostCard activity={activity} />;
-
-    case 'space_post_comment':
-      return (
-        <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-100">
-          <p className="text-xs text-gray-500">
-            on <span className="font-medium text-gray-700">{trackable.post.title}</span>
-          </p>
-        </div>
-      );
 
     case 'event':
       return (
@@ -175,15 +142,6 @@ function TrackableContent({ activity }: { activity: FeedActivity }) {
         />
       );
 
-    case 'challenge':
-      return (
-        <ImageCard
-          imageUrl={trackable.image_url}
-          title={trackable.title}
-          description={trackable.description}
-        />
-      );
-
     case 'listing':
       return (
         <ImageCard
@@ -198,16 +156,6 @@ function TrackableContent({ activity }: { activity: FeedActivity }) {
             ) : null
           }
         />
-      );
-
-    case 'community_space':
-      return (
-        <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-100 flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-indigo-50 flex items-center justify-center text-sm shrink-0">
-            {trackable.icon ?? '💬'}
-          </div>
-          <p className="font-medium text-sm text-gray-900">{trackable.name}</p>
-        </div>
       );
 
     default:

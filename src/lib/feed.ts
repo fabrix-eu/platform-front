@@ -29,20 +29,6 @@ export interface TrackableMemberJoined {
   };
 }
 
-export interface TrackableSpacePost {
-  type: 'space_post';
-  id: string;
-  title: string;
-  body: string | null;
-  space: { id: string; name: string; icon: string | null };
-}
-
-export interface TrackableSpacePostComment {
-  type: 'space_post_comment';
-  id: string;
-  post: { id: string; title: string; space_id: string };
-}
-
 export interface TrackableEvent {
   type: 'event';
   id: string;
@@ -50,14 +36,6 @@ export interface TrackableEvent {
   description: string | null;
   starts_at: string;
   location: string | null;
-  image_url: string | null;
-}
-
-export interface TrackableChallenge {
-  type: 'challenge';
-  id: string;
-  title: string;
-  description: string | null;
   image_url: string | null;
 }
 
@@ -70,21 +48,10 @@ export interface TrackableListing {
   image_url: string | null;
 }
 
-export interface TrackableCommunitySpace {
-  type: 'community_space';
-  id: string;
-  name: string;
-  icon: string | null;
-}
-
 export type Trackable =
   | TrackableMemberJoined
-  | TrackableSpacePost
-  | TrackableSpacePostComment
   | TrackableEvent
-  | TrackableChallenge
   | TrackableListing
-  | TrackableCommunitySpace
   | null;
 
 export interface FeedActivity {
