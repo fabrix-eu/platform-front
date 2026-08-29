@@ -3,7 +3,6 @@ import {
   ShoppingBag,
   Calendar,
   Map,
-  MessagesSquare,
   Building2,
   Compass,
   Network,
@@ -39,7 +38,6 @@ export function AppSidebar({ className = '' }: { className?: string }) {
     { to: '/marketplace', label: 'Marketplace', icon: <ShoppingBag className="h-4 w-4" /> },
     { to: '/events', label: 'Events', icon: <Calendar className="h-4 w-4" /> },
     { to: '/global', label: 'Directory', icon: <Map className="h-4 w-4" /> },
-    { to: '/discussions', label: 'Discussions', icon: <MessagesSquare className="h-4 w-4" /> },
   ];
 
   // Facilitator dashboard (CRM) — for facilitators and network members
