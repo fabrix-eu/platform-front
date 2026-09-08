@@ -15,31 +15,31 @@ import {
   Toggles,
 } from '../components/design/atoms';
 import { HomeScreen, MarketplaceScreen } from '../components/design/screens';
+import { SpacingRules } from '../components/design/spacing';
 
 /**
  * /design — the design system, rendered from the live tokens.
  *
- * Two directions share one set of token names; `?dir=` picks which set of
- * values is bound. Direction B (the default) is Adrian's navigation
- * prototype with the volume turned up; Direction A is the refashion.fr
- * reading, kept so the two can be argued side by side.
+ * Direction B is the system: chosen, and running in production on the
+ * Learning Hub. Direction A is kept behind `?dir=` for the record — the two
+ * still share one set of token names, which is what made choosing cheap.
  */
 
 type Dir = 'prototype' | 'refashion';
 
 const DIRECTIONS: Record<Dir, { label: string; title: string; lede: string; chips: string[] }> = {
   prototype: {
-    label: 'Direction B · the prototype, bolder',
-    title: 'Same system. Twice the voice.',
+    label: 'Direction B · chosen · live on the Learning Hub',
+    title: 'This is the system.',
     lede:
-      "Everything structural is the prototype's: white page, #faf9fc panel, Plus Jakarta Sans, violet #6c4cf1, the same accents, 14px cards. What changes is volume — headings four times the size at weight 800, solid violet where it used a tint, and enough weight contrast that a page has a shape before you read it.",
+      "Everything structural is the prototype's: white page, #faf9fc panel, Plus Jakarta Sans, violet #6c4cf1, the same accents, 14px cards. What changed is volume — headings four times the size at weight 800, solid violet where it used a tint. The Learning Hub runs on it since September 2026; the platform's own screens migrate one at a time.",
     chips: ['Plus Jakarta Sans 800', 'Violet #6c4cf1', 'Panel #faf9fc', '14px cards', 'Fills, not tints'],
   },
   refashion: {
-    label: 'Direction A · the refashion.fr reading',
-    title: 'Bolder, on purpose.',
+    label: 'Direction A · not taken · kept for the record',
+    title: 'The road not taken.',
     lede:
-      'A warm ground instead of near-white, black instead of violet as the structural colour, Poppins set large and tight, pill actions and much larger radii. Further from the prototype, closer to the reference.',
+      'A warm ground instead of near-white, black instead of violet as the structural colour, Poppins set large and tight, pill actions and much larger radii. Further from the prototype, closer to the reference — and not the direction we took. It still renders, because every atom on this page is written against token names rather than values.',
     chips: ['Poppins 600', 'Cream #faf5f1', 'Ink-led', 'Pill actions', '24px radii'],
   },
 };
@@ -243,6 +243,14 @@ export function DesignPage() {
 
           <Section
             n="04"
+            title="Spacing"
+            lede="Type sizes without spacing rules is half a system — the Learning Hub migration proved it by breaking all three of these at once. Each rule below is shown as the before/after it actually was."
+          >
+            <SpacingRules />
+          </Section>
+
+          <Section
+            n="05"
             title="Atoms"
             lede="The pieces every screen is assembled from. Switch direction above and nothing below is rewritten — only the values behind the names change."
           >
@@ -262,7 +270,7 @@ export function DesignPage() {
           </Section>
 
           <Section
-            n="05"
+            n="06"
             title="Screens"
             lede="The atoms put back in the shape the app already has — the flat sidebar, the filter column, the card grid. Nothing below is drawn twice: switch direction above and the screens change with it."
           >
@@ -286,8 +294,9 @@ export function DesignPage() {
             <p className="max-w-3xl text-fx-small text-fx-muted">
               Both directions live in <span className="font-mono text-fx-ink">src/index.css</span> as one set of{' '}
               <span className="font-mono text-fx-ink">fx-*</span> names with two sets of values; the switch above is a
-              class on this page's root. The app still renders on the previous tokens — no existing screen changes until
-              it is migrated on purpose. Plus Jakarta Sans and Poppins are self-hosted in{' '}
+              class on this page's root. The Learning Hub already runs on Direction B; this app still renders on the
+              previous tokens — no existing screen changes until it is migrated on purpose. Plus Jakarta Sans and
+              Poppins are self-hosted in{' '}
               <span className="font-mono text-fx-ink">public/fonts</span>; no third-party font call.
             </p>
           </footer>

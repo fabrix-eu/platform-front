@@ -122,11 +122,14 @@
   --color-fx-paper: #ffffff;
 
   /* Ink — the prototype's #23232b taken two steps deeper, and its #9a9aa6
-     muted darkened to clear WCAG AA on the panel (the Learning Hub made
-     the same correction, for the same reason). */
+     muted darkened to clear WCAG AA on the panel.
+     The muted was #7d7c8a until the Learning Hub migration measured it:
+     3.9:1 on the panel, 4.1:1 on white — under AA for anything below 18.66px,
+     which is every label and every piece of metadata that uses it. #6f6f7b is
+     4.7:1 and reads as the same grey. */
   --color-fx-ink: #1a1a22;
   --color-fx-ink2: #55545f;
-  --color-fx-muted: #7d7c8a;
+  --color-fx-muted: #6f6f7b;
   --color-fx-line: #ecebf0;
   --color-fx-line2: #dedce4;
 
@@ -220,7 +223,7 @@
 
   --color-fx-ink: #111014;
   --color-fx-ink2: #45444e;
-  --color-fx-muted: #737180;
+  --color-fx-muted: #6b6977;
   --color-fx-line: #e7e1dc;
   --color-fx-line2: #d6cfc8;
 
