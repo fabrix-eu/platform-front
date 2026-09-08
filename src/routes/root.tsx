@@ -24,6 +24,9 @@ export function RootLayout() {
   const { pathname } = useLocation();
   const isAdmin = pathname.startsWith('/admin');
   const isDocs = pathname === '/docs';
+  // The design system page is its own surface — it must not be framed by the
+  // chrome it is meant to replace.
+  const isDesign = pathname === '/design';
 
   useRefreshOnNavigate();
 
@@ -38,7 +41,9 @@ export function RootLayout() {
     navigate({ to: '/login' });
   };
 
-  const showNav = authed && !isAdmin && !isDocs;
+  const showNav = authed && !isAdmin && !isDocs && !isDesign;
+
+  if (isDesign) return <Outlet />;
 
   return (
     <div className="min-h-screen bg-muted/40">

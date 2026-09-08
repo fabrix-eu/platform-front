@@ -34,6 +34,7 @@ import { VerifyInstructionsPage } from '../routes/verify-instructions';
 import { VerifyEmailPage } from '../routes/verify-email';
 import { TestGoogleAddressPage } from '../routes/test/google-address';
 import { DocsPage } from '../routes/docs';
+import { DesignPage } from '../routes/design';
 import { ChangelogPage } from '../routes/changelog';
 import { FeedbackPage } from '../routes/feedback';
 import { AdminLayout } from '../routes/admin/layout';
@@ -211,6 +212,17 @@ const docsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/docs',
   component: DocsPage,
+});
+
+// The design system, rendered from the live tokens rather than pictured.
+// `dir` picks which set of values the token names are bound to.
+const designRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/design',
+  component: DesignPage,
+  validateSearch: z.object({
+    dir: z.enum(['prototype', 'refashion']).optional(),
+  }),
 });
 
 const changelogRoute = createRoute({
@@ -764,6 +776,7 @@ const routeTree = rootRoute.addChildren([
   resetPasswordRoute,
   testGoogleAddressRoute,
   docsRoute,
+  designRoute,
   changelogRoute,
   feedbackRoute,
   settingsRoute,
