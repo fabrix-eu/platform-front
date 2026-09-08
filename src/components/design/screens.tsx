@@ -91,7 +91,7 @@ function NavGroup({ label }: { label: string }) {
   return <p className="mt-5 mb-1.5 px-2.5 font-fx-display text-fx-label text-fx-muted uppercase">{label}</p>;
 }
 
-function Sidebar({ active }: { active: string }) {
+export function Sidebar({ active }: { active: string }) {
   return (
     <div className="hidden w-52 shrink-0 flex-col border-r border-fx-line bg-fx-paper p-3 @2xl:flex">
       <span className="mb-6 px-2.5 pt-1 font-fx-display text-[17px] font-extrabold tracking-tight text-fx-ink">

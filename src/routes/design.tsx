@@ -14,6 +14,7 @@ import {
   Toggles,
 } from '../components/design/atoms';
 import { HomeScreen, MarketplaceScreen } from '../components/design/screens';
+import { OrgProfileScreen } from '../components/design/screen-profile';
 import { SpacingRules } from '../components/design/spacing';
 
 /**
@@ -245,6 +246,12 @@ export function DesignPage() {
                   Home — where the referral loop is asked for
                 </p>
                 <HomeScreen />
+              </div>
+              <div>
+                <p className="mb-3 font-fx-display text-fx-label text-fx-muted uppercase">
+                  Organisation profile — what an invited partner lands on
+                </p>
+                <OrgProfileScreen />
               </div>
             </div>
           </Section>
