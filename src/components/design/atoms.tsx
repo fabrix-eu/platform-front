@@ -29,9 +29,8 @@ export function Row({ label, hint, children }: { label: string; hint?: string; c
 }
 
 // ── Buttons ─────────────────────────────────────────────────────────────
-// The primary is the emphasis colour: violet in the prototype direction,
-// ink in the refashion one. Shape comes from --radius-fx-action, which is
-// a rounded rectangle in one direction and a pill in the other.
+// The primary reads its fill from --color-fx-emphasis and its shape from
+// --radius-fx-action. Neither is written here: a button never names violet.
 
 const btn = 'inline-flex items-center gap-2 rounded-fx-action font-fx-text font-bold transition';
 const btnMd = 'px-5 py-2.5 text-fx-body';

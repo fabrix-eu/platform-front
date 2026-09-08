@@ -215,14 +215,10 @@ const docsRoute = createRoute({
 });
 
 // The design system, rendered from the live tokens rather than pictured.
-// `dir` picks which set of values the token names are bound to.
 const designRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/design',
   component: DesignPage,
-  validateSearch: z.object({
-    dir: z.enum(['prototype', 'refashion']).optional(),
-  }),
 });
 
 const changelogRoute = createRoute({

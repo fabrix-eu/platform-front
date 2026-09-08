@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { Link, useSearch } from '@tanstack/react-router';
 import {
   Avatars,
   Badges,
@@ -18,30 +17,18 @@ import { HomeScreen, MarketplaceScreen } from '../components/design/screens';
 import { SpacingRules } from '../components/design/spacing';
 
 /**
- * /design — the design system, rendered from the live tokens.
- *
- * Direction B is the system: chosen, and running in production on the
- * Learning Hub. Direction A is kept behind `?dir=` for the record — the two
- * still share one set of token names, which is what made choosing cheap.
+ * /design — the design system, rendered from the live tokens rather than
+ * pictured. The second candidate direction was dropped once this one was
+ * chosen; what it leaves behind is the discipline it forced — every atom
+ * below is written against token names, never their values.
  */
 
-type Dir = 'prototype' | 'refashion';
-
-const DIRECTIONS: Record<Dir, { label: string; title: string; lede: string; chips: string[] }> = {
-  prototype: {
-    label: 'Direction B · chosen · live on the Learning Hub',
-    title: 'This is the system.',
-    lede:
-      "Everything structural is the prototype's: white page, #faf9fc panel, Plus Jakarta Sans, violet #6c4cf1, the same accents, 14px cards. What changed is volume — headings four times the size at weight 800, solid violet where it used a tint. The Learning Hub runs on it since September 2026; the platform's own screens migrate one at a time.",
-    chips: ['Plus Jakarta Sans 800', 'Violet #6c4cf1', 'Panel #faf9fc', '14px cards', 'Fills, not tints'],
-  },
-  refashion: {
-    label: 'Direction A · not taken · kept for the record',
-    title: 'The road not taken.',
-    lede:
-      'A warm ground instead of near-white, black instead of violet as the structural colour, Poppins set large and tight, pill actions and much larger radii. Further from the prototype, closer to the reference — and not the direction we took. It still renders, because every atom on this page is written against token names rather than values.',
-    chips: ['Poppins 600', 'Cream #faf5f1', 'Ink-led', 'Pill actions', '24px radii'],
-  },
+const META = {
+  label: 'The FABRIX design system · live on the Learning Hub',
+  title: 'This is the system.',
+  lede:
+    "Everything structural is the prototype's: white page, #faf9fc panel, Plus Jakarta Sans, violet #6c4cf1, the same accents, 14px cards. What changed is volume — headings four times the size at weight 800, solid violet where it used a tint. The Learning Hub runs on it since September 2026; the platform's own screens migrate one at a time.",
+  chips: ['Plus Jakarta Sans 800', 'Violet #6c4cf1', 'Panel #faf9fc', '14px cards', 'Fills, not tints'],
 };
 
 const SWATCHES: { group: string; items: { name: string; token: string; note?: string }[] }[] = [
@@ -132,44 +119,16 @@ function Swatch({ name, token, note }: { name: string; token: string; note?: str
   );
 }
 
-function DirectionSwitch({ current }: { current: Dir }) {
-  return (
-    <div className="inline-flex rounded-full border border-fx-line2 bg-fx-paper p-1">
-      {(Object.keys(DIRECTIONS) as Dir[]).map((d) => (
-        <Link
-          key={d}
-          to="/design"
-          search={{ dir: d }}
-          className={`rounded-full px-4 py-2 font-fx-text text-fx-small font-bold transition ${
-            current === d ? 'bg-fx-emphasis text-fx-emphasis-ink' : 'text-fx-ink2'
-          }`}
-        >
-          {d === 'prototype' ? 'B · prototype' : 'A · refashion'}
-        </Link>
-      ))}
-    </div>
-  );
-}
-
 export function DesignPage() {
-  const { dir } = useSearch({ from: '/design' });
-  const active: Dir = dir ?? 'prototype';
-  const meta = DIRECTIONS[active];
-
   return (
-    <div
-      className={`min-h-screen bg-fx-ground font-fx-text text-fx-ink ${active === 'refashion' ? 'dir-refashion' : ''}`}
-    >
+    <div className="min-h-screen bg-fx-ground font-fx-text text-fx-ink">
       <header className="border-b border-fx-line px-8 py-14 sm:px-16">
         <div className="mx-auto max-w-6xl">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <p className="font-fx-display text-fx-label text-fx-muted uppercase">{meta.label}</p>
-            <DirectionSwitch current={active} />
-          </div>
-          <h1 className="mt-8 max-w-4xl font-fx-display text-fx-hero text-fx-ink">{meta.title}</h1>
-          <p className="mt-6 max-w-2xl text-fx-lead text-fx-ink2">{meta.lede}</p>
+          <p className="font-fx-display text-fx-label text-fx-muted uppercase">{META.label}</p>
+          <h1 className="mt-8 max-w-4xl font-fx-display text-fx-hero text-fx-ink">{META.title}</h1>
+          <p className="mt-6 max-w-2xl text-fx-lead text-fx-ink2">{META.lede}</p>
           <div className="mt-8 flex flex-wrap gap-2">
-            {meta.chips.map((c) => (
+            {META.chips.map((c) => (
               <span
                 key={c}
                 className="rounded-full bg-fx-emphasis-soft px-4 py-2 font-fx-text text-fx-small font-bold text-fx-ink"
@@ -186,7 +145,7 @@ export function DesignPage() {
           <Section
             n="01"
             title="Colour"
-            lede="One name does one job. `emphasis` is whatever the direction hands the structural work to — violet here, ink in Direction A — and every selected state, primary button and hero block reads from it."
+            lede="One name does one job. `emphasis` is the colour that carries the structural work, and every selected state, primary button and hero block reads from it — no screen names violet directly."
           >
             <div className="grid gap-12">
               {SWATCHES.map((g) => (
@@ -229,7 +188,7 @@ export function DesignPage() {
           <Section
             n="03"
             title="Radius"
-            lede="Cards keep the prototype's 14. The larger steps are for hero surfaces, and actions get their own token — a rounded rectangle here, a pill in Direction A."
+            lede="Cards keep the prototype's 14. The larger steps are for hero surfaces, and actions get their own token, so a button's shape moves without touching a button."
           >
             <div className="flex flex-wrap gap-6">
               {RADII.map((r) => (
@@ -252,7 +211,7 @@ export function DesignPage() {
           <Section
             n="05"
             title="Atoms"
-            lede="The pieces every screen is assembled from. Switch direction above and nothing below is rewritten — only the values behind the names change."
+            lede="The pieces every screen is assembled from, written once against the token names. Move a value in index.css and every one of them follows."
           >
             <div className="rounded-fx-lg border border-fx-line bg-fx-paper px-8 py-2">
               <Row label="Buttons" hint="primary is the emphasis colour · shape comes from --radius-fx-action"><Buttons /></Row>
@@ -272,7 +231,7 @@ export function DesignPage() {
           <Section
             n="06"
             title="Screens"
-            lede="The atoms put back in the shape the app already has — the flat sidebar, the filter column, the card grid. Nothing below is drawn twice: switch direction above and the screens change with it."
+            lede="The atoms put back in the shape the app already has — the flat sidebar, the filter column, the card grid. Nothing here is drawn twice; the screens are the same pieces, arranged."
           >
             <div className="grid gap-8">
               <div>
@@ -292,11 +251,10 @@ export function DesignPage() {
 
           <footer className="mt-24 border-t border-fx-line pt-8">
             <p className="max-w-3xl text-fx-small text-fx-muted">
-              Both directions live in <span className="font-mono text-fx-ink">src/index.css</span> as one set of{' '}
-              <span className="font-mono text-fx-ink">fx-*</span> names with two sets of values; the switch above is a
-              class on this page's root. The Learning Hub already runs on Direction B; this app still renders on the
-              previous tokens — no existing screen changes until it is migrated on purpose. Plus Jakarta Sans and
-              Poppins are self-hosted in{' '}
+              The system lives in <span className="font-mono text-fx-ink">src/index.css</span> as one set of{' '}
+              <span className="font-mono text-fx-ink">fx-*</span> names. The Learning Hub already runs on it; this app
+              still renders on the previous tokens — no existing screen changes until it is migrated on purpose. Plus
+              Jakarta Sans is self-hosted in{' '}
               <span className="font-mono text-fx-ink">public/fonts</span>; no third-party font call.
             </p>
           </footer>

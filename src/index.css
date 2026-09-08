@@ -60,21 +60,17 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   FABRIX design directions
+   FABRIX design system
    ═══════════════════════════════════════════════════════════════════════
-   One set of semantic token names, two directions that reassign their
-   values. The atoms are written once, against the names; switching
-   direction is a class on an ancestor, not a second component library.
+   The chosen direction, and the only one: the navigation prototype with the
+   volume turned up. It shipped on the Learning Hub in September 2026.
 
-   This works because the `@theme` below is NOT `inline`: Tailwind emits
-   real custom properties and the utilities read them through var(), so a
-   scope that redeclares a property flips every utility inside it.
+   Components are written against these token *names*, never their values —
+   the discipline that let two candidate directions share one component set
+   while we chose, and that now lets a value move without a rewrite.
 
-     default (:root)  Direction B — Adrian's navigation prototype, bolder
-     .dir-refashion   Direction A — the refashion.fr reading
-
-   Everything is namespaced `fx-*`, so the app keeps rendering on the
-   theme block above until each screen is migrated on purpose.
+   Everything is namespaced `fx-*`, so the app keeps rendering on the theme
+   block above until each screen is migrated on purpose.
    ═══════════════════════════════════════════════════════════════════════ */
 
 @font-face {
@@ -83,27 +79,9 @@
   font-weight: 200 800;
   font-display: swap;
 }
-@font-face {
-  font-family: "Poppins";
-  src: url("/fonts/Poppins-Medium.woff2") format("woff2");
-  font-weight: 500;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Poppins";
-  src: url("/fonts/Poppins-SemiBold.woff2") format("woff2");
-  font-weight: 600;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Poppins";
-  src: url("/fonts/Poppins-Bold.woff2") format("woff2");
-  font-weight: 700;
-  font-display: swap;
-}
 
 /* ───────────────────────────────────────────────────────────────────────
-   DIRECTION B (default) — the prototype, bolder.
+   The system.
 
    Everything structural is Adrian's: white page, #faf9fc content panel,
    Plus Jakarta Sans throughout, violet #6c4cf1 as the one brand colour,
@@ -140,7 +118,8 @@
   --color-fx-violet-border: #ded5ff;
 
   /* The colour that carries emphasis: selected nav, active chips, hero
-     blocks, primary buttons. Direction A hands this to ink instead. */
+     blocks, primary buttons. One name, so a screen never hard-codes which
+     colour is doing the structural work. */
   --color-fx-emphasis: #6c4cf1;
   --color-fx-emphasis-ink: #ffffff;
   --color-fx-emphasis-soft: #f1edff;
@@ -163,8 +142,7 @@
   --color-fx-slate-soft: #eef0f3;
 
   /* Radii — the prototype's 14 stays the card, with a larger step for
-     hero surfaces. Actions keep a rounded rectangle, not a pill: the
-     pill is Direction A's signature, not this one's. */
+     hero surfaces. Actions keep a rounded rectangle, not a pill. */
   --radius-fx-sm: 9px;
   --radius-fx: 14px;
   --radius-fx-lg: 20px;
@@ -206,75 +184,4 @@
   --text-fx-label--line-height: 1;
   --text-fx-label--letter-spacing: 0.06em;
   --text-fx-label--font-weight: 700;
-}
-
-/* ───────────────────────────────────────────────────────────────────────
-   DIRECTION A — the refashion.fr reading.
-   Kept for comparison. Warm ground, black as the structural colour,
-   Poppins display, pill actions, much larger radii.
-   ─────────────────────────────────────────────────────────────────────── */
-.dir-refashion {
-  --font-fx-display: "Poppins", system-ui, sans-serif;
-  --font-fx-text: "IBM Plex Sans", system-ui, sans-serif;
-
-  --color-fx-ground: #faf5f1;
-  --color-fx-panel: #f4ede8;
-  --color-fx-paper: #ffffff;
-
-  --color-fx-ink: #111014;
-  --color-fx-ink2: #45444e;
-  --color-fx-muted: #6b6977;
-  --color-fx-line: #e7e1dc;
-  --color-fx-line2: #d6cfc8;
-
-  /* Ink carries emphasis; violet is rationed to one action per page. */
-  --color-fx-emphasis: #111014;
-  --color-fx-emphasis-ink: #faf5f1;
-  --color-fx-emphasis-soft: #ece5df;
-
-  --color-fx-teal: #1d9c99;
-  --color-fx-green: #2bb673;
-  --color-fx-amber: #c8791a;
-  --color-fx-rose: #d1568f;
-  --color-fx-indigo: #5b53c9;
-  --color-fx-orange: #ff6235;
-
-  /* teal and green must not collide: a Services card and a Materials card
-     sit side by side in the grid. */
-  --color-fx-teal-soft: #d2efee;
-  --color-fx-green-soft: #ccf0dd;
-  --color-fx-amber-soft: #ffe9b8;
-  --color-fx-rose-soft: #ffd9d0;
-  --color-fx-indigo-soft: #e6dfff;
-  --color-fx-slate-soft: #d2edff;
-
-  --radius-fx-sm: 10px;
-  --radius-fx: 16px;
-  --radius-fx-lg: 24px;
-  --radius-fx-xl: 32px;
-  --radius-fx-action: 999px;
-
-  --text-fx-hero: 64px;
-  --text-fx-hero--line-height: 0.96;
-  --text-fx-hero--letter-spacing: -0.035em;
-  --text-fx-hero--font-weight: 600;
-
-  --text-fx-display: 44px;
-  --text-fx-display--line-height: 1;
-  --text-fx-display--letter-spacing: -0.03em;
-  --text-fx-display--font-weight: 600;
-
-  --text-fx-title: 30px;
-  --text-fx-title--line-height: 1.08;
-  --text-fx-title--letter-spacing: -0.025em;
-  --text-fx-title--font-weight: 600;
-
-  --text-fx-heading: 20px;
-  --text-fx-heading--line-height: 1.2;
-  --text-fx-heading--letter-spacing: -0.02em;
-  --text-fx-heading--font-weight: 600;
-
-  --text-fx-lead: 17px;
-  --text-fx-label--letter-spacing: 0.09em;
-  --text-fx-label--font-weight: 600;
 }
