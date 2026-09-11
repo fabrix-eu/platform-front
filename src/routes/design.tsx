@@ -14,6 +14,7 @@ import {
   Toggles,
 } from '../components/design/atoms';
 import { HomeScreen, MarketplaceScreen } from '../components/design/screens';
+import { LandingScreen } from '../components/design/screen-landing';
 import { OrgProfileScreen } from '../components/design/screen-profile';
 import { SpacingRules } from '../components/design/spacing';
 
@@ -235,6 +236,12 @@ export function DesignPage() {
             lede="The atoms put back in the shape the app already has — the flat sidebar, the filter column, the card grid. Nothing here is drawn twice; the screens are the same pieces, arranged."
           >
             <div className="grid gap-8">
+              <div>
+                <p className="mb-3 font-fx-display text-fx-label text-fx-muted uppercase">
+                  Landing — the only screen a logged-out visitor sees
+                </p>
+                <LandingScreen />
+              </div>
               <div>
                 <p className="mb-3 font-fx-display text-fx-label text-fx-muted uppercase">
                   Marketplace — the growth lever
