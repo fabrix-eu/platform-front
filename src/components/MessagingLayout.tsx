@@ -120,6 +120,7 @@ export function MessagingLayout({ orgId, replyAsOrgId, selectedId, newConversati
         {composing && newConversationOrgId ? (
           <ComposePanel
             recipientOrgId={newConversationOrgId}
+            senderOrgId={replyAsOrgId ?? orgId ?? myOrgIds[0]}
             listingId={listingId}
             onConversationCreated={selectConversation}
           />
@@ -187,10 +188,13 @@ function ListingBanner({ listingId }: { listingId: string }) {
 
 function ComposePanel({
   recipientOrgId,
+  senderOrgId,
   listingId,
   onConversationCreated,
 }: {
   recipientOrgId: string;
+  /** Conversations are opened by an organisation, never by a person on their own. */
+  senderOrgId?: string;
   listingId?: string;
   onConversationCreated: (conversationId: string) => void;
 }) {
@@ -230,9 +234,9 @@ function ComposePanel({
 
   function handleSend() {
     const text = message.trim();
-    if (!text) return;
+    if (!text || !senderOrgId) return;
     createConversation.mutate(
-      { recipient_organization_id: recipientOrgId, content: text },
+      { recipient_organization_id: recipientOrgId, initiator_organization_id: senderOrgId, content: text },
       { onSuccess: (conv) => onConversationCreated(conv.id) },
     );
   }
@@ -263,6 +267,11 @@ function ComposePanel({
             {(createConversation.error as Error)?.message || 'Failed to send message'}
           </p>
         )}
+        {!senderOrgId && (
+          <p className="text-sm text-gray-500 mb-2">
+            Messages are sent from one organization to another. Add yours to get in touch.
+          </p>
+        )}
         <div className="flex items-end gap-2">
           <textarea
             ref={textareaRef}
@@ -276,7 +285,7 @@ function ComposePanel({
           />
           <button
             onClick={handleSend}
-            disabled={!message.trim() || createConversation.isPending}
+            disabled={!message.trim() || !senderOrgId || createConversation.isPending}
             className="bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
           >
             {createConversation.isPending ? 'Sending...' : 'Send'}
